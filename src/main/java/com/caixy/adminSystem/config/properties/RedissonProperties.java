@@ -1,4 +1,5 @@
-package com.caixy.adminSystem.config;
+package com.caixy.adminSystem.config.properties;
+
 
 import lombok.Data;
 import lombok.Getter;
@@ -6,7 +7,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Redis会话统一配置管理，黑名单、限流等
@@ -20,10 +20,11 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "redis-session")
 public class RedissonProperties
 {
-    private Map<String, RedisInstanceProperties> instances = new HashMap<>();
+    private HashMap<String, RedisInstanceProperties> instances = new HashMap<>();
 
-    public void setInstances(Map<String, RedisInstanceProperties> instances)
+    public void setInstances(HashMap<String, RedisInstanceProperties> instances)
     {
+
         this.instances = instances;
     }
 

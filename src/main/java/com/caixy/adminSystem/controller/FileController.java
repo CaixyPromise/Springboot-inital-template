@@ -7,6 +7,7 @@ import com.caixy.adminSystem.common.ResultUtils;
 import com.caixy.adminSystem.constant.FileConstant;
 import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.manager.CosManager;
+import com.caixy.adminSystem.manager.ThreadPoolExecutorManager;
 import com.caixy.adminSystem.model.dto.file.UploadFileRequest;
 import com.caixy.adminSystem.model.entity.User;
 import com.caixy.adminSystem.model.enums.FileUploadBizEnum;
@@ -35,6 +36,8 @@ public class FileController
 
     @Resource
     private UserService userService;
+    @Resource
+    private ThreadPoolExecutorManager threadPoolExecutorManager;
 
     @Resource
     private CosManager cosManager;

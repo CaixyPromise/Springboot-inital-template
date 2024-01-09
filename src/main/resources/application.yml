@@ -107,3 +107,13 @@ redis-session:
 
 encryption:
   key: CAIXYRPOMISE
+
+
+thread-pool:
+  instances:
+    default:
+      corePoolSize: 2
+      maxPoolSize: 4
+      queueCapacity: 30
+      keepAliveSeconds: 120
+      timeUnit: SECONDS

@@ -1,8 +1,7 @@
 package com.caixy.adminSystem.config;
 
 import com.caixy.adminSystem.common.ErrorCode;
-import com.caixy.adminSystem.exception.ThrowUtils;
-import com.caixy.adminSystem.common.ErrorCode;
+import com.caixy.adminSystem.config.properties.RedissonProperties;
 import com.caixy.adminSystem.exception.ThrowUtils;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
