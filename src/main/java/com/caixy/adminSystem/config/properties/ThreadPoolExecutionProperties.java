@@ -73,7 +73,7 @@ public class ThreadPoolExecutionProperties
     {
         try
         {
-            if ("CustomThreadFactory".equals(threadFactoryName))
+            if ("DefaultThreadFactory".equals(threadFactoryName))
             {
                 return DefaultThreadFactory(threadGroupName);
             }
