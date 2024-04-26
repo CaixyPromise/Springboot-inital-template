@@ -1,6 +1,7 @@
 package com.caixy.adminSystem.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.caixy.adminSystem.common.ErrorCode;
@@ -10,13 +11,14 @@ import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.mapper.UserMapper;
 import com.caixy.adminSystem.model.dto.user.UserLoginRequest;
 import com.caixy.adminSystem.model.dto.user.UserQueryRequest;
+import com.caixy.adminSystem.model.dto.user.UserRegisterRequest;
 import com.caixy.adminSystem.model.entity.User;
 import com.caixy.adminSystem.model.enums.UserRoleEnum;
 import com.caixy.adminSystem.model.vo.LoginUserVO;
 import com.caixy.adminSystem.model.vo.UserVO;
 import com.caixy.adminSystem.service.UserService;
 import com.caixy.adminSystem.utils.EncryptionUtils;
-import com.caixy.adminSystem.utils.RedisOperatorService;
+import com.caixy.adminSystem.utils.RegexUtils;
 import com.caixy.adminSystem.utils.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
@@ -24,9 +26,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,21 +41,16 @@ import static com.caixy.adminSystem.constant.UserConstant.USER_LOGIN_STATE;
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService
 {
-
     /**
      * 盐值，混淆密码
      */
     public static final String SALT = "caixy";
 
-    @Resource
-    private EncryptionUtils encryptionUtils;
-
-    @Resource
-    private RedisOperatorService redisOperatorService;
-
     @Override
-    public long userRegister(String userAccount, String userPassword)
+    public long userRegister(UserRegisterRequest userRegisterRequest)
     {
+        String userAccount = userRegisterRequest.getUserAccount();
+        String userPassword = userRegisterRequest.getUserPassword();
         // 1. 校验
         if (StringUtils.isAnyBlank(userAccount, userPassword))
         {
@@ -67,7 +64,28 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户密码过短");
         }
-        return this.makeRegister(userAccount, userPassword);
+        if (!RegexUtils.validatePassword(userPassword))
+        {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码不符合要求");
+        }
+        if (RegexUtils.validateAccount(userAccount))
+        {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户账号格式错误");
+        }
+        // 查询账号是否存在
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("userAccount", userAccount);
+        long count = baseMapper.selectCount(queryWrapper);
+        if (count > 0)
+        {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号已存在");
+        }
+        // 2. 插入数据
+        User user = new User();
+        BeanUtils.copyProperties(userRegisterRequest, user);
+        user.setUserPassword(userPassword);
+        user.setUserRole(UserRoleEnum.USER.getValue());
+        return makeRegister(user);
     }
 
     @Override
@@ -102,7 +120,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             log.info("user login failed, userAccount cannot match userPassword");
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
         }
-        if (!encryptionUtils.matches(userPassword, user.getUserPassword()))
+        if (!EncryptionUtils.matches(userPassword, user.getUserPassword()))
         {
             log.info("user login failed, userAccount cannot match userPassword");
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
@@ -289,14 +307,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return queryWrapper;
     }
 
-    @Override
-    public Long makeRegister(String userAccount, String userPassword)
-    {
-        User user = new User();
-        user.setUserAccount(userAccount);
-        user.setUserPassword(userPassword);
-        return this.makeRegister(user);
-    }
 
     // 重载的 makeRegister 方法，接收 User 对象
     @Override
@@ -308,7 +318,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             checkUserAccount(user.getUserAccount());
 
             // 加密密码并设置
-            String encryptPassword = encryptionUtils.encodePassword(user.getUserPassword());
+            String encryptPassword = EncryptionUtils.encodePassword(user.getUserPassword());
             user.setUserPassword(encryptPassword);
 
             // 插入数据
@@ -331,5 +341,51 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号重复");
         }
+    }
+
+    /**
+     * 随机生成密码
+     *
+     * @author CAIXYPROMISE
+     * @version 1.0
+     * @since 2024/4/26 下午9:42
+     */
+    @Override
+    public String generatePassword()
+    {
+        // 定义字符集
+        String lowerCaseLetters = "abcdefghijklmnopqrstuvwxyz";
+        String upperCaseLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        String numbers = "0123456789";
+        String specialCharacters = "!@#$%&*.?";
+
+        // 确保每种字符至少出现一次
+        List<Character> passwordChars = new ArrayList<>();
+        passwordChars.add(RandomUtil.randomChar(lowerCaseLetters));
+        passwordChars.add(RandomUtil.randomChar(upperCaseLetters));
+        passwordChars.add(RandomUtil.randomChar(numbers));
+        passwordChars.add(RandomUtil.randomChar(specialCharacters));
+
+        // 随机密码长度
+        int length = RandomUtil.randomInt(8, 21);
+
+        // 填充剩余的字符
+        String allCharacters = lowerCaseLetters + upperCaseLetters + numbers + specialCharacters;
+        for (int i = passwordChars.size(); i < length; i++)
+        {
+            passwordChars.add(RandomUtil.randomChar(allCharacters));
+        }
+
+        // 打乱字符顺序
+        Collections.shuffle(passwordChars);
+
+        // 构建最终的密码字符串
+        StringBuilder password = new StringBuilder();
+        for (Character ch : passwordChars)
+        {
+            password.append(ch);
+        }
+
+        return password.toString();
     }
 }

@@ -15,22 +15,19 @@ import com.caixy.adminSystem.model.entity.User;
 import com.caixy.adminSystem.model.vo.LoginUserVO;
 import com.caixy.adminSystem.model.vo.UserVO;
 import com.caixy.adminSystem.service.UserService;
-import com.caixy.adminSystem.utils.EncryptionUtils;
+import com.caixy.adminSystem.utils.RegexUtils;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
 import me.chanjar.weixin.common.bean.oauth2.WxOAuth2AccessToken;
 import me.chanjar.weixin.mp.api.WxMpService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
-import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
-
-import static com.caixy.adminSystem.service.impl.UserServiceImpl.SALT;
 
 /**
  * 用户接口
@@ -44,9 +41,6 @@ public class UserController
     private UserService userService;
     @Resource
     private WxOpenConfig wxOpenConfig;
-
-    @Resource
-    private EncryptionUtils encryptionUtils;
 
     // region 登录相关
     /**
@@ -72,7 +66,7 @@ public class UserController
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "两次输入的密码不一致");
         }
-        long result = userService.userRegister(userAccount, userPassword);
+        long result = userService.userRegister(userRegisterRequest);
         return ResultUtils.success(result);
     }
 
@@ -188,8 +182,13 @@ public class UserController
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户账号过短");
         }
-        // 默认密码 12345678
-        String defaultPassword = "12345678";
+        if (RegexUtils.validateAccount(userAccount))
+        {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户账号格式错误");
+        }
+        // 默认密码 随机生成
+        String defaultPassword = userService.generatePassword();
+
         user.setUserPassword(defaultPassword);
         // 创建
         Long resultId = userService.makeRegister(user);

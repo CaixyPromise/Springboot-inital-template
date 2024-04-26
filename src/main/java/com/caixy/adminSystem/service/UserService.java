@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.caixy.adminSystem.model.dto.user.UserLoginRequest;
 import com.caixy.adminSystem.model.dto.user.UserQueryRequest;
+import com.caixy.adminSystem.model.dto.user.UserRegisterRequest;
 import com.caixy.adminSystem.model.entity.User;
 import com.caixy.adminSystem.model.vo.LoginUserVO;
 import com.caixy.adminSystem.model.vo.UserVO;
@@ -21,11 +22,9 @@ public interface UserService extends IService<User> {
     /**
      * 用户注册
      *
-     * @param userAccount   用户账户
-     * @param userPassword  用户密码
      * @return 新用户 id
      */
-    long userRegister(String userAccount, String userPassword);
+    long userRegister(UserRegisterRequest userRegisterRequest);
 
     /**
      * 用户登录
@@ -115,6 +114,8 @@ public interface UserService extends IService<User> {
      * @return
      */
     QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest);
-    Long makeRegister(String userAccount, String userPassword);
+//    Long makeRegister(String userAccount, String userPassword);
     Long makeRegister(User user);
+
+    String generatePassword();
 }

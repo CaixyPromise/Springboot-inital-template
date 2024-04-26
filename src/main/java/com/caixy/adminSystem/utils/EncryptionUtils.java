@@ -19,26 +19,24 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Map;
 
-@Service
+//@Service
 public class EncryptionUtils
 {
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private static final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    @Value("${encryption.key}")
-    private final String SALT = "CAIXYPROMISE";
 
     //
-    public String encodePassword(String rawPassword)
+    public static String encodePassword(String rawPassword)
     {
         return passwordEncoder.encode(rawPassword);
     }
 
-    public boolean matches(String originPassword, String hashPassword)
+    public static boolean matches(String originPassword, String hashPassword)
     {
         return passwordEncoder.matches(originPassword, hashPassword);
     }
 
-    public String makeUserKey(String content)
+    public static String makeUserKey(String content, String SALT)
     {
         Digester md5 = new Digester(DigestAlgorithm.SHA256);
         StringBuilder stringBuffer = new StringBuilder();
@@ -80,7 +78,7 @@ public class EncryptionUtils
         }
     }
 
-    public void makeEncryption(@NotNull Map<String, Object> dataMap) throws NoSuchAlgorithmException
+    public static void makeEncryption(@NotNull Map<String, Object> dataMap) throws NoSuchAlgorithmException
     {
         // 生成AES密钥
         KeyGenerator keyGen = KeyGenerator.getInstance("AES");
