@@ -3,21 +3,22 @@ package com.caixy.adminSystem.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.caixy.adminSystem.model.dto.user.UserLoginRequest;
+import com.caixy.adminSystem.model.dto.user.UserModifyPasswordRequest;
 import com.caixy.adminSystem.model.dto.user.UserQueryRequest;
 import com.caixy.adminSystem.model.dto.user.UserRegisterRequest;
 import com.caixy.adminSystem.model.entity.User;
-import com.caixy.adminSystem.model.vo.LoginUserVO;
-import com.caixy.adminSystem.model.vo.UserVO;
-import java.util.List;
-import javax.servlet.http.HttpServletRequest;
+import com.caixy.adminSystem.model.vo.user.LoginUserVO;
+import com.caixy.adminSystem.model.vo.user.UserVO;
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * 用户服务
- *
- 
  */
-public interface UserService extends IService<User> {
+public interface UserService extends IService<User>
+{
 
     /**
      * 用户注册
@@ -114,8 +115,11 @@ public interface UserService extends IService<User> {
      * @return
      */
     QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest);
-//    Long makeRegister(String userAccount, String userPassword);
+
+    //    Long makeRegister(String userAccount, String userPassword);
     Long makeRegister(User user);
 
     String generatePassword();
+
+    Boolean modifyPassword(Long userId, UserModifyPasswordRequest userModifyPasswordRequest);
 }

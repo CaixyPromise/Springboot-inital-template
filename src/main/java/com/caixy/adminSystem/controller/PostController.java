@@ -16,7 +16,7 @@ import com.caixy.adminSystem.model.dto.post.PostQueryRequest;
 import com.caixy.adminSystem.model.dto.post.PostUpdateRequest;
 import com.caixy.adminSystem.model.entity.Post;
 import com.caixy.adminSystem.model.entity.User;
-import com.caixy.adminSystem.model.vo.PostVO;
+import com.caixy.adminSystem.model.vo.post.PostVO;
 import com.caixy.adminSystem.service.PostService;
 import com.caixy.adminSystem.service.UserService;
 import lombok.extern.slf4j.Slf4j;

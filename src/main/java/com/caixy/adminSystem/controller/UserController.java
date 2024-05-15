@@ -1,5 +1,6 @@
 package com.caixy.adminSystem.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.caixy.adminSystem.annotation.AuthCheck;
 import com.caixy.adminSystem.common.BaseResponse;
@@ -12,10 +13,12 @@ import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.exception.ThrowUtils;
 import com.caixy.adminSystem.model.dto.user.*;
 import com.caixy.adminSystem.model.entity.User;
-import com.caixy.adminSystem.model.vo.LoginUserVO;
-import com.caixy.adminSystem.model.vo.UserVO;
+import com.caixy.adminSystem.model.vo.user.AboutMeVO;
+import com.caixy.adminSystem.model.vo.user.AddUserVO;
+import com.caixy.adminSystem.model.vo.user.LoginUserVO;
+import com.caixy.adminSystem.model.vo.user.UserVO;
 import com.caixy.adminSystem.service.UserService;
-import com.caixy.adminSystem.utils.RegexUtils;
+import com.caixy.adminSystem.utils.EncryptionUtils;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
 import me.chanjar.weixin.common.bean.oauth2.WxOAuth2AccessToken;
@@ -43,6 +46,7 @@ public class UserController
     private WxOpenConfig wxOpenConfig;
 
     // region 登录相关
+
     /**
      * 用户注册
      *
@@ -50,15 +54,17 @@ public class UserController
      * @return
      */
     @PostMapping("/register")
-    public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest)
+    public BaseResponse<Boolean> userRegister(@RequestBody UserRegisterRequest userRegisterRequest)
     {
-        if (userRegisterRequest == null) {
+        if (userRegisterRequest == null)
+        {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         String userAccount = userRegisterRequest.getUserAccount();
         String userPassword = userRegisterRequest.getUserPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
-        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
+        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword))
+        {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数不能为空");
         }
         // 密码和校验密码相同
@@ -66,8 +72,22 @@ public class UserController
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "两次输入的密码不一致");
         }
-        long result = userService.userRegister(userRegisterRequest);
-        return ResultUtils.success(result);
+        // 校验用户是否存在
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("userAccount", userAccount);
+        User userGetOne = userService.getOne(queryWrapper);
+        if (userGetOne != null)
+        {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "手机号已注册");
+        }
+
+        User user = new User();
+        BeanUtils.copyProperties(userRegisterRequest, user);
+        user.setUserPassword(EncryptionUtils.encodePassword(userPassword));
+        user.setUserRole(UserConstant.DEFAULT_ROLE);
+        boolean saveResult = userService.save(user);
+
+        return ResultUtils.success(saveResult);
     }
 
     /**
@@ -94,32 +114,6 @@ public class UserController
         return ResultUtils.success(userService.getLoginUserVO(loginUserVO));
     }
 
-    /**
-     * 用户登录（微信开放平台）
-     */
-    @GetMapping("/login/wx_open")
-    public BaseResponse<LoginUserVO> userLoginByWxOpen(HttpServletRequest request,
-                                                       HttpServletResponse response,
-                                                       @RequestParam("code") String code)
-    {
-        WxOAuth2AccessToken accessToken;
-        try {
-            WxMpService wxService = wxOpenConfig.getWxMpService();
-            accessToken = wxService.getOAuth2Service().getAccessToken(code);
-            WxOAuth2UserInfo userInfo = wxService.getOAuth2Service().getUserInfo(accessToken, code);
-            String unionId = userInfo.getUnionId();
-            String mpOpenId = userInfo.getOpenid();
-            if (StringUtils.isAnyBlank(unionId, mpOpenId)) {
-                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "登录失败，系统错误");
-            }
-            LoginUserVO loginUserVO = userService.userLoginByMpOpen(userInfo, request);
-            return ResultUtils.success(loginUserVO);
-        }
-        catch (Exception e) {
-            log.error("userLoginByWxOpen error", e);
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "登录失败，系统错误");
-        }
-    }
 
     /**
      * 用户注销
@@ -130,7 +124,8 @@ public class UserController
     @PostMapping("/logout")
     public BaseResponse<Boolean> userLogout(HttpServletRequest request)
     {
-        if (request == null) {
+        if (request == null)
+        {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         boolean result = userService.userLogout(request);
@@ -151,7 +146,37 @@ public class UserController
 
     // endregion
 
-    // region 增删改查
+
+    // region 微信操作
+    @GetMapping("/login/wx_open")
+    public BaseResponse<LoginUserVO> userLoginByWxOpen(HttpServletRequest request, HttpServletResponse response,
+                                                       @RequestParam("code") String code)
+    {
+        WxOAuth2AccessToken accessToken;
+        try
+        {
+            WxMpService wxService = wxOpenConfig.getWxMpService();
+            accessToken = wxService.getOAuth2Service().getAccessToken(code);
+            WxOAuth2UserInfo userInfo = wxService.getOAuth2Service().getUserInfo(accessToken, code);
+            String unionId = userInfo.getUnionId();
+            String mpOpenId = userInfo.getOpenid();
+            if (StringUtils.isAnyBlank(unionId, mpOpenId))
+            {
+                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "登录失败，系统错误");
+            }
+            return ResultUtils.success(userService.userLoginByMpOpen(userInfo, request));
+        }
+        catch (Exception e)
+        {
+            log.error("userLoginByWxOpen error", e);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "登录失败，系统错误");
+        }
+    }
+
+
+    // endregion
+
+    // region 管理员增删改查
 
     /**
      * 创建用户
@@ -162,7 +187,7 @@ public class UserController
      */
     @PostMapping("/add")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Long> addUser(@RequestBody UserAddRequest userAddRequest, HttpServletRequest request)
+    public BaseResponse<AddUserVO> addUser(@RequestBody UserAddRequest userAddRequest, HttpServletRequest request)
     {
         // 检查请求信息
         if (userAddRequest == null)
@@ -172,7 +197,7 @@ public class UserController
         User user = new User();
         BeanUtils.copyProperties(userAddRequest, user);
         // 参数校验
-        String userAccount =  user.getUserAccount();
+        String userAccount = user.getUserAccount();
         // 1. 校验
         if (StringUtils.isAnyBlank(userAccount))
         {
@@ -182,17 +207,20 @@ public class UserController
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户账号过短");
         }
-        if (RegexUtils.validateAccount(userAccount))
-        {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户账号格式错误");
-        }
-        // 默认密码 随机生成
+        user.setUserName(userAddRequest.getUserName());
+        // 生成默认密码
         String defaultPassword = userService.generatePassword();
-
         user.setUserPassword(defaultPassword);
         // 创建
         Long resultId = userService.makeRegister(user);
-        return ResultUtils.success(resultId);
+        // 返回结果
+        AddUserVO resultAddUserInfo = AddUserVO.builder()
+                .userName(userAddRequest.getUserName())
+                .userAccount(userAddRequest.getUserAccount())
+                .userPassword(defaultPassword)
+                .id(resultId)
+                .build();
+        return ResultUtils.success(resultAddUserInfo);
     }
 
     /**
@@ -256,6 +284,8 @@ public class UserController
         ThrowUtils.throwIf(user == null, ErrorCode.NOT_FOUND_ERROR);
         return ResultUtils.success(user);
     }
+
+    // endregion
 
     /**
      * 根据 id 获取包装类
@@ -321,6 +351,37 @@ public class UserController
     }
 
     // endregion
+
+
+    @GetMapping("/get/me")
+    public BaseResponse<AboutMeVO> getMe(HttpServletRequest request)
+    {
+        User loginUser = userService.getLoginUser(request);
+        User currentUser = userService.getById(loginUser.getId());
+        AboutMeVO aboutMeVO = new AboutMeVO();
+        BeanUtils.copyProperties(currentUser, aboutMeVO);
+        return ResultUtils.success(aboutMeVO);
+    }
+
+    @PostMapping("/modify/password")
+    public BaseResponse<Boolean> modifyPassword(@RequestBody
+                                                UserModifyPasswordRequest userModifyPasswordRequest,
+                                                HttpServletRequest request)
+    {
+        if (userModifyPasswordRequest == null)
+        {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
+        User loginUser = userService.getLoginUser(request);
+        Boolean result = userService.modifyPassword(loginUser.getId(), userModifyPasswordRequest);
+        // 如果修改成功，修改登录状态
+        if (result)
+        {
+            request.getSession().removeAttribute(UserConstant.USER_LOGIN_STATE);
+        }
+        return ResultUtils.success(result);
+    }
 
     /**
      * 更新个人信息

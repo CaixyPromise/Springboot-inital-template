@@ -10,12 +10,13 @@ import com.caixy.adminSystem.constant.UserConstant;
 import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.mapper.UserMapper;
 import com.caixy.adminSystem.model.dto.user.UserLoginRequest;
+import com.caixy.adminSystem.model.dto.user.UserModifyPasswordRequest;
 import com.caixy.adminSystem.model.dto.user.UserQueryRequest;
 import com.caixy.adminSystem.model.dto.user.UserRegisterRequest;
 import com.caixy.adminSystem.model.entity.User;
 import com.caixy.adminSystem.model.enums.UserRoleEnum;
-import com.caixy.adminSystem.model.vo.LoginUserVO;
-import com.caixy.adminSystem.model.vo.UserVO;
+import com.caixy.adminSystem.model.vo.user.LoginUserVO;
+import com.caixy.adminSystem.model.vo.user.UserVO;
 import com.caixy.adminSystem.service.UserService;
 import com.caixy.adminSystem.utils.EncryptionUtils;
 import com.caixy.adminSystem.utils.RegexUtils;
@@ -387,5 +388,43 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         return password.toString();
+    }
+
+
+    @Override
+    public Boolean modifyPassword(Long userId, UserModifyPasswordRequest userModifyPasswordRequest)
+    {
+        String userPassword = userModifyPasswordRequest.getNewPassword();
+        if (userPassword.length() < 8)
+        {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户密码过短");
+        }
+        if (userPassword.length() > 20)
+        {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户密码过长");
+        }
+        if (!userPassword.equals(userModifyPasswordRequest.getConfirmPassword()))
+        {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "两次输入密码不一致");
+        }
+        // 查询用户
+        User currenUser = this.getById(userId);
+        if (currenUser == null)
+        {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "用户不存在");
+        }
+
+        // 校验密码
+        boolean matches = EncryptionUtils.matches(userModifyPasswordRequest.getOldPassword(), currenUser.getUserPassword());
+        if (!matches)
+        {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "原密码错误");
+        }
+
+        // 加密密码
+        String encryptPassword = EncryptionUtils.encodePassword(userPassword);
+        currenUser.setUserPassword(encryptPassword);
+        // 清空登录状态
+        return this.updateById(currenUser);
     }
 }

@@ -1,19 +1,19 @@
-package com.caixy.adminSystem.model.vo;
+package com.caixy.adminSystem.model.vo.user;
 
 import java.io.Serializable;
 import java.util.Date;
 import lombok.Data;
 
 /**
- * 用户视图（脱敏）
+ * 已登录用户视图（脱敏）
  *
  
- */
+ **/
 @Data
-public class UserVO implements Serializable {
+public class LoginUserVO implements Serializable {
 
     /**
-     * id
+     * 用户 id
      */
     private Long id;
 
@@ -41,6 +41,11 @@ public class UserVO implements Serializable {
      * 创建时间
      */
     private Date createTime;
+
+    /**
+     * 更新时间
+     */
+    private Date updateTime;
 
     private static final long serialVersionUID = 1L;
 }

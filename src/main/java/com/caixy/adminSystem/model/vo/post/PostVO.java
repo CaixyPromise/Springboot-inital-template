@@ -1,10 +1,12 @@
-package com.caixy.adminSystem.model.vo;
+package com.caixy.adminSystem.model.vo.post;
 
 import cn.hutool.json.JSONUtil;
 import com.caixy.adminSystem.model.entity.Post;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
+
+import com.caixy.adminSystem.model.vo.user.UserVO;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 

@@ -11,7 +11,7 @@ import com.caixy.adminSystem.model.dto.postfavour.PostFavourAddRequest;
 import com.caixy.adminSystem.model.dto.postfavour.PostFavourQueryRequest;
 import com.caixy.adminSystem.model.entity.Post;
 import com.caixy.adminSystem.model.entity.User;
-import com.caixy.adminSystem.model.vo.PostVO;
+import com.caixy.adminSystem.model.vo.post.PostVO;
 import com.caixy.adminSystem.service.PostFavourService;
 import com.caixy.adminSystem.service.PostService;
 import com.caixy.adminSystem.service.UserService;

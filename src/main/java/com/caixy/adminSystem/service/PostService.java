@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.caixy.adminSystem.model.dto.post.PostQueryRequest;
 import com.caixy.adminSystem.model.entity.Post;
-import com.caixy.adminSystem.model.vo.PostVO;
+import com.caixy.adminSystem.model.vo.post.PostVO;
 import javax.servlet.http.HttpServletRequest;
 
 /**
