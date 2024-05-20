@@ -69,13 +69,25 @@ public class RegexUtils
             return "{}";
         }
     }
+
+    /**
+     * 校验名称是否可用
+     *
+     * @author CAIXYPROMISE
+     * @version 1.0
+     * @since 2024/5/19 下午1:43
+     */
+    public static boolean validatedUserName(String userName)
+    {
+        return match(RegexPatternConstants.NAME_REGEX, userName);
+    }
     
     /**
      * 匹配账号是否合法
      */
     public static boolean validateAccount(String userAccount)
     {
-        return !match(RegexPatternConstants.ACCOUNT_REGEX, userAccount);
+        return match(RegexPatternConstants.ACCOUNT_REGEX, userAccount);
     }
 
     private static boolean match(String regex, String input)

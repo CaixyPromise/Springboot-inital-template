@@ -13,7 +13,6 @@ import java.util.Date;
 @Data
 public class User implements Serializable
 {
-
     /**
      * id
      */
@@ -21,19 +20,29 @@ public class User implements Serializable
     private Long id;
 
     /**
-     * 用户账号
+     * 账号
      */
     private String userAccount;
 
     /**
-     * 用户密码
+     * 密码
      */
     private String userPassword;
 
     /**
-     * 开放平台id
+     * 微信开放平台id
      */
     private String unionId;
+
+    /**
+     * 用户手机号(后期允许拓展区号和国际号码）
+     */
+    private String userPhone;
+
+    /**
+     * 用户邮箱
+     */
+    private String userEmail;
 
     /**
      * 公众号openId

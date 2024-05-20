@@ -8,6 +8,7 @@ import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.constant.CommonConstant;
 import com.caixy.adminSystem.constant.UserConstant;
 import com.caixy.adminSystem.exception.BusinessException;
+import com.caixy.adminSystem.exception.ThrowUtils;
 import com.caixy.adminSystem.mapper.UserMapper;
 import com.caixy.adminSystem.model.dto.user.UserLoginRequest;
 import com.caixy.adminSystem.model.dto.user.UserModifyPasswordRequest;
@@ -42,41 +43,31 @@ import static com.caixy.adminSystem.constant.UserConstant.USER_LOGIN_STATE;
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService
 {
-    /**
-     * 盐值，混淆密码
-     */
-    public static final String SALT = "caixy";
 
     @Override
     public long userRegister(UserRegisterRequest userRegisterRequest)
     {
         String userAccount = userRegisterRequest.getUserAccount();
         String userPassword = userRegisterRequest.getUserPassword();
+        String userEmail = userRegisterRequest.getUserEmail();
+        String userPhone = userRegisterRequest.getUserPhone();
         // 1. 校验
-        if (StringUtils.isAnyBlank(userAccount, userPassword))
-        {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
-        }
-        if (userAccount.length() < 4)
-        {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户账号过短");
-        }
-        if (userPassword.length() < 8)
-        {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户密码过短");
-        }
-        if (!RegexUtils.validatePassword(userPassword))
-        {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码不符合要求");
-        }
-        if (RegexUtils.validateAccount(userAccount))
-        {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户账号格式错误");
-        }
-        // 查询账号是否存在
+        // 检查密码是否合法
+        ThrowUtils.throwIf(!RegexUtils.validatePassword(userPassword), ErrorCode.PARAMS_ERROR, "密码不符合要求");
+        // 检查账号是否合法
+        ThrowUtils.throwIf(!RegexUtils.validateAccount(userAccount), ErrorCode.PARAMS_ERROR, "用户账号格式错误");
+        // 检查手机号是否合法
+        ThrowUtils.throwIf(!RegexUtils.isMobilePhone(userRegisterRequest.getUserPhone()), ErrorCode.PARAMS_ERROR, "手机号格式错误");
+        // 检查用户邮箱
+        ThrowUtils.throwIf(!RegexUtils.isEmail(userRegisterRequest.getUserEmail()), ErrorCode.PARAMS_ERROR, "邮箱格式错误");
+
+        // 查询账号是否存在，同时检查手机、邮箱唯一性
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("userAccount", userAccount);
+        queryWrapper.eq("userAccount", userAccount).or();
+        queryWrapper.eq("userEmail", userEmail).or();
+        queryWrapper.eq("userPhone", userPhone);
         long count = baseMapper.selectCount(queryWrapper);
+        // 账号已存在
         if (count > 0)
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号已存在");
@@ -85,7 +76,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User user = new User();
         BeanUtils.copyProperties(userRegisterRequest, user);
         user.setUserPassword(userPassword);
-        user.setUserRole(UserRoleEnum.USER.getValue());
+        user.setUserRole(UserConstant.DEFAULT_ROLE);
         return makeRegister(user);
     }
 
@@ -125,6 +116,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         {
             log.info("user login failed, userAccount cannot match userPassword");
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
+        }
+        // 检查是否被封号
+        if (user.getUserRole().equals(UserConstant.BAN_ROLE))
+        {
+            log.info("user login failed, userAccount is ban: {}", userAccount);
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户已被封号");
         }
         // 3. 记录用户的登录态
         User userVo = new User();
@@ -186,6 +183,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (currentUser == null || currentUser.getId() == null)
         {
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
+        }
+        if (currentUser.getUserRole().equals(UserConstant.BAN_ROLE))
+        {
+            // 被封号的用户，先断开连接
+            userLogout(request);
+            throw new BusinessException(ErrorCode.FORBIDDEN_ERROR, "账号已被封禁");
         }
         return currentUser;
     }

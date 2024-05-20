@@ -72,22 +72,9 @@ public class UserController
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "两次输入的密码不一致");
         }
-        // 校验用户是否存在
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("userAccount", userAccount);
-        User userGetOne = userService.getOne(queryWrapper);
-        if (userGetOne != null)
-        {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "手机号已注册");
-        }
-
-        User user = new User();
-        BeanUtils.copyProperties(userRegisterRequest, user);
-        user.setUserPassword(EncryptionUtils.encodePassword(userPassword));
-        user.setUserRole(UserConstant.DEFAULT_ROLE);
-        boolean saveResult = userService.save(user);
-
-        return ResultUtils.success(saveResult);
+        // 执行注册操作
+        long saveResult = userService.userRegister(userRegisterRequest);
+        return ResultUtils.success(saveResult > 0);
     }
 
     /**

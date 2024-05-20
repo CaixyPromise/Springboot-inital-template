@@ -5,10 +5,9 @@ import com.caixy.adminSystem.model.entity.User;
 
 /**
  * 用户数据库操作
- *
- 
  */
-public interface UserMapper extends BaseMapper<User> {
+public interface UserMapper extends BaseMapper<User>
+{
 
 }
 

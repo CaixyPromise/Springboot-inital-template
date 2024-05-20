@@ -25,7 +25,7 @@ spring:
   # Redis 配置
   redis:
     database: 1
-    host: 192.168.59.226
+    host: 127.0.0.1
     port: 6379
     timeout: 5000
     password: 123456
@@ -102,7 +102,7 @@ redis-session:
   instances:
     limiter:
       database: 1
-      host: 192.168.59.226
+      host: 127.0.0.1
       port: 6379
 
 encryption:

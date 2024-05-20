@@ -76,4 +76,9 @@ public interface RegexPatternConstants
      */
     Pattern EXTRA_JSON_PATTERN = Pattern.compile("\\{.*\\}", Pattern.DOTALL);
 
+    /**
+     * 匹配姓名，只能包含中文字符和英文大小写字母
+     */
+    String NAME_REGEX = "^(?:[\\u4e00-\\u9fa5a-zA-Z]{1,30})$";
+
 }
