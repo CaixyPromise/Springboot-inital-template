@@ -65,6 +65,11 @@ public class User implements Serializable
     private String userProfile;
 
     /**
+     * 用户性别
+     */
+    private Integer userGender;
+
+    /**
      * 用户角色：user/admin/ban
      */
     private String userRole;

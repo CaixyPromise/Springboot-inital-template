@@ -13,12 +13,12 @@ import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.exception.ThrowUtils;
 import com.caixy.adminSystem.model.dto.user.*;
 import com.caixy.adminSystem.model.entity.User;
+import com.caixy.adminSystem.model.enums.UserGenderEnum;
 import com.caixy.adminSystem.model.vo.user.AboutMeVO;
 import com.caixy.adminSystem.model.vo.user.AddUserVO;
 import com.caixy.adminSystem.model.vo.user.LoginUserVO;
 import com.caixy.adminSystem.model.vo.user.UserVO;
 import com.caixy.adminSystem.service.UserService;
-import com.caixy.adminSystem.utils.EncryptionUtils;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
 import me.chanjar.weixin.common.bean.oauth2.WxOAuth2AccessToken;
@@ -247,6 +247,7 @@ public class UserController
         }
         User user = new User();
         BeanUtils.copyProperties(userUpdateRequest, user);
+        userService.validUserInfo(user, false);
         boolean result = userService.updateById(user);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);
@@ -345,9 +346,8 @@ public class UserController
     {
         User loginUser = userService.getLoginUser(request);
         User currentUser = userService.getById(loginUser.getId());
-        AboutMeVO aboutMeVO = new AboutMeVO();
-        BeanUtils.copyProperties(currentUser, aboutMeVO);
-        return ResultUtils.success(aboutMeVO);
+
+        return ResultUtils.success(AboutMeVO.of(currentUser));
     }
 
     @PostMapping("/modify/password")
@@ -390,6 +390,7 @@ public class UserController
         User user = new User();
         BeanUtils.copyProperties(userUpdateMyRequest, user);
         user.setId(loginUser.getId());
+        userService.validUserInfo(user, false);
         boolean result = userService.updateById(user);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);

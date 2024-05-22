@@ -35,9 +35,20 @@ public interface RegexPatternConstants
     String EMAIL_REGEX = "[\\w!#$%&'*+/=?^_`{|}~-]+(?:\\.[\\w!#$%&'*+/=?^_`{|}~-]+)*@(?:[\\w](?:[\\w-]*[\\w])?\\.)+[\\w](?:[\\w-]*[\\w])?";
 
     /**
+     * 邮箱加密， 邮箱第一个字符和’@‘之后的原文显示，第一个字符之后’@‘之前的，显示为’****’
+     */
+    String EMAIL_ENCRYPT_REGEX = "(^\\w)[^@]*(@.*$)";
+
+    /**
      * 匹配手机号是否合法
      */
     String PHONE_REGEX = "^1[3-9]\\d{9}$";
+
+    /**
+     * 手机号加密，屏蔽 中间 4位数
+     */
+    String PHONE_ENCRYPT_REGEX = "(^\\d{3})\\d.*(\\d{4})";
+
 
     /**
      * 匹配URL

@@ -10,19 +10,19 @@ import com.caixy.adminSystem.model.entity.PostThumb;
 import com.caixy.adminSystem.model.entity.User;
 import com.caixy.adminSystem.service.PostService;
 import com.caixy.adminSystem.service.PostThumbService;
-import javax.annotation.Resource;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
+
 /**
  * 帖子点赞服务实现
- *
- 
  */
 @Service
 public class PostThumbServiceImpl extends ServiceImpl<PostThumbMapper, PostThumb>
-        implements PostThumbService {
+        implements PostThumbService
+{
 
     @Resource
     private PostService postService;
@@ -35,10 +35,12 @@ public class PostThumbServiceImpl extends ServiceImpl<PostThumbMapper, PostThumb
      * @return
      */
     @Override
-    public int doPostThumb(long postId, User loginUser) {
+    public int doPostThumb(long postId, User loginUser)
+    {
         // 判断实体是否存在，根据类别获取实体
         Post post = postService.getById(postId);
-        if (post == null) {
+        if (post == null)
+        {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
         // 是否已点赞
@@ -46,7 +48,8 @@ public class PostThumbServiceImpl extends ServiceImpl<PostThumbMapper, PostThumb
         // 每个用户串行点赞
         // 锁必须要包裹住事务方法
         PostThumbService postThumbService = (PostThumbService) AopContext.currentProxy();
-        synchronized (String.valueOf(userId).intern()) {
+        synchronized (String.valueOf(userId).intern())
+        {
             return postThumbService.doPostThumbInner(userId, postId);
         }
     }
@@ -60,7 +63,8 @@ public class PostThumbServiceImpl extends ServiceImpl<PostThumbMapper, PostThumb
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public int doPostThumbInner(long userId, long postId) {
+    public int doPostThumbInner(long userId, long postId)
+    {
         PostThumb postThumb = new PostThumb();
         postThumb.setUserId(userId);
         postThumb.setPostId(postId);
@@ -68,9 +72,11 @@ public class PostThumbServiceImpl extends ServiceImpl<PostThumbMapper, PostThumb
         PostThumb oldPostThumb = this.getOne(thumbQueryWrapper);
         boolean result;
         // 已点赞
-        if (oldPostThumb != null) {
+        if (oldPostThumb != null)
+        {
             result = this.remove(thumbQueryWrapper);
-            if (result) {
+            if (result)
+            {
                 // 点赞数 - 1
                 result = postService.update()
                         .eq("id", postId)
@@ -78,20 +84,27 @@ public class PostThumbServiceImpl extends ServiceImpl<PostThumbMapper, PostThumb
                         .setSql("thumbNum = thumbNum - 1")
                         .update();
                 return result ? -1 : 0;
-            } else {
+            }
+            else
+            {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR);
             }
-        } else {
+        }
+        else
+        {
             // 未点赞
             result = this.save(postThumb);
-            if (result) {
+            if (result)
+            {
                 // 点赞数 + 1
                 result = postService.update()
                         .eq("id", postId)
                         .setSql("thumbNum = thumbNum + 1")
                         .update();
                 return result ? 1 : 0;
-            } else {
+            }
+            else
+            {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR);
             }
         }

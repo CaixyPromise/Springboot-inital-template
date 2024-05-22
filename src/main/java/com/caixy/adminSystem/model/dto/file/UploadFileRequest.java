@@ -1,15 +1,15 @@
 package com.caixy.adminSystem.model.dto.file;
 
-import java.io.Serializable;
 import lombok.Data;
+
+import java.io.Serializable;
 
 /**
  * 文件上传请求
- *
- 
  */
 @Data
-public class UploadFileRequest implements Serializable {
+public class UploadFileRequest implements Serializable
+{
 
     /**
      * 业务

@@ -108,7 +108,6 @@ redis-session:
 encryption:
   key: CAIXYRPOMISE
 
-
 thread-pool:
   instances:
     default:
@@ -117,3 +116,9 @@ thread-pool:
       queueCapacity: 30
       keepAliveSeconds: 120
       timeUnit: SECONDS
+
+# 文件存储
+storage:
+  location: uploads
+  forceCreated: true
+  staticPath: /static

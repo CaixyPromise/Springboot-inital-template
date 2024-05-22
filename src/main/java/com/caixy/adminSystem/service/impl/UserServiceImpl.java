@@ -6,18 +6,23 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.constant.CommonConstant;
+import com.caixy.adminSystem.constant.FileTypeConstant;
 import com.caixy.adminSystem.constant.UserConstant;
 import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.exception.ThrowUtils;
 import com.caixy.adminSystem.mapper.UserMapper;
+import com.caixy.adminSystem.model.dto.file.UploadFileConfig;
 import com.caixy.adminSystem.model.dto.user.UserLoginRequest;
 import com.caixy.adminSystem.model.dto.user.UserModifyPasswordRequest;
 import com.caixy.adminSystem.model.dto.user.UserQueryRequest;
 import com.caixy.adminSystem.model.dto.user.UserRegisterRequest;
 import com.caixy.adminSystem.model.entity.User;
+import com.caixy.adminSystem.model.enums.FileUploadBizEnum;
+import com.caixy.adminSystem.model.enums.UserGenderEnum;
 import com.caixy.adminSystem.model.enums.UserRoleEnum;
 import com.caixy.adminSystem.model.vo.user.LoginUserVO;
 import com.caixy.adminSystem.model.vo.user.UserVO;
+import com.caixy.adminSystem.service.FileUploadActionService;
 import com.caixy.adminSystem.service.UserService;
 import com.caixy.adminSystem.utils.EncryptionUtils;
 import com.caixy.adminSystem.utils.RegexUtils;
@@ -26,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
@@ -41,40 +47,19 @@ import static com.caixy.adminSystem.constant.UserConstant.USER_LOGIN_STATE;
  */
 @Service
 @Slf4j
-public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService
+@Qualifier(FileTypeConstant.AVATAR)
+public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService, FileUploadActionService
 {
 
     @Override
     public long userRegister(UserRegisterRequest userRegisterRequest)
     {
-        String userAccount = userRegisterRequest.getUserAccount();
         String userPassword = userRegisterRequest.getUserPassword();
-        String userEmail = userRegisterRequest.getUserEmail();
-        String userPhone = userRegisterRequest.getUserPhone();
-        // 1. 校验
-        // 检查密码是否合法
-        ThrowUtils.throwIf(!RegexUtils.validatePassword(userPassword), ErrorCode.PARAMS_ERROR, "密码不符合要求");
-        // 检查账号是否合法
-        ThrowUtils.throwIf(!RegexUtils.validateAccount(userAccount), ErrorCode.PARAMS_ERROR, "用户账号格式错误");
-        // 检查手机号是否合法
-        ThrowUtils.throwIf(!RegexUtils.isMobilePhone(userRegisterRequest.getUserPhone()), ErrorCode.PARAMS_ERROR, "手机号格式错误");
-        // 检查用户邮箱
-        ThrowUtils.throwIf(!RegexUtils.isEmail(userRegisterRequest.getUserEmail()), ErrorCode.PARAMS_ERROR, "邮箱格式错误");
-
-        // 查询账号是否存在，同时检查手机、邮箱唯一性
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("userAccount", userAccount).or();
-        queryWrapper.eq("userEmail", userEmail).or();
-        queryWrapper.eq("userPhone", userPhone);
-        long count = baseMapper.selectCount(queryWrapper);
-        // 账号已存在
-        if (count > 0)
-        {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号已存在");
-        }
-        // 2. 插入数据
         User user = new User();
         BeanUtils.copyProperties(userRegisterRequest, user);
+        // 1. 校验
+        validUserInfo(user, true);
+        // 2. 插入数据
         user.setUserPassword(userPassword);
         user.setUserRole(UserConstant.DEFAULT_ROLE);
         return makeRegister(user);
@@ -126,6 +111,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 3. 记录用户的登录态
         User userVo = new User();
         BeanUtils.copyProperties(user, userVo);
+        userVo.setUserPassword(null);
         request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, userVo);
         // 登录成功
         return userVo;
@@ -162,6 +148,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                     throw new BusinessException(ErrorCode.SYSTEM_ERROR, "登录失败");
                 }
             }
+            user.setUserPassword(null);
             // 记录用户的登录态
             request.getSession().setAttribute(USER_LOGIN_STATE, user);
             return getLoginUserVO(user);
@@ -418,7 +405,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         // 校验密码
-        boolean matches = EncryptionUtils.matches(userModifyPasswordRequest.getOldPassword(), currenUser.getUserPassword());
+        boolean matches =
+                EncryptionUtils.matches(userModifyPasswordRequest.getOldPassword(), currenUser.getUserPassword());
         if (!matches)
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "原密码错误");
@@ -429,5 +417,58 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         currenUser.setUserPassword(encryptPassword);
         // 清空登录状态
         return this.updateById(currenUser);
+    }
+
+    /**
+     * 校验用户信息
+     *
+     * @author CAIXYPROMISE
+     * @version 1.0
+     * @since 2024/5/21 下午3:56
+     */
+    @Override
+    public void validUserInfo(User user, boolean add)
+    {
+        if (add)
+        {
+            String userAccount = user.getUserAccount();
+            String userPassword = user.getUserPassword();
+            String userEmail = user.getUserEmail();
+            String userPhone = user.getUserPhone();
+            // 检查密码是否合法
+            ThrowUtils.throwIf(!RegexUtils.validatePassword(userPassword), ErrorCode.PARAMS_ERROR, "密码不符合要求");
+            // 检查账号是否合法
+            ThrowUtils.throwIf(!RegexUtils.validateAccount(userAccount), ErrorCode.PARAMS_ERROR, "用户账号格式错误");
+            // 检查手机号是否合法
+            ThrowUtils.throwIf(!RegexUtils.isMobilePhone(userPhone), ErrorCode.PARAMS_ERROR, "手机号格式错误");
+            // 检查用户邮箱
+            ThrowUtils.throwIf(!RegexUtils.isEmail(userEmail), ErrorCode.PARAMS_ERROR, "邮箱格式错误");
+
+            // 查询账号是否存在，同时检查手机、邮箱唯一性
+            QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("userAccount", userAccount).or();
+            queryWrapper.eq("userEmail", userEmail).or();
+            queryWrapper.eq("userPhone", userPhone);
+            long count = baseMapper.selectCount(queryWrapper);
+            // 账号已存在
+            ThrowUtils.throwIf(count > 0, ErrorCode.PARAMS_ERROR, "账号已存在");
+        }
+        Integer gender = user.getUserGender();
+        if (gender != null && UserGenderEnum.getEnumByValue(gender) == null)
+        {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "性别参数错误");
+        }
+    }
+
+    @Override
+    public Boolean doAfterUpload(UploadFileConfig uploadFileConfig, String savePath)
+    {
+        User user = this.getById(uploadFileConfig.getUserId());
+        if (user == null)
+        {
+            return false;
+        }
+        user.setUserAvatar(uploadFileConfig.getFileInfo().getFileURL());
+        return this.updateById(user);
     }
 }
