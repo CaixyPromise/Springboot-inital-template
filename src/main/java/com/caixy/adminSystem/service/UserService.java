@@ -122,4 +122,6 @@ public interface UserService extends IService<User>
     String generatePassword();
 
     Boolean modifyPassword(Long userId, UserModifyPasswordRequest userModifyPasswordRequest);
+
+    void validUserInfo(User user, boolean add);
 }

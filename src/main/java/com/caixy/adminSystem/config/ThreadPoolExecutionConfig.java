@@ -10,7 +10,6 @@ import org.springframework.context.annotation.Configuration;
  * @since: 2024-01-09 17:27
  **/
 @Configuration
-
 public class ThreadPoolExecutionConfig
 {
 }

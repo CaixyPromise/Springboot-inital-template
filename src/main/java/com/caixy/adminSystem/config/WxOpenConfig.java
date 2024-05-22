@@ -10,14 +10,13 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * 微信开放平台配置
- *
- 
  */
 @Slf4j
 @Configuration
 @ConfigurationProperties(prefix = "wx.open")
 @Data
-public class WxOpenConfig {
+public class WxOpenConfig
+{
 
     private String appId;
 
@@ -30,12 +29,16 @@ public class WxOpenConfig {
      *
      * @return
      */
-    public WxMpService getWxMpService() {
-        if (wxMpService != null) {
+    public WxMpService getWxMpService()
+    {
+        if (wxMpService != null)
+        {
             return wxMpService;
         }
-        synchronized (this) {
-            if (wxMpService != null) {
+        synchronized (this)
+        {
+            if (wxMpService != null)
+            {
                 return wxMpService;
             }
             WxMpDefaultConfigImpl config = new WxMpDefaultConfigImpl();
