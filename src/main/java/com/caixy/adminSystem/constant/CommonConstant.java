@@ -16,4 +16,8 @@ public interface CommonConstant
      */
     String SORT_ORDER_DESC = " descend";
 
+    /**
+     * 默认时间格式
+     */
+    String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 }
