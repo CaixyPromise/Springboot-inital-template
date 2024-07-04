@@ -17,4 +17,14 @@ public enum RedisConstant
         this.key = key;
         this.expire = expire;
     }
+
+    public String generateKey(String... values)
+    {
+        String joinValue = String.join(":", values);
+        if (this.key.charAt(this.key.length() - 1) == ':')
+        {
+            return this.key + joinValue;
+        }
+        return this.key + ":" + joinValue;
+    }
 }
