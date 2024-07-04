@@ -3,14 +3,13 @@ package com.caixy.adminSystem.utils;
 import com.caixy.adminSystem.model.enums.RedisConstant;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -46,6 +45,7 @@ public class RedisUtils
     private static final String REDIS_INVOKE_RANK_LOCK_KEY = REDIS_LOCK_KEY + "REDIS_INVOKE_RANK_LOCK:";
 
     private final StringRedisTemplate stringRedisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 根据枚举获取Key，并且根据字段值生成完整的Key值，自动拼接冒号
@@ -94,9 +94,9 @@ public class RedisUtils
      * @version 2.0
      * @since 2024/2/16 20:19
      */
-    public boolean delete(RedisConstant Enum, Object itemName)
+    public boolean delete(RedisConstant Enum, String... items)
     {
-        return Boolean.TRUE.equals(stringRedisTemplate.delete(getFullKey(Enum, itemName)));
+        return Boolean.TRUE.equals(stringRedisTemplate.delete(Enum.generateKey(items)));
     }
 
     /**
@@ -106,14 +106,9 @@ public class RedisUtils
      * @version 2.0
      * @since 2024/2/16 20:19
      */
-    public void refreshExpire(RedisConstant Enum, Object itemName, long expire)
+    public void refreshExpire(RedisConstant Enum, long expire, String... items)
     {
-        stringRedisTemplate.expire(getFullKey(Enum, itemName.toString()), expire, TimeUnit.SECONDS);
-    }
-
-    public void refreshExpire(String key, Object itemName, long expire)
-    {
-        stringRedisTemplate.expire((key + ":" + itemName.toString()), expire, TimeUnit.SECONDS);
+        stringRedisTemplate.expire(Enum.generateKey(items), expire, TimeUnit.SECONDS);
     }
 
     /**
@@ -135,9 +130,9 @@ public class RedisUtils
      * @version 1.0
      * @since 2023/1220 20:18
      */
-    public String getString(RedisConstant Enum, Object itemName)
+    public String getString(RedisConstant Enum, String... items)
     {
-        return stringRedisTemplate.opsForValue().get(getFullKey(Enum, itemName));
+        return stringRedisTemplate.opsForValue().get(Enum.generateKey(items));
     }
 
     /**
@@ -152,17 +147,50 @@ public class RedisUtils
         return stringRedisTemplate.opsForValue().get(key);
     }
 
+    public <JsonType> List<JsonType> getJson(RedisConstant keyEnum, String... items)
+    {
+        String cacheData = stringRedisTemplate.opsForValue().get(keyEnum.generateKey(items));
+        if (StringUtils.isNotBlank(cacheData))
+        {
+            // 把字符串转义全部清楚掉
+            return JsonUtils.jsonToList(cacheData);
+        }
+        // 直接返回空指针，不返回空列表
+        return null;
+    }
+
+    public <JsonType> JsonType getJson(RedisConstant keyEnum, Class<JsonType> returnType, String... items)
+    {
+        String cacheData = stringRedisTemplate.opsForValue().get(keyEnum.generateKey(items));
+        if (StringUtils.isNotBlank(cacheData))
+        {
+            return JsonUtils.jsonToObject(cacheData, returnType);
+        }
+        return null;
+    }
 
     /**
-     * 获取哈希数据
+     * 放入一个对象数据
      *
      * @author CAIXYPROMISE
      * @version 1.0
-     * @since 2023/1220 20:18
+     * @since 2024/6/16 上午10:32
      */
-    public Map<Object, Object> getHash(String key, Object objectName)
+    public void setObject(RedisConstant keyEnum, Object value, String... items)
     {
-        return stringRedisTemplate.opsForHash().entries(key + objectName);
+        setString(keyEnum, JsonUtils.toJsonString(value), items);
+    }
+
+    /**
+     * 从redis获取对象，因为放入时已经处理序列化，所以在这里需要从json转对象
+     *
+     * @author CAIXYPROMISE
+     * @version 1.0
+     * @since 2024/7/2 下午9:18
+     */
+    public <T> T getObject(RedisConstant keyEnum, Class<T> returnType, String... items)
+    {
+        return getJson(keyEnum, returnType, items);
     }
 
 
@@ -173,28 +201,30 @@ public class RedisUtils
      * @version 1.0
      * @since 2023/1220 20:18
      */
-    public Map<Object, Object> getHash(RedisConstant Enum, Object objectName)
+    public Map<Object, Object> getHashMap(RedisConstant Enum, String... items)
     {
-        return stringRedisTemplate.opsForHash().entries(getFullKey(Enum, objectName));
+        return stringRedisTemplate.opsForHash().entries(Enum.generateKey(items));
     }
 
 
     /**
      * 获取hash数据，接受常量配置，并且根据类型回传对应类型的HashMap
      *
-     * @param enumKey    key常量
-     * @param objectName key名称
-     * @param keyType    key类型
-     * @param valueType  value类型
+     * @param enumKey   key常量
+     * @param items     key名称
+     * @param keyType   key类型
+     * @param valueType value类型
      * @author CAIXYPROMISE
      * @version 1.0
      * @since 2024/2/24 00:16
      */
-    public <K, V> HashMap<K, V> getHash(RedisConstant enumKey, Object objectName,
-                                        Class<K> keyType,
-                                        Class<V> valueType)
+    public <K, V> HashMap<K, V> getHashMap(RedisConstant enumKey,
+                                           Class<K> keyType,
+                                           Class<V> valueType,
+                                           String items
+    )
     {
-        Map<Object, Object> rawMap = stringRedisTemplate.opsForHash().entries(getFullKey(enumKey, objectName));
+        Map<Object, Object> rawMap = stringRedisTemplate.opsForHash().entries(enumKey.generateKey(items));
         HashMap<K, V> typedMap = new HashMap<>();
         rawMap.forEach((rawKey, rawValue) ->
         {
@@ -213,19 +243,17 @@ public class RedisUtils
      * @version 1.0
      * @since 2023/12/20 2:16
      */
-    public void setHashMap(RedisConstant Enum, Object itemName, HashMap<String, Object> data)
+    public void setHashMap(RedisConstant Enum, Map<String, Object> data, String... item)
     {
-        String fullKey = getFullKey(Enum, itemName);
         Long expire = Enum.getExpire();
         HashMap<String, String> stringData = new HashMap<>();
-        data.forEach((dataKey, value) ->
-                stringData.put(dataKey, JsonUtils.toJsonString(value)));
+        data.forEach((dataKey, value) -> stringData.put(dataKey, JsonUtils.toJsonString(value)));
+        String fullKey = Enum.generateKey(item);
         stringRedisTemplate.opsForHash().putAll(fullKey, stringData);
         if (expire != null)
         {
             refreshExpire(fullKey, expire);
         }
-        log.info("[setHashMap] key: {}, data: {}, expire: {}", fullKey, data, expire);
     }
 
     /**
@@ -251,27 +279,6 @@ public class RedisUtils
         log.info("[setHashMap] key: {}, data: {}, expire: {}", key, data, expire);
     }
 
-
-    public void setStringHashMap(RedisConstant Enum, Object itemName, HashMap<String, String> data, Long expire)
-    {
-        String fullKey = getFullKey(Enum, itemName);
-        stringRedisTemplate.opsForHash().putAll(fullKey, data);
-        if (expire != null)
-        {
-            refreshExpire(fullKey, Enum.getExpire());
-        }
-    }
-
-    public void setStringHashMap(String key, HashMap<String, String> data, Long expire)
-    {
-        stringRedisTemplate.opsForHash().putAll(key, data);
-        if (expire != null)
-        {
-            refreshExpire(key, expire);
-        }
-    }
-
-
     /**
      * 放入字符串类型的字符
      *
@@ -279,30 +286,11 @@ public class RedisUtils
      * @version 1.0
      * @since 2023/12/0 20:16
      */
-    public void setString(RedisConstant Enum, Object itemName, String value)
+    public void setString(RedisConstant Enum, String value, String... items)
     {
-        String fullKey = getFullKey(Enum, itemName);
-        stringRedisTemplate.opsForValue().set(fullKey, value, Enum.getExpire(), TimeUnit.SECONDS);
+        stringRedisTemplate.opsForValue().set(Enum.generateKey(items), value, Enum.getExpire(), TimeUnit.SECONDS);
     }
 
-    /**
-     * 放入字符串类型的字符
-     *
-     * @author CAIXYPROMISE
-     * @version 1.0
-     * @since 2023/12/0 20:16
-     */
-    public void setString(String key, String value, Long expire)
-    {
-        if (expire != null)
-        {
-            stringRedisTemplate.opsForValue().set(key, value, expire, TimeUnit.SECONDS);
-        }
-        else
-        {
-            stringRedisTemplate.opsForValue().set(key, value);
-        }
-    }
 
     /**
      * 获取是否有对应的Key值存在
@@ -597,5 +585,4 @@ public class RedisUtils
 
 
     // endregion
-
 }
