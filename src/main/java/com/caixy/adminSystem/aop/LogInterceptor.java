@@ -1,7 +1,5 @@
 package com.caixy.adminSystem.aop;
 
-import java.util.UUID;
-import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -13,21 +11,24 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import javax.servlet.http.HttpServletRequest;
+import java.util.UUID;
+
 /**
  * 请求响应日志 AOP
- *
- 
  **/
 @Aspect
 @Component
 @Slf4j
-public class LogInterceptor {
+public class LogInterceptor
+{
 
     /**
      * 执行拦截
      */
     @Around("execution(* com.caixy.adminSystem.controller.*.*(..))")
-    public Object doInterceptor(ProceedingJoinPoint point) throws Throwable {
+    public Object doInterceptor(ProceedingJoinPoint point) throws Throwable
+    {
         // 计时
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
