@@ -1,6 +1,6 @@
 package com.caixy.adminSystem.config;
 
-import com.caixy.adminSystem.model.enums.FileUploadBizEnum;
+import com.caixy.adminSystem.model.enums.FileActionBizEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Configuration;
@@ -37,7 +37,7 @@ public class CorsConfig implements WebMvcConfigurer
     @Override
     public void addResourceHandlers(@NotNull ResourceHandlerRegistry registry)
     {
-        for (FileUploadBizEnum bizEnum : FileUploadBizEnum.values())
+        for (FileActionBizEnum bizEnum : FileActionBizEnum.values())
         {
             String pathPattern = localFileConfig.getStaticPath() + "/" + bizEnum.getRoutePath() + "/**";
             String location =

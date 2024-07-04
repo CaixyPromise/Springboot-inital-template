@@ -10,19 +10,21 @@ import com.caixy.adminSystem.constant.FileTypeConstant;
 import com.caixy.adminSystem.constant.UserConstant;
 import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.exception.ThrowUtils;
+import com.caixy.adminSystem.manager.uploadManager.core.UploadFileMethodManager;
 import com.caixy.adminSystem.mapper.UserMapper;
-import com.caixy.adminSystem.model.dto.file.UploadFileConfig;
+import com.caixy.adminSystem.model.dto.file.UploadFileDTO;
+import com.caixy.adminSystem.model.dto.file.UploadFileRequest;
 import com.caixy.adminSystem.model.dto.user.UserLoginRequest;
 import com.caixy.adminSystem.model.dto.user.UserModifyPasswordRequest;
 import com.caixy.adminSystem.model.dto.user.UserQueryRequest;
 import com.caixy.adminSystem.model.dto.user.UserRegisterRequest;
 import com.caixy.adminSystem.model.entity.User;
-import com.caixy.adminSystem.model.enums.FileUploadBizEnum;
+import com.caixy.adminSystem.model.enums.FileActionBizEnum;
 import com.caixy.adminSystem.model.enums.UserGenderEnum;
 import com.caixy.adminSystem.model.enums.UserRoleEnum;
 import com.caixy.adminSystem.model.vo.user.LoginUserVO;
 import com.caixy.adminSystem.model.vo.user.UserVO;
-import com.caixy.adminSystem.service.FileUploadActionService;
+import com.caixy.adminSystem.service.FileActionService;
 import com.caixy.adminSystem.service.UserService;
 import com.caixy.adminSystem.utils.EncryptionUtils;
 import com.caixy.adminSystem.utils.RegexUtils;
@@ -35,6 +37,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -48,7 +52,7 @@ import static com.caixy.adminSystem.constant.UserConstant.USER_LOGIN_STATE;
 @Service
 @Slf4j
 @Qualifier(FileTypeConstant.AVATAR)
-public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService, FileUploadActionService
+public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService, FileActionService
 {
 
     @Override
@@ -460,15 +464,44 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
     }
 
+    /**
+     * 头像文件上传处理逻辑
+     *
+     * @author CAIXYPROMISE
+     * @version 1.0
+     * @since 2024/6/7 下午4:31
+     */
     @Override
-    public Boolean doAfterUpload(UploadFileConfig uploadFileConfig, String savePath)
+    public Boolean doAfterUploadAction(UploadFileDTO uploadFileDTO, Path savePath, UploadFileRequest uploadFileRequest) throws IOException
     {
-        User user = this.getById(uploadFileConfig.getUserId());
+        Long userId = uploadFileDTO.getUserId();
+        User user = this.getById(userId);
         if (user == null)
         {
             return false;
         }
-        user.setUserAvatar(uploadFileConfig.getFileInfo().getFileURL());
-        return this.updateById(user);
+        String userAvatar = user.getUserAvatar();
+        user.setUserAvatar(uploadFileDTO.getFileInfo().getFileURL());
+        UploadFileMethodManager uploadManager = uploadFileDTO.getUploadManager();
+        boolean updated = this.updateById(user);
+        if (updated)
+        {
+            if (StringUtils.isNotBlank(userAvatar))
+            {
+                FileActionBizEnum uploadBizEnum = uploadFileDTO.getFileActionBizEnum();
+
+                String[] filename = userAvatar.split("/");
+                if (filename.length > 0)
+                {
+                    Path filepath = uploadBizEnum.buildFileAbsolutePathAndName(userId, filename[filename.length - 1]);
+                    uploadManager.deleteFile(filepath);
+                    return true;
+                }
+                return false;
+            }
+            // 可能初始化的时候没有设置头像，可以设置一个默认头像，但不允许删除默认头像
+            return true;
+        }
+        return false;
     }
 }
