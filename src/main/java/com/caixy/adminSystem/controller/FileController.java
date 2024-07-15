@@ -35,6 +35,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 文件接口
@@ -53,7 +54,7 @@ public class FileController
     @Resource
     private List<FileActionStrategy> fileActionStrategy;
 
-    private HashMap<FileActionBizEnum, FileActionStrategy> serviceCache;
+    private ConcurrentHashMap<FileActionBizEnum, FileActionStrategy> serviceCache;
 
     @PostConstruct
     public void initActionService()
