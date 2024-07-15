@@ -4,7 +4,7 @@ import com.caixy.adminSystem.annotation.UploadMethodTarget;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.config.LocalFileConfig;
 import com.caixy.adminSystem.exception.BusinessException;
-import com.caixy.adminSystem.manager.uploadManager.core.UploadFileMethodManager;
+import com.caixy.adminSystem.strategy.UploadFileMethodStrategy;
 import com.caixy.adminSystem.model.dto.file.UploadFileDTO;
 import com.caixy.adminSystem.model.enums.FileActionBizEnum;
 import com.caixy.adminSystem.model.enums.SaveFileMethodEnum;
@@ -24,14 +24,14 @@ import java.nio.file.Paths;
  * 本地文件管理器
  *
  * @author CAIXYPROMISE
- * @name com.caixy.adminSystem.manager.uploadManager.LocalFileManagerManager
+ * @name com.caixy.adminSystem.manager.uploadManager.LocalFileStrategyImpl
  * @since 2024-05-21 20:13
  **/
 @Component
 @AllArgsConstructor
 @Slf4j
 @UploadMethodTarget(SaveFileMethodEnum.LOCAL_SAVE)
-public class LocalFileManagerManager implements UploadFileMethodManager
+public class LocalFileStrategyImpl implements UploadFileMethodStrategy
 {
     private final LocalFileConfig localFileConfig;
 

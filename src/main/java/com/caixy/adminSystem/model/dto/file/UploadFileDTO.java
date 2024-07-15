@@ -2,7 +2,7 @@ package com.caixy.adminSystem.model.dto.file;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.crypto.digest.DigestUtil;
-import com.caixy.adminSystem.manager.uploadManager.core.UploadFileMethodManager;
+import com.caixy.adminSystem.strategy.UploadFileMethodStrategy;
 import com.caixy.adminSystem.model.enums.FileActionBizEnum;
 import lombok.Builder;
 import lombok.Data;
@@ -22,7 +22,7 @@ import java.util.UUID;
 @Data
 public class UploadFileDTO
 {
-    private UploadFileMethodManager uploadManager;
+    private UploadFileMethodStrategy uploadManager;
 
     /**
      * 上传人Id

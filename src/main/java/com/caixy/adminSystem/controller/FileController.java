@@ -13,7 +13,7 @@ import com.caixy.adminSystem.model.dto.file.UploadFileRequest;
 import com.caixy.adminSystem.model.entity.User;
 import com.caixy.adminSystem.model.enums.FileActionBizEnum;
 import com.caixy.adminSystem.model.enums.SaveFileMethodEnum;
-import com.caixy.adminSystem.service.FileActionService;
+import com.caixy.adminSystem.strategy.FileActionStrategy;
 import com.caixy.adminSystem.service.UploadFileService;
 import com.caixy.adminSystem.service.UserService;
 import com.caixy.adminSystem.utils.FileUtils;
@@ -51,15 +51,15 @@ public class FileController
     private UploadFileService uploadFileService;
 
     @Resource
-    private List<FileActionService> fileActionService;
+    private List<FileActionStrategy> fileActionStrategy;
 
-    private HashMap<FileActionBizEnum, FileActionService> serviceCache;
+    private HashMap<FileActionBizEnum, FileActionStrategy> serviceCache;
 
     @PostConstruct
     public void initActionService()
     {
         serviceCache =
-                SpringContextUtils.getServiceFromAnnotation(fileActionService, UploadMethodTarget.class);
+                SpringContextUtils.getServiceFromAnnotation(fileActionStrategy, UploadMethodTarget.class);
     }
 
     @PostMapping("/upload")
@@ -76,7 +76,7 @@ public class FileController
         try
         {
             // 获取文件处理类，如果找不到就会直接报错
-            FileActionService actionService = getFileActionService(uploadBizEnum);
+            FileActionStrategy actionService = getFileActionService(uploadBizEnum);
             boolean doVerifyFileToken = doBeforeFileUploadAction(actionService, uploadFileDTO, uploadFileRequest);
             if (!doVerifyFileToken)
             {
@@ -128,12 +128,12 @@ public class FileController
         }
         User loginUser = userService.getLoginUser(request);
 
-        FileActionService fileActionService = getFileActionService(fileActionBizEnum);
+        FileActionStrategy fileActionStrategy = getFileActionService(fileActionBizEnum);
         DownloadFileDTO downloadFileDTO = new DownloadFileDTO();
         downloadFileDTO.setFileId(id);
         downloadFileDTO.setFileActionBizEnum(fileActionBizEnum);
         downloadFileDTO.setUserId(loginUser.getId());
-        Boolean beforeDownloadAction = fileActionService.doBeforeDownloadAction(downloadFileDTO);
+        Boolean beforeDownloadAction = fileActionStrategy.doBeforeDownloadAction(downloadFileDTO);
         if (!beforeDownloadAction)
         {
             log.error("文件下载操作前处理失败: userId: {}, 下载文件信息：{}", loginUser.getId(), downloadFileDTO);
@@ -164,7 +164,7 @@ public class FileController
 
                     // 执行下载后的操作
                     downloadFileDTO.setFileIsExist(true);
-                    if (!fileActionService.doAfterDownloadAction(downloadFileDTO))
+                    if (!fileActionStrategy.doAfterDownloadAction(downloadFileDTO))
                     {
                         log.error("文件下载操作后处理失败: userId: {}, 下载文件信息：{}", loginUser.getId(), downloadFileDTO);
                         throw new BusinessException(ErrorCode.SYSTEM_ERROR, "文件下载操作失败");
@@ -250,9 +250,9 @@ public class FileController
      * @version 1.0
      * @since 2024/6/11 下午8:00
      */
-    private FileActionService getFileActionService(FileActionBizEnum fileActionBizEnum)
+    private FileActionStrategy getFileActionService(FileActionBizEnum fileActionBizEnum)
     {
-        FileActionService actionService = serviceCache.get(fileActionBizEnum);
+        FileActionStrategy actionService = serviceCache.get(fileActionBizEnum);
         if (actionService == null)
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "暂无该文件对应业务的操作");
@@ -260,12 +260,12 @@ public class FileController
         return actionService;
     }
 
-    private boolean doAfterFileUploadAction(FileActionService actionService, UploadFileDTO uploadFileDTO, Path savePath, UploadFileRequest uploadFileRequest) throws IOException
+    private boolean doAfterFileUploadAction(FileActionStrategy actionService, UploadFileDTO uploadFileDTO, Path savePath, UploadFileRequest uploadFileRequest) throws IOException
     {
         return actionService.doAfterUploadAction(uploadFileDTO, savePath, uploadFileRequest);
     }
 
-    private boolean doBeforeFileUploadAction(FileActionService actionService, UploadFileDTO uploadFileDTO
+    private boolean doBeforeFileUploadAction(FileActionStrategy actionService, UploadFileDTO uploadFileDTO
             , UploadFileRequest uploadFileRequest)
     {
         return actionService.doBeforeUploadAction(uploadFileDTO, uploadFileRequest);
