@@ -12,6 +12,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Spring 上下文获取工具
@@ -71,10 +73,10 @@ public class SpringContextUtils implements ApplicationContextAware {
      * @param <KeyType>           注解值的类型
      * @return 注解值和服务的映射
      */
-    public static <ServiceType, AnnotationType extends Annotation, KeyType> HashMap<KeyType, ServiceType> getServiceFromAnnotation(
+    public static <ServiceType, AnnotationType extends Annotation, KeyType> ConcurrentHashMap<KeyType, ServiceType> getServiceFromAnnotation(
             List<ServiceType> serviceTypeList, Class<AnnotationType> annotationTypeClass)
     {
-        HashMap<KeyType, ServiceType> serviceMap = new HashMap<>();
+        ConcurrentHashMap<KeyType, ServiceType> serviceMap = new ConcurrentHashMap<>();
 
         for (ServiceType service : serviceTypeList)
         {
