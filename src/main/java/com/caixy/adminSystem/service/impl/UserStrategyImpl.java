@@ -10,7 +10,8 @@ import com.caixy.adminSystem.constant.FileTypeConstant;
 import com.caixy.adminSystem.constant.UserConstant;
 import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.exception.ThrowUtils;
-import com.caixy.adminSystem.manager.uploadManager.core.UploadFileMethodManager;
+import com.caixy.adminSystem.strategy.FileActionStrategy;
+import com.caixy.adminSystem.strategy.UploadFileMethodStrategy;
 import com.caixy.adminSystem.mapper.UserMapper;
 import com.caixy.adminSystem.model.dto.file.UploadFileDTO;
 import com.caixy.adminSystem.model.dto.file.UploadFileRequest;
@@ -24,7 +25,6 @@ import com.caixy.adminSystem.model.enums.UserGenderEnum;
 import com.caixy.adminSystem.model.enums.UserRoleEnum;
 import com.caixy.adminSystem.model.vo.user.LoginUserVO;
 import com.caixy.adminSystem.model.vo.user.UserVO;
-import com.caixy.adminSystem.service.FileActionService;
 import com.caixy.adminSystem.service.UserService;
 import com.caixy.adminSystem.utils.EncryptionUtils;
 import com.caixy.adminSystem.utils.RegexUtils;
@@ -52,7 +52,7 @@ import static com.caixy.adminSystem.constant.UserConstant.USER_LOGIN_STATE;
 @Service
 @Slf4j
 @Qualifier(FileTypeConstant.AVATAR)
-public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService, FileActionService
+public class UserStrategyImpl extends ServiceImpl<UserMapper, User> implements UserService, FileActionStrategy
 {
 
     @Override
@@ -482,7 +482,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         String userAvatar = user.getUserAvatar();
         user.setUserAvatar(uploadFileDTO.getFileInfo().getFileURL());
-        UploadFileMethodManager uploadManager = uploadFileDTO.getUploadManager();
+        UploadFileMethodStrategy uploadManager = uploadFileDTO.getUploadManager();
         boolean updated = this.updateById(user);
         if (updated)
         {

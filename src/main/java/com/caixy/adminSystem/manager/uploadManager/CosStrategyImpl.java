@@ -5,7 +5,7 @@ import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.config.CosClientConfig;
 import com.caixy.adminSystem.constant.FileConstant;
 import com.caixy.adminSystem.exception.BusinessException;
-import com.caixy.adminSystem.manager.uploadManager.core.UploadFileMethodManager;
+import com.caixy.adminSystem.strategy.UploadFileMethodStrategy;
 import com.caixy.adminSystem.model.dto.file.UploadFileDTO;
 import com.caixy.adminSystem.model.enums.SaveFileMethodEnum;
 import com.qcloud.cos.COSClient;
@@ -33,7 +33,7 @@ import java.nio.file.Paths;
 @AllArgsConstructor
 @UploadMethodTarget(SaveFileMethodEnum.TENCENT_COS_SAVE)
 @Slf4j
-public class CosManager implements UploadFileMethodManager
+public class CosStrategyImpl implements UploadFileMethodStrategy
 {
     private final CosClientConfig cosClientConfig;
 

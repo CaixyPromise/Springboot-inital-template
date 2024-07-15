@@ -1,4 +1,4 @@
-package com.caixy.adminSystem.service;
+package com.caixy.adminSystem.strategy;
 
 import com.caixy.adminSystem.model.dto.file.DownloadFileDTO;
 import com.caixy.adminSystem.model.dto.file.UploadFileDTO;
@@ -8,12 +8,12 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 /**
- * @name: com.caixy.adminSystem.service.FileActionService
+ * @name: com.caixy.adminSystem.strategy.FileActionStrategy
  * @description: 文件上传操作接口类
  * @author: CAIXYPROMISE
  * @date: 2024-05-22 16:51
  **/
-public interface FileActionService
+public interface FileActionStrategy
 {
     /**
      * 文件上传后处理操作
