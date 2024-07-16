@@ -74,7 +74,8 @@ public class SpringContextUtils implements ApplicationContextAware {
      * @return 注解值和服务的映射
      */
     public static <ServiceType, AnnotationType extends Annotation, KeyType> ConcurrentHashMap<KeyType, ServiceType> getServiceFromAnnotation(
-            List<ServiceType> serviceTypeList, Class<AnnotationType> annotationTypeClass)
+            List<ServiceType> serviceTypeList, Class<AnnotationType> annotationTypeClass,
+            String getAnnotationValueMethodName)
     {
         ConcurrentHashMap<KeyType, ServiceType> serviceMap = new ConcurrentHashMap<>();
 
@@ -92,7 +93,7 @@ public class SpringContextUtils implements ApplicationContextAware {
                 try
                 {
                     // 获取注解中的 value 方法
-                    Method valueMethod = annotationTypeClass.getMethod("value");
+                    Method valueMethod = annotationTypeClass.getMethod(getAnnotationValueMethodName);
                     @SuppressWarnings("unchecked") KeyType key = (KeyType) valueMethod.invoke(annotation);
                     serviceMap.put(key, service);
                     System.out.printf("成功-初始化策略注解处理类：%s -> %s%n", key, targetClass.getName());
