@@ -20,4 +20,9 @@ public interface CommonConstant
      * 默认时间格式
      */
     String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
+
+    /**
+     * 验证码session-key
+     */
+    String CAPTCHA_SIGN = "captcha";
 }
