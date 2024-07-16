@@ -60,7 +60,7 @@ public class FileController
     public void initActionService()
     {
         serviceCache =
-                SpringContextUtils.getServiceFromAnnotation(fileActionStrategy, UploadMethodTarget.class);
+                SpringContextUtils.getServiceFromAnnotation(fileActionStrategy, UploadMethodTarget.class, "value");
     }
 
     @PostMapping("/upload")
