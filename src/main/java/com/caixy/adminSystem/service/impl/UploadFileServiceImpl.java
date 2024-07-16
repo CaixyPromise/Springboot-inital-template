@@ -39,7 +39,7 @@ public class UploadFileServiceImpl implements UploadFileService
     public void initUploadFileMethods()
     {
         uploadFileMethodMap =
-                SpringContextUtils.getServiceFromAnnotation(uploadFileMethodStrategies, UploadMethodTarget.class);
+                SpringContextUtils.getServiceFromAnnotation(uploadFileMethodStrategies, UploadMethodTarget.class, "value");
     }
 
     @Override
