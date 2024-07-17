@@ -16,5 +16,6 @@ import java.lang.annotation.*;
 public @interface RateLimitFlow
 {
     RedisLimiterEnum key();
-    String args();
+    String args() default "";
+    String errorMessage() default "";
 }
