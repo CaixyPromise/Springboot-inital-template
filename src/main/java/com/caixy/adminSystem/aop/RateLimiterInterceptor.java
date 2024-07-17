@@ -5,6 +5,7 @@ import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.manager.limiter.RateLimiterBuilder;
 import com.caixy.adminSystem.manager.limiter.RedisLimiterManager;
+import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -43,7 +44,7 @@ public class RateLimiterInterceptor
         String dynamicKey = parseKey(rateLimitedFlow.args(), methodSignature, args);
 
         RateLimiterBuilder<Object> builder = redisLimiterManager.doLimit(rateLimitedFlow.key(), dynamicKey);
-
+        String errorMsg = StringUtils.isNotBlank(rateLimitedFlow.errorMessage()) ? rateLimitedFlow.errorMessage() : "操作过于频繁，请稍后再试";
         return builder.onSuccess(() -> {
                     try
                     {
@@ -54,7 +55,7 @@ public class RateLimiterInterceptor
                         throw new RuntimeException(throwable);
                     }
                 })
-                .orElseThrow(() -> new BusinessException(ErrorCode.OPERATION_ERROR, "Rate limit exceeded"))
+                .orElseThrow(() -> new BusinessException(ErrorCode.OPERATION_ERROR, errorMsg))
                 .execute();
     }
 
