@@ -5,7 +5,13 @@ import lombok.Getter;
 @Getter
 public enum RedisConstant
 {
-    CATEGORY_PARENT_BY_KEY("category:parent:", 3600L * 24 * 7);
+
+    CATEGORY_PARENT_BY_KEY("category:parent:", -1L),
+
+    /**
+     * 验证码缓存，5分钟
+     */
+    CAPTCHA_CODE("captcha:", 60L * 5),
 
     ;
 
@@ -14,17 +20,12 @@ public enum RedisConstant
 
     RedisConstant(String key, Long expire)
     {
-        this.key = key;
+        this.key = key.endsWith(":") ? key : key + ":";
         this.expire = expire;
     }
 
-    public String generateKey(String... values)
+    public String generateKey(String... items)
     {
-        String joinValue = String.join(":", values);
-        if (this.key.charAt(this.key.length() - 1) == ':')
-        {
-            return this.key + joinValue;
-        }
-        return this.key + ":" + joinValue;
+        return key.concat(String.join(":", items));
     }
 }
