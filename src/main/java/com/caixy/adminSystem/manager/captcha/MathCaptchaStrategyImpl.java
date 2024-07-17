@@ -35,7 +35,6 @@ public class MathCaptchaStrategyImpl extends CaptchaGenerationStrategy
         tryRemoveLastCaptcha(request);
         String capText = captchaProducer.createText();
         String capStr = capText.substring(0, capText.lastIndexOf("@"));
-        System.out.println(capStr);
         String code = capText.substring(capText.lastIndexOf("@") + 1);
         BufferedImage image = captchaProducer.createImage(capStr);
         return saveResult(code, image, request);
