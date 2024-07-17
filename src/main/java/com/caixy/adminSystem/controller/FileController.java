@@ -1,6 +1,7 @@
 package com.caixy.adminSystem.controller;
 
 import cn.hutool.core.io.FileUtil;
+import com.caixy.adminSystem.annotation.FileUploadActionTarget;
 import com.caixy.adminSystem.annotation.UploadMethodTarget;
 import com.caixy.adminSystem.common.BaseResponse;
 import com.caixy.adminSystem.common.ErrorCode;
@@ -60,7 +61,7 @@ public class FileController
     public void initActionService()
     {
         serviceCache =
-                SpringContextUtils.getServiceFromAnnotation(fileActionStrategy, UploadMethodTarget.class, "value");
+                SpringContextUtils.getServiceFromAnnotation(fileActionStrategy, FileUploadActionTarget.class, "value");
     }
 
     @PostMapping("/upload")

@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.caixy.adminSystem.annotation.FileUploadActionTarget;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.constant.CommonConstant;
 import com.caixy.adminSystem.constant.FileTypeConstant;
@@ -51,10 +52,9 @@ import static com.caixy.adminSystem.constant.UserConstant.USER_LOGIN_STATE;
  */
 @Service
 @Slf4j
-@Qualifier(FileTypeConstant.AVATAR)
-public class UserStrategyImpl extends ServiceImpl<UserMapper, User> implements UserService, FileActionStrategy
+@FileUploadActionTarget(FileActionBizEnum.USER_AVATAR)
+public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService, FileActionStrategy
 {
-
     @Override
     public long userRegister(UserRegisterRequest userRegisterRequest)
     {
