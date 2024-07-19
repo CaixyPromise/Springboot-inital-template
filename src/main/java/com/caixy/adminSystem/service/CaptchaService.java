@@ -26,4 +26,6 @@ public interface CaptchaService
      * 获取指定类型的验证码服务类
      */
     CaptchaVO getCaptchaByType(HttpServletRequest request, String type);
+
+    boolean verifyCaptcha(String code, String captchaId, HttpServletRequest request);
 }

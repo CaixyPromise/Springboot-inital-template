@@ -20,6 +20,5 @@ public class TestRegex
         String encryptedPassword = "$2a$10$Q8T7GHowRg/TDefThcNQsuB2JtzoBlqV5BLInc0SnlfaoPX4KecYa";
         boolean matches = EncryptionUtils.matches(password, encryptedPassword);
         System.out.println(matches);
-
     }
 }
