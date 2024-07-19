@@ -7,12 +7,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.caixy.adminSystem.annotation.FileUploadActionTarget;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.constant.CommonConstant;
-import com.caixy.adminSystem.constant.FileTypeConstant;
 import com.caixy.adminSystem.constant.UserConstant;
 import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.exception.ThrowUtils;
-import com.caixy.adminSystem.strategy.FileActionStrategy;
-import com.caixy.adminSystem.strategy.UploadFileMethodStrategy;
 import com.caixy.adminSystem.mapper.UserMapper;
 import com.caixy.adminSystem.model.dto.file.UploadFileDTO;
 import com.caixy.adminSystem.model.dto.file.UploadFileRequest;
@@ -26,15 +23,18 @@ import com.caixy.adminSystem.model.enums.UserGenderEnum;
 import com.caixy.adminSystem.model.enums.UserRoleEnum;
 import com.caixy.adminSystem.model.vo.user.LoginUserVO;
 import com.caixy.adminSystem.model.vo.user.UserVO;
+import com.caixy.adminSystem.service.CaptchaService;
 import com.caixy.adminSystem.service.UserService;
+import com.caixy.adminSystem.strategy.FileActionStrategy;
+import com.caixy.adminSystem.strategy.UploadFileMethodStrategy;
 import com.caixy.adminSystem.utils.EncryptionUtils;
 import com.caixy.adminSystem.utils.RegexUtils;
 import com.caixy.adminSystem.utils.SqlUtils;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
@@ -53,8 +53,11 @@ import static com.caixy.adminSystem.constant.UserConstant.USER_LOGIN_STATE;
 @Service
 @Slf4j
 @FileUploadActionTarget(FileActionBizEnum.USER_AVATAR)
+@AllArgsConstructor
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService, FileActionStrategy
 {
+    private final CaptchaService captchaService;
+
     @Override
     public long userRegister(UserRegisterRequest userRegisterRequest)
     {
@@ -75,8 +78,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 0. 提取参数
         String userAccount = userLoginRequest.getUserAccount();
         String userPassword = userLoginRequest.getUserPassword();
-//        String captcha = userLoginRequest.getCaptcha().trim();
-//        String captchaId = userLoginRequest.getCaptchaId();
+        String captcha = userLoginRequest.getCaptcha().trim();
+        String captchaId = userLoginRequest.getCaptchaId();
         // 1. 校验
         // 1.1 检查参数是否完整
         if (StringUtils.isAnyBlank(userAccount, userPassword))
@@ -87,8 +90,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号错误");
         }
-
         // 1.2 校验验证码
+        verifyCaptchaCode(captcha, captchaId, request);
 
         // 2. 根据账号查询用户是否存在
         // 查询用户是否存在
@@ -326,18 +329,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
     }
 
-    // 私有方法，用于检查账户是否重复
-    private void checkUserAccount(String userAccount)
-    {
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("userAccount", userAccount);
-        long count = this.baseMapper.selectCount(queryWrapper);
-        if (count > 0)
-        {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号重复");
-        }
-    }
-
     /**
      * 随机生成密码
      *
@@ -472,7 +463,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @since 2024/6/7 下午4:31
      */
     @Override
-    public Boolean doAfterUploadAction(UploadFileDTO uploadFileDTO, Path savePath, UploadFileRequest uploadFileRequest) throws IOException
+    public Boolean doAfterUploadAction(UploadFileDTO uploadFileDTO, Path savePath,
+                                       UploadFileRequest uploadFileRequest) throws IOException
     {
         Long userId = uploadFileDTO.getUserId();
         User user = this.getById(userId);
@@ -503,5 +495,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return true;
         }
         return false;
+    }
+
+    // 私有方法，用于检查账户是否重复
+    private void checkUserAccount(String userAccount)
+    {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("userAccount", userAccount);
+        long count = this.baseMapper.selectCount(queryWrapper);
+        if (count > 0)
+        {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号重复");
+        }
+    }
+
+    private void verifyCaptchaCode(String captchaCode, String captchaId, HttpServletRequest request)
+    {
+        ThrowUtils.throwIf(captchaService.verifyCaptcha(captchaCode, captchaId, request), ErrorCode.PARAMS_ERROR, "验证码错误");
     }
 }

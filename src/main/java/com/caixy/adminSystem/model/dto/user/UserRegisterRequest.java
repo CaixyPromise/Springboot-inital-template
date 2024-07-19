@@ -38,5 +38,9 @@ public class UserRegisterRequest implements Serializable
      * 确认密码
      */
     private String checkPassword;
+
+    private String captcha;
+
+    private String captchaId;
     private static final long serialVersionUID = 3191241716373120793L;
 }

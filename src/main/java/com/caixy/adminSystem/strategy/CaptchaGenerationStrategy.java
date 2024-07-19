@@ -31,7 +31,8 @@ import java.util.UUID;
  **/
 public abstract class CaptchaGenerationStrategy
 {
-    private static final Logger log = LoggerFactory.getLogger(CaptchaGenerationStrategy.class);
+    @Resource
+    private RedisUtils redisUtils;
 
     protected Producer captchaProducer;
 
@@ -41,40 +42,9 @@ public abstract class CaptchaGenerationStrategy
         captchaProducer = makeProducer();
     }
 
-    @Resource
-    private RedisUtils redisUtils;
-
     public abstract CaptchaVO generateCaptcha(HttpServletRequest request);
 
     protected abstract Producer makeProducer(); // 确保这个方法只能被继承者使用
-
-    public boolean verifyCaptcha(String captchaCode, HttpServletRequest request)
-    {
-        // 获取SessionId
-        String sessionId = request.getRequestedSessionId();
-        String sessionUuid = request.getSession().getAttribute(CommonConstant.CAPTCHA_SIGN).toString();
-        // 1.2 校验验证码
-        Map<String, String> result = redisUtils.getHashMap(
-                RedisConstant.CAPTCHA_CODE,
-                String.class,
-                String.class,
-                sessionId);
-        if (sessionUuid == null || result == null || result.isEmpty())
-        {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "验证码错误");
-        }
-        String redisCode = result.get("code").trim();
-        String redisUuid = result.get("uuid").trim();
-        // 移除session缓存的uuid
-        request.getSession().removeAttribute(CommonConstant.CAPTCHA_SIGN);
-        boolean removeByCache = redisUtils.delete(RedisConstant.CAPTCHA_CODE, sessionId);
-        if (!removeByCache)
-        {
-            log.warn("验证码校验失败，移除缓存失败，sessionId:{}", sessionId);
-        }
-        // 验证码不区分大小写，同时校验前后的session内的uuid是否一致。
-        return !redisCode.equalsIgnoreCase(captchaCode.trim()) && sessionUuid.equals(redisUuid);
-    }
 
     protected CaptchaVO saveResult(String code, BufferedImage image, HttpServletRequest request)
     {

@@ -9,7 +9,6 @@ import com.caixy.adminSystem.strategy.CaptchaGenerationStrategy;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -24,7 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 public class CaptchaServiceImpl implements CaptchaService
 {
     private final CaptchaFactory captchaFactory;
-    // todo: 添加验证码混淆，补充AES令牌进入到验证码图片中进行混淆。
+
     @Override
     public CaptchaVO getAnyCaptcha(HttpServletRequest request)
     {
@@ -41,5 +40,18 @@ public class CaptchaServiceImpl implements CaptchaService
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "验证码类型错误");
         }
         return captchaStrategy.generateCaptcha(request);
+    }
+
+    /**
+     * 校验验证码
+     *
+     * @author CAIXYPROMISE
+     * @version 1.0
+     * @since 2024/7/18 上午1:54
+     */
+    @Override
+    public boolean verifyCaptcha(String code, String captchaId, HttpServletRequest request)
+    {
+        return captchaFactory.verifyCaptcha(code, captchaId, request);
     }
 }
