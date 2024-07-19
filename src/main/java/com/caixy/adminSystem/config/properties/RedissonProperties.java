@@ -3,6 +3,7 @@ package com.caixy.adminSystem.config.properties;
 
 import lombok.Data;
 import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -15,18 +16,13 @@ import java.util.HashMap;
  * @author: CAIXYPROMISE
  * @since: 2024-01-07 21:58
  **/
+@Setter
 @Getter
 @Configuration
 @ConfigurationProperties(prefix = "redis-session")
 public class RedissonProperties
 {
     private HashMap<String, RedisInstanceProperties> instances = new HashMap<>();
-
-    public void setInstances(HashMap<String, RedisInstanceProperties> instances)
-    {
-
-        this.instances = instances;
-    }
 
     @Data
     public static class RedisInstanceProperties
