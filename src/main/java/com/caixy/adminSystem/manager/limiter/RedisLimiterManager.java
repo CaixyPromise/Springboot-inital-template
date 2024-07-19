@@ -1,7 +1,8 @@
 package com.caixy.adminSystem.manager.limiter;
 
+import com.caixy.adminSystem.annotation.InjectRedissonClient;
 import com.caixy.adminSystem.common.ErrorCode;
-import com.caixy.adminSystem.config.RedisSessionManager;
+import com.caixy.adminSystem.config.RedissonClientConfigurator;
 import com.caixy.adminSystem.exception.ThrowUtils;
 import com.caixy.adminSystem.model.enums.RedisLimiterEnum;
 import lombok.extern.slf4j.Slf4j;
@@ -24,15 +25,8 @@ import java.time.Duration;
 @Slf4j
 public class RedisLimiterManager
 {
-    private final RedissonClient redissonClient;
-
-    public RedisLimiterManager(RedisSessionManager redisSessionManager)
-    {
-        ThrowUtils.throwIf(redisSessionManager == null, ErrorCode.SYSTEM_ERROR, "RedissonClient init fail.");
-        // 加载redis限流器客户端
-        redissonClient = redisSessionManager.getRedissonClient("limiter");
-        log.info("RedisLimiterManager init.");
-    }
+    @InjectRedissonClient(clientName = "limiter", name = "限流器")
+    private RedissonClient redissonClient;
 
     /**
      * 执行限流策略
