@@ -44,19 +44,21 @@ public class RateLimiterInterceptor
         String dynamicKey = parseKey(rateLimitedFlow.args(), methodSignature, args);
 
         RateLimiterBuilder<Object> builder = redisLimiterManager.doLimit(rateLimitedFlow.key(), dynamicKey);
-        String errorMsg = StringUtils.isNotBlank(rateLimitedFlow.errorMessage()) ? rateLimitedFlow.errorMessage() : "操作过于频繁，请稍后再试";
-        return builder.onSuccess(() -> {
-                    try
-                    {
-                        return joinPoint.proceed();
-                    }
-                    catch (Throwable throwable)
-                    {
-                        throw new RuntimeException(throwable);
-                    }
-                })
-                .orElseThrow(() -> new BusinessException(ErrorCode.OPERATION_ERROR, errorMsg))
-                .execute();
+        String errorMsg = StringUtils.isNotBlank(rateLimitedFlow.errorMessage()) ? rateLimitedFlow.errorMessage()
+                                                                                 : "操作过于频繁，请稍后再试";
+        return builder.onSuccess(() ->
+                      {
+                          try
+                          {
+                              return joinPoint.proceed();
+                          }
+                          catch (Throwable throwable)
+                          {
+                              throw new RuntimeException(throwable);
+                          }
+                      })
+                      .orElseThrow(() -> new BusinessException(ErrorCode.OPERATION_ERROR, errorMsg))
+                      .execute();
     }
 
     private String parseKey(String keyExpression, MethodSignature methodSignature, Object[] args)
