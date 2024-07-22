@@ -1,6 +1,8 @@
 package com.caixy.adminSystem.utils;
 
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;
@@ -10,23 +12,21 @@ import org.springframework.stereotype.Component;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * Spring 上下文获取工具
- *
- 
  */
 @Component
-public class SpringContextUtils implements ApplicationContextAware {
-
+public class SpringContextUtils implements ApplicationContextAware
+{
+    private static final Logger log = LoggerFactory.getLogger(SpringContextUtils.class);
     private static ApplicationContext applicationContext;
 
     @Override
-    public void setApplicationContext(@NotNull ApplicationContext applicationContext) throws BeansException {
+    public void setApplicationContext(@NotNull ApplicationContext applicationContext) throws BeansException
+    {
         SpringContextUtils.applicationContext = applicationContext;
     }
 
@@ -36,7 +36,8 @@ public class SpringContextUtils implements ApplicationContextAware {
      * @param beanName
      * @return
      */
-    public static Object getBean(String beanName) {
+    public static Object getBean(String beanName)
+    {
         return applicationContext.getBean(beanName);
     }
 
@@ -47,7 +48,8 @@ public class SpringContextUtils implements ApplicationContextAware {
      * @param <T>
      * @return
      */
-    public static <T> T getBean(Class<T> beanClass) {
+    public static <T> T getBean(Class<T> beanClass)
+    {
         return applicationContext.getBean(beanClass);
     }
 
@@ -59,7 +61,8 @@ public class SpringContextUtils implements ApplicationContextAware {
      * @param <T>
      * @return
      */
-    public static <T> T getBean(String beanName, Class<T> beanClass) {
+    public static <T> T getBean(String beanName, Class<T> beanClass)
+    {
         return applicationContext.getBean(beanName, beanClass);
     }
 
@@ -96,7 +99,7 @@ public class SpringContextUtils implements ApplicationContextAware {
                     Method valueMethod = annotationTypeClass.getMethod(getAnnotationValueMethodName);
                     @SuppressWarnings("unchecked") KeyType key = (KeyType) valueMethod.invoke(annotation);
                     serviceMap.put(key, service);
-                    System.out.printf("成功-初始化策略注解处理类：%s -> %s%n", key, targetClass.getName());
+                    log.info("成功-初始化策略注解处理类：{} -> {}", key, targetClass.getName());
                 }
                 catch (ReflectiveOperationException e)
                 {
