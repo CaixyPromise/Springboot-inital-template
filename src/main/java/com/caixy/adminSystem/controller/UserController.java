@@ -1,6 +1,5 @@
 package com.caixy.adminSystem.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.caixy.adminSystem.annotation.AuthCheck;
 import com.caixy.adminSystem.common.BaseResponse;
@@ -13,7 +12,6 @@ import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.exception.ThrowUtils;
 import com.caixy.adminSystem.model.dto.user.*;
 import com.caixy.adminSystem.model.entity.User;
-import com.caixy.adminSystem.model.enums.UserGenderEnum;
 import com.caixy.adminSystem.model.vo.user.AboutMeVO;
 import com.caixy.adminSystem.model.vo.user.AddUserVO;
 import com.caixy.adminSystem.model.vo.user.LoginUserVO;
