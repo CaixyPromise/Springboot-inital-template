@@ -6,10 +6,11 @@ import org.redisson.api.RateIntervalUnit;
 
 /**
  * Redis限流器枚举
- *
+ * <p>
  * 设置限流器的规则。这里设定的规则是每秒最多允许total个请求
- *  * 每个请求间隔rate个时间单位
- *  * 获取1个权限，也就是每秒最多处理2个请求
+ * * 每个请求间隔rate个时间单位
+ * * 获取1个权限，也就是每秒最多处理2个请求
+ *
  * @author CAIXYPROMISE
  * @name com.caixy.adminSystem.model.enums.RedisLimiterEnum
  * @since 2024-07-16 21:46
@@ -66,6 +67,10 @@ public enum RedisLimiterEnum
 
     public String generateKey(String... items)
     {
+        if (items == null || items.length == 0)
+        {
+            return key;
+        }
         return key.concat(String.join(":", items));
     }
 }
