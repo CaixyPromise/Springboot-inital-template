@@ -317,92 +317,6 @@ public class RedisUtils
         return Boolean.TRUE.equals(stringRedisTemplate.hasKey(key));
     }
 
-    // region 分布式锁
-    // ===================================== 分布式锁 =====================================
-
-    /**
-     * 尝试获取分布式锁
-     *
-     * @param lockKey   锁的Key
-     * @param requestId 请求标识
-     * @return 是否获取成功
-     */
-    public boolean tryGetDistributedLock(RedisConstant lockKey, String itemKey, String requestId, Long retryTime)
-    {
-        return tryGetDistributedLock(getFullKey(lockKey, itemKey), requestId, lockKey.getExpire(), retryTime);
-    }
-
-    public boolean tryGetDistributedLock(String lockKey, String requestId, Long expireTime, Long retryTime)
-    {
-        long retry = retryTime == null ? MAX_RETRY_TIMES : retryTime;
-        if (retry < 0)
-        {
-            while (true)
-            {
-                if (getLock(lockKey, requestId, expireTime))
-                {
-                    return true;
-                }
-            }
-        }
-        else
-        {
-            for (int i = 0; i < retry; i++)
-            {
-                if (getLock(lockKey, requestId, expireTime))
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private boolean getLock(String lockKey, String requestId, Long expireTime)
-    {
-        Boolean result = stringRedisTemplate.opsForValue().setIfAbsent(
-                lockKey,
-                requestId,
-                expireTime,
-                TimeUnit.SECONDS);
-        if (result != null && result)
-        {
-            return true;
-        }
-        try
-        {
-            Thread.sleep(RETRY_INTERVAL);
-        }
-        catch (InterruptedException e)
-        {
-            Thread.currentThread().interrupt();
-        }
-        return false;
-    }
-
-    /**
-     * 释放分布式锁
-     *
-     * @param lockKey   锁的Key
-     * @param requestId 请求标识
-     * @return 是否释放成功
-     */
-    public boolean releaseDistributedLock(String lockKey, String requestId)
-    {
-        if (requestId.equals(stringRedisTemplate.opsForValue().get(lockKey)))
-        {
-            return delete(lockKey);
-        }
-        return false;
-    }
-
-    public boolean releaseDistributedLock(RedisConstant key, String itemKey, String requestId)
-    {
-        return releaseDistributedLock(getFullKey(key, itemKey), requestId);
-    }
-
-
-    // endregion
     // region 排行榜实现
     // ===================== 排行榜实现 =====================
 
@@ -417,26 +331,10 @@ public class RedisUtils
      */
     public boolean zAdd(RedisConstant rankKey, Object value, double score)
     {
-        String lockKey = REDIS_INVOKE_RANK_LOCK_KEY + rankKey.getKey() + ":lock";
-        String requestId = UUID.randomUUID().toString();
-        try
-        {
-            // 尝试获取分布式锁
-            boolean isLocked = tryGetDistributedLock(lockKey, requestId, rankKey.getExpire(), 10L);
-            if (!isLocked)
-            {
-                return false; // 无法获取锁，直接返回
-            }
-            // 检查排行榜大小，并可能移除最低分数的记录
-            manageRankSize(rankKey.getKey());
-            // 添加新记录
-            return Boolean.TRUE.equals(stringRedisTemplate.opsForZSet().add(rankKey.getKey(), value.toString(), score));
-        }
-        finally
-        {
-            // 释放分布式锁
-            releaseDistributedLock(lockKey, requestId);
-        }
+        // 检查排行榜大小，并可能移除最低分数的记录
+        manageRankSize(rankKey.getKey());
+        // 添加新记录
+        return Boolean.TRUE.equals(stringRedisTemplate.opsForZSet().add(rankKey.getKey(), value.toString(), score));
     }
 
     /**
