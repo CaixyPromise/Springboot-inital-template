@@ -33,4 +33,17 @@ public class BusinessException extends RuntimeException
         this.code = errorCode.getCode();
     }
 
+    /**
+     * 抛出错误，返回message信息，args会替换message内的{}字符
+     *
+     * @author CAIXYPROMISE
+     * @version 1.0
+     * @since 2024/7/20 上午12:49
+     */
+    public BusinessException(ErrorCode errorCode, String message, Object... args)
+    {
+        super(String.format(message.replace("{}", "%s"), args));
+        this.code = errorCode.getCode();
+    }
+
 }
