@@ -26,6 +26,10 @@ public enum RedisConstant
 
     public String generateKey(String... items)
     {
+        if (items == null || items.length == 0)
+        {
+            return key;
+        }
         return key.concat(String.join(":", items));
     }
 }
