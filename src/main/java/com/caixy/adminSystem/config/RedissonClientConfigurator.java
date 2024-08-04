@@ -53,7 +53,7 @@ public class RedissonClientConfigurator implements BeanPostProcessor
                 }
                 catch (IllegalAccessException e)
                 {
-                    throw new BusinessException(ErrorCode.SYSTEM_ERROR, annotation.name() + "注入RedissonClient失败");
+                    throw new RuntimeException(annotation.name() + "注入RedissonClient失败");
                 }
             }
         }
