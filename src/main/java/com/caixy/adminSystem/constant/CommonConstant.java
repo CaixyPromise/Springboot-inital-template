@@ -25,4 +25,6 @@ public interface CommonConstant
      * 验证码session-key
      */
     String CAPTCHA_SIGN = "captcha";
+
+    String FRONTED_URL = "http://localhost:8000";
 }
