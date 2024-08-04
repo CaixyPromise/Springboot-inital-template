@@ -17,10 +17,10 @@ spring:
     timeout: 5000
     password: 123456
   # Elasticsearch 配置
-  elasticsearch:
-    uris: http://localhost:9200
-    username: root
-    password: 123456
+#  elasticsearch:
+#    uris: http://localhost:9200
+#    username: root
+#    password: 123456
 mybatis-plus:
   configuration:
     # 生产环境关闭日志
