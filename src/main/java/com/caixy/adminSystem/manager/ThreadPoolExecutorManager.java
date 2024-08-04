@@ -21,6 +21,7 @@ import static com.caixy.adminSystem.config.properties.ThreadPoolExecutionPropert
  **/
 @Service
 @Slf4j
+@Deprecated
 public class ThreadPoolExecutorManager
 {
     @Resource
