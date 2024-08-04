@@ -8,8 +8,6 @@ import com.caixy.adminSystem.model.enums.RedisConstant;
 import com.caixy.adminSystem.model.vo.captcha.CaptchaVO;
 import com.caixy.adminSystem.utils.RedisUtils;
 import com.google.code.kaptcha.Producer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.util.FastByteArrayOutputStream;
 
 import javax.annotation.PostConstruct;
@@ -19,7 +17,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -48,7 +45,7 @@ public abstract class CaptchaGenerationStrategy
 
     protected CaptchaVO saveResult(String code, BufferedImage image, HttpServletRequest request)
     {
-        HashMap<String, Object> resultMap = new HashMap<>();
+        HashMap<String, String> resultMap = new HashMap<>();
         String uuid = UUID.randomUUID().toString();
 
         FastByteArrayOutputStream outputStream = new FastByteArrayOutputStream();
