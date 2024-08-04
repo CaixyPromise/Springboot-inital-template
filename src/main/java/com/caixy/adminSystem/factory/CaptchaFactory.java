@@ -30,6 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 @Slf4j
 public class CaptchaFactory
+
 {
     @Resource
     private List<CaptchaGenerationStrategy> captchaGenerationStrategies;
