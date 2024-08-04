@@ -13,6 +13,7 @@ import com.caixy.adminSystem.exception.ThrowUtils;
 import com.caixy.adminSystem.mapper.UserMapper;
 import com.caixy.adminSystem.model.dto.file.UploadFileDTO;
 import com.caixy.adminSystem.model.dto.file.UploadFileRequest;
+import com.caixy.adminSystem.model.dto.oauth.github.GithubUserProfileDTO;
 import com.caixy.adminSystem.model.dto.user.UserLoginRequest;
 import com.caixy.adminSystem.model.dto.user.UserModifyPasswordRequest;
 import com.caixy.adminSystem.model.dto.user.UserQueryRequest;
@@ -116,12 +117,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户已被封号");
         }
         // 3. 记录用户的登录态
-        User userVo = new User();
-        BeanUtils.copyProperties(user, userVo);
-        userVo.setUserPassword(null);
-        request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, userVo);
-        // 登录成功
-        return userVo;
+        return loginUser(user, request);
     }
 
     @Override
@@ -455,6 +451,41 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
     }
 
+    @Override
+    public User doOAuthLogin(GithubUserProfileDTO userProfile, HttpServletRequest request)
+    {
+        if (userProfile.getMessage() != null)
+        {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "验证失败");
+        }
+        Long githubUserId = userProfile.getId();
+        if (githubUserId == null)
+        {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "验证失败");
+        }
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("githubId", githubUserId);
+        User userInfo = this.getOne(queryWrapper);
+        // 如果未查询到，注册该用户
+        if (userInfo == null)
+        {
+            userInfo =
+                    User.builder()
+                    .userEmail(userProfile.getEmail())
+                    .githubId(userProfile.getId())
+                    .userAvatar(userProfile.getAvatarUrl())
+                    .githubUserName(userProfile.getLoginUserName())
+                    .userGender(UserGenderEnum.UNKNOWN.getValue())
+                    .userAccount(userProfile.getLoginUserName())
+                    .userRole(UserRoleEnum.USER.getValue())
+                    .userName(userProfile.getName())
+                    .build();
+            this.save(userInfo);
+
+        }
+        return loginUser(userInfo, request);
+    }
+
     /**
      * 头像文件上传处理逻辑
      *
@@ -511,6 +542,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     private void verifyCaptchaCode(String captchaCode, String captchaId, HttpServletRequest request)
     {
-        ThrowUtils.throwIf(captchaService.verifyCaptcha(captchaCode, captchaId, request), ErrorCode.PARAMS_ERROR, "验证码错误");
+        ThrowUtils.throwIf(captchaService.verifyCaptcha(captchaCode, captchaId, request), ErrorCode.PARAMS_ERROR,
+                "验证码错误");
+    }
+
+    private User loginUser(User user, HttpServletRequest request)
+    {
+        User userVo = new User();
+        BeanUtils.copyProperties(user, userVo);
+        userVo.setUserPassword(null);
+        request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, userVo);
+        return userVo;
     }
 }

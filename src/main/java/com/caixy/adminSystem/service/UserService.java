@@ -2,6 +2,7 @@ package com.caixy.adminSystem.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.caixy.adminSystem.model.dto.oauth.github.GithubUserProfileDTO;
 import com.caixy.adminSystem.model.dto.user.UserLoginRequest;
 import com.caixy.adminSystem.model.dto.user.UserModifyPasswordRequest;
 import com.caixy.adminSystem.model.dto.user.UserQueryRequest;
@@ -124,4 +125,6 @@ public interface UserService extends IService<User>
     Boolean modifyPassword(Long userId, UserModifyPasswordRequest userModifyPasswordRequest);
 
     void validUserInfo(User user, boolean add);
+
+    User doOAuthLogin(GithubUserProfileDTO userProfile, HttpServletRequest request);
 }
