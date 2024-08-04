@@ -13,6 +13,11 @@ public enum RedisConstant
      */
     CAPTCHA_CODE("captcha:", 60L * 5),
 
+    /**
+     * github OAuth验证信息缓存，5分钟
+     */
+    GITHUB_OAUTH("github_oauth:", 60L * 5),
+
     ;
 
     private final String key;
