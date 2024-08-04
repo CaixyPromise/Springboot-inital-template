@@ -6,6 +6,7 @@ import lombok.Data;
 import org.springframework.beans.BeanUtils;
 
 import java.io.Serializable;
+import java.util.Optional;
 
 /**
  * 关于我个人信息VO
@@ -52,9 +53,10 @@ public class AboutMeVO implements Serializable
         AboutMeVO aboutMeVO = new AboutMeVO();
         BeanUtils.copyProperties(currentUser, aboutMeVO);
         // 脱密处理
-        aboutMeVO.setUserPhone(currentUser.getUserPhone().replaceAll(RegexPatternConstants.PHONE_ENCRYPT_REGEX, "$1****$2"));
-
-        aboutMeVO.setUserEmail(currentUser.getUserEmail().replaceAll(RegexPatternConstants.EMAIL_ENCRYPT_REGEX, "$1****$2"));
+        Optional.ofNullable(aboutMeVO.getUserPhone()).ifPresent(item -> aboutMeVO.setUserPhone(
+                currentUser.getUserPhone().replaceAll(RegexPatternConstants.PHONE_ENCRYPT_REGEX, "$1****$2")));
+        Optional.ofNullable(aboutMeVO.getUserEmail()).ifPresent(item -> aboutMeVO.setUserEmail(
+                currentUser.getUserEmail().replaceAll(RegexPatternConstants.EMAIL_ENCRYPT_REGEX, "$1****$2")));
         return aboutMeVO;
     }
 

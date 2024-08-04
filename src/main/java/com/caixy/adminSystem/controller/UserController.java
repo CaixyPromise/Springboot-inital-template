@@ -7,9 +7,15 @@ import com.caixy.adminSystem.common.DeleteRequest;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.common.ResultUtils;
 import com.caixy.adminSystem.config.WxOpenConfig;
+import com.caixy.adminSystem.constant.CommonConstant;
 import com.caixy.adminSystem.constant.UserConstant;
 import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.exception.ThrowUtils;
+import com.caixy.adminSystem.factory.OAuthFactory;
+import com.caixy.adminSystem.model.dto.oauth.github.GithubCallbackRequest;
+import com.caixy.adminSystem.model.dto.oauth.github.GithubCallbackResponse;
+import com.caixy.adminSystem.model.dto.oauth.github.GithubGetAuthorizationUrlRequest;
+import com.caixy.adminSystem.model.dto.oauth.github.GithubUserProfileDTO;
 import com.caixy.adminSystem.model.dto.user.*;
 import com.caixy.adminSystem.model.entity.User;
 import com.caixy.adminSystem.model.vo.user.AboutMeVO;
@@ -17,6 +23,7 @@ import com.caixy.adminSystem.model.vo.user.AddUserVO;
 import com.caixy.adminSystem.model.vo.user.LoginUserVO;
 import com.caixy.adminSystem.model.vo.user.UserVO;
 import com.caixy.adminSystem.service.UserService;
+import com.caixy.adminSystem.strategy.OAuth2ActionStrategy;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
 import me.chanjar.weixin.common.bean.oauth2.WxOAuth2AccessToken;
@@ -28,6 +35,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -43,7 +51,55 @@ public class UserController
     @Resource
     private WxOpenConfig wxOpenConfig;
 
+    @Resource
+    private OAuthFactory<
+            GithubCallbackResponse,
+            GithubUserProfileDTO,
+            GithubGetAuthorizationUrlRequest,
+            GithubCallbackRequest> oAuthFactory;
+
     // region 登录相关
+    @GetMapping("/oauth2/github/login")
+    public BaseResponse<String> initiateGithubLogin(
+            @ModelAttribute GithubGetAuthorizationUrlRequest authorizationUrlRequest,
+            HttpServletRequest request)
+    {
+        authorizationUrlRequest.setSessionId(request.getSession().getId());
+        log.info("authorizationUrlRequest:{}", authorizationUrlRequest);
+        String authorizationUrl = oAuthFactory.getOAuth2ActionStrategy("Github").getAuthorizationUrl(
+                authorizationUrlRequest);
+        return ResultUtils.success(authorizationUrl);
+    }
+
+    @GetMapping("/oauth2/github/callback")
+    public void githubLoginCallback(
+            @ModelAttribute GithubCallbackRequest githubCallbackRequest,
+            HttpServletRequest request,
+            HttpServletResponse response) throws IOException
+    {
+        try {
+            OAuth2ActionStrategy<GithubCallbackResponse,
+                    GithubUserProfileDTO,
+                    GithubGetAuthorizationUrlRequest,
+                    GithubCallbackRequest> githubStrategy = oAuthFactory.getOAuth2ActionStrategy(
+                    "Github");
+            githubCallbackRequest.setSessionId(request.getSession().getId());
+            GithubCallbackResponse githubCallbackResponse = githubStrategy.doCallback(githubCallbackRequest);
+            GithubUserProfileDTO userProfile = githubStrategy.getUserProfile(githubCallbackResponse);
+            if (userProfile != null)
+            {
+                User user = userService.doOAuthLogin(userProfile, request);
+                request.getSession().setAttribute("user", user);
+                request.getSession().setAttribute("loginType", "Github");
+            }
+            response.sendRedirect(githubCallbackResponse.getRedirectUri());
+        }
+        catch (Exception e)
+        {
+            response.sendRedirect(CommonConstant.FRONTED_URL);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, e.getMessage());
+        }
+    }
 
     /**
      * 用户注册
@@ -83,7 +139,8 @@ public class UserController
      * @return
      */
     @PostMapping("/login")
-    public BaseResponse<LoginUserVO> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request)
+    public BaseResponse<LoginUserVO> userLogin(@RequestBody UserLoginRequest userLoginRequest,
+                                               HttpServletRequest request)
     {
         if (userLoginRequest == null)
         {
@@ -200,11 +257,11 @@ public class UserController
         Long resultId = userService.makeRegister(user);
         // 返回结果
         AddUserVO resultAddUserInfo = AddUserVO.builder()
-                .userName(userAddRequest.getUserName())
-                .userAccount(userAddRequest.getUserAccount())
-                .userPassword(defaultPassword)
-                .id(resultId)
-                .build();
+                                               .userName(userAddRequest.getUserName())
+                                               .userAccount(userAddRequest.getUserAccount())
+                                               .userPassword(defaultPassword)
+                                               .id(resultId)
+                                               .build();
         return ResultUtils.success(resultAddUserInfo);
     }
 

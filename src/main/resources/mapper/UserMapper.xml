@@ -9,13 +9,15 @@
             <result property="userAccount" column="userAccount" jdbcType="VARCHAR"/>
             <result property="userPassword" column="userPassword" jdbcType="VARCHAR"/>
             <result property="unionId" column="unionId" jdbcType="VARCHAR"/>
+            <result property="githubId" column="githubId" jdbcType="BIGINT"/>
+            <result property="githubUserName" column="githubUserName" jdbcType="VARCHAR"/>
             <result property="userPhone" column="userPhone" jdbcType="VARCHAR"/>
             <result property="userEmail" column="userEmail" jdbcType="VARCHAR"/>
             <result property="mpOpenId" column="mpOpenId" jdbcType="VARCHAR"/>
             <result property="userName" column="userName" jdbcType="VARCHAR"/>
+            <result property="userGender" column="userGender" jdbcType="INTEGER"/>
             <result property="userAvatar" column="userAvatar" jdbcType="VARCHAR"/>
             <result property="userProfile" column="userProfile" jdbcType="VARCHAR"/>
-            <result property="userGender" column="userGender" jdbcType="TINYINT"/>
             <result property="userRole" column="userRole" jdbcType="VARCHAR"/>
             <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
             <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
@@ -24,9 +26,10 @@
 
     <sql id="Base_Column_List">
         id,userAccount,userPassword,
-        unionId,userPhone,userEmail,
-        mpOpenId,userName,userAvatar,
-        userProfile,userGender,userRole,
-        createTime,updateTime,isDelete
+        unionId,githubId,githubUserName,
+        userPhone,userEmail,mpOpenId, userGender,
+        userName,userAvatar,userProfile,
+        userRole,createTime,updateTime,
+        isDelete
     </sql>
 </mapper>
