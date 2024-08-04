@@ -243,13 +243,11 @@ public class RedisUtils
      * @version 1.0
      * @since 2023/12/20 2:16
      */
-    public void setHashMap(RedisConstant Enum, Map<String, Object> data, String... item)
+    public <Key, Value> void setHashMap(RedisConstant Enum, Map<Key, Value> data, String... item)
     {
         Long expire = Enum.getExpire();
-        HashMap<String, String> stringData = new HashMap<>();
-        data.forEach((dataKey, value) -> stringData.put(dataKey, JsonUtils.toJsonString(value)));
         String fullKey = Enum.generateKey(item);
-        stringRedisTemplate.opsForHash().putAll(fullKey, stringData);
+        stringRedisTemplate.opsForHash().putAll(fullKey, data);
         if (expire != null)
         {
             refreshExpire(fullKey, expire);
