@@ -12,18 +12,16 @@ import com.caixy.adminSystem.constant.UserConstant;
 import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.exception.ThrowUtils;
 import com.caixy.adminSystem.factory.OAuthFactory;
-import com.caixy.adminSystem.model.dto.oauth.github.GithubCallbackRequest;
-import com.caixy.adminSystem.model.dto.oauth.github.GithubCallbackResponse;
+import com.caixy.adminSystem.model.dto.oauth.OAuthResultResponse;
 import com.caixy.adminSystem.model.dto.oauth.github.GithubGetAuthorizationUrlRequest;
-import com.caixy.adminSystem.model.dto.oauth.github.GithubUserProfileDTO;
 import com.caixy.adminSystem.model.dto.user.*;
 import com.caixy.adminSystem.model.entity.User;
+import com.caixy.adminSystem.model.enums.OAuthProviderEnum;
 import com.caixy.adminSystem.model.vo.user.AboutMeVO;
 import com.caixy.adminSystem.model.vo.user.AddUserVO;
 import com.caixy.adminSystem.model.vo.user.LoginUserVO;
 import com.caixy.adminSystem.model.vo.user.UserVO;
 import com.caixy.adminSystem.service.UserService;
-import com.caixy.adminSystem.strategy.OAuth2ActionStrategy;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
 import me.chanjar.weixin.common.bean.oauth2.WxOAuth2AccessToken;
@@ -37,6 +35,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 用户接口
@@ -52,47 +51,48 @@ public class UserController
     private WxOpenConfig wxOpenConfig;
 
     @Resource
-    private OAuthFactory<
-            GithubCallbackResponse,
-            GithubUserProfileDTO,
-            GithubGetAuthorizationUrlRequest,
-            GithubCallbackRequest> oAuthFactory;
+    private OAuthFactory oAuthFactory;
 
     // region 登录相关
-    @GetMapping("/oauth2/github/login")
+    @GetMapping("/oauth2/{provider}/login")
     public BaseResponse<String> initiateGithubLogin(
+            @PathVariable String provider,
             @ModelAttribute GithubGetAuthorizationUrlRequest authorizationUrlRequest,
             HttpServletRequest request)
     {
+        OAuthProviderEnum providerEnum = OAuthProviderEnum.getProviderEnum(provider);
+        if (providerEnum == null)
+        {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "不支持的OAuth2登录方式");
+        }
         authorizationUrlRequest.setSessionId(request.getSession().getId());
         log.info("authorizationUrlRequest:{}", authorizationUrlRequest);
-        String authorizationUrl = oAuthFactory.getOAuth2ActionStrategy("Github").getAuthorizationUrl(
+        String authorizationUrl = oAuthFactory.getOAuth2ActionStrategy(providerEnum).getAuthorizationUrl(
                 authorizationUrlRequest);
         return ResultUtils.success(authorizationUrl);
     }
 
-    @GetMapping("/oauth2/github/callback")
+    @GetMapping("/oauth2/{provider}/callback")
     public void githubLoginCallback(
-            @ModelAttribute GithubCallbackRequest githubCallbackRequest,
+            @PathVariable("provider") String provider,
+            @RequestParam Map<String, Object> allParams,
             HttpServletRequest request,
             HttpServletResponse response) throws IOException
     {
-        try {
-            OAuth2ActionStrategy<GithubCallbackResponse,
-                    GithubUserProfileDTO,
-                    GithubGetAuthorizationUrlRequest,
-                    GithubCallbackRequest> githubStrategy = oAuthFactory.getOAuth2ActionStrategy(
-                    "Github");
-            githubCallbackRequest.setSessionId(request.getSession().getId());
-            GithubCallbackResponse githubCallbackResponse = githubStrategy.doCallback(githubCallbackRequest);
-            GithubUserProfileDTO userProfile = githubStrategy.getUserProfile(githubCallbackResponse);
-            if (userProfile != null)
+        allParams.put("sessionId", request.getSession().getId());
+        try
+        {
+            OAuthProviderEnum providerEnum = OAuthProviderEnum.getProviderEnum(provider);
+            if (providerEnum == null)
             {
-                User user = userService.doOAuthLogin(userProfile, request);
-                request.getSession().setAttribute("user", user);
-                request.getSession().setAttribute("loginType", "Github");
+                throw new BusinessException(ErrorCode.OPERATION_ERROR, "不支持的OAuth2登录方式");
             }
-            response.sendRedirect(githubCallbackResponse.getRedirectUri());
+            OAuthResultResponse oAuthResultResponse = oAuthFactory.doAuth(providerEnum, allParams);
+            if (oAuthResultResponse.isSuccess())
+            {
+                userService.doOAuthLogin(oAuthResultResponse, providerEnum, request);
+            }
+            response.sendRedirect(oAuthResultResponse.getRedirectUrl());
         }
         catch (Exception e)
         {

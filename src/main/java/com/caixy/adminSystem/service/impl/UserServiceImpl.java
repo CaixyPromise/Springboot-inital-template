@@ -13,13 +13,12 @@ import com.caixy.adminSystem.exception.ThrowUtils;
 import com.caixy.adminSystem.mapper.UserMapper;
 import com.caixy.adminSystem.model.dto.file.UploadFileDTO;
 import com.caixy.adminSystem.model.dto.file.UploadFileRequest;
-import com.caixy.adminSystem.model.dto.oauth.github.GithubUserProfileDTO;
-import com.caixy.adminSystem.model.dto.user.UserLoginRequest;
-import com.caixy.adminSystem.model.dto.user.UserModifyPasswordRequest;
-import com.caixy.adminSystem.model.dto.user.UserQueryRequest;
-import com.caixy.adminSystem.model.dto.user.UserRegisterRequest;
+import com.caixy.adminSystem.model.dto.oauth.OAuthResultResponse;
+import com.caixy.adminSystem.model.dto.user.*;
 import com.caixy.adminSystem.model.entity.User;
+import com.caixy.adminSystem.model.entity.convertor.UserConvertor;
 import com.caixy.adminSystem.model.enums.FileActionBizEnum;
+import com.caixy.adminSystem.model.enums.OAuthProviderEnum;
 import com.caixy.adminSystem.model.enums.UserGenderEnum;
 import com.caixy.adminSystem.model.enums.UserRoleEnum;
 import com.caixy.adminSystem.model.vo.user.LoginUserVO;
@@ -41,9 +40,7 @@ import org.springframework.stereotype.Service;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.caixy.adminSystem.constant.UserConstant.USER_LOGIN_STATE;
@@ -452,38 +449,41 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public User doOAuthLogin(GithubUserProfileDTO userProfile, HttpServletRequest request)
+    public Boolean doOAuthLogin(OAuthResultResponse resultResponse, OAuthProviderEnum providerEnum,
+                                HttpServletRequest request)
     {
-        if (userProfile.getMessage() != null)
+        if (!resultResponse.isSuccess())
         {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "验证失败");
         }
-        Long githubUserId = userProfile.getId();
-        if (githubUserId == null)
-        {
-            throw new BusinessException(ErrorCode.OPERATION_ERROR, "验证失败");
-        }
+        UserLoginByOAuthAdapter loginAdapter = resultResponse.getLoginAdapter();
+        User oauthUserInfo = loginAdapter.getUserInfo();
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("githubId", githubUserId);
+        queryWrapper.eq(loginAdapter.getUniqueFieldName(), loginAdapter.getUniqueFieldValue());
         User userInfo = this.getOne(queryWrapper);
+        log.info("查询到登录用户信息: {}", userInfo);
         // 如果未查询到，注册该用户
-        if (userInfo == null)
+        boolean isRegister = userInfo == null;
+        if (isRegister)
         {
-            userInfo =
-                    User.builder()
-                    .userEmail(userProfile.getEmail())
-                    .githubId(userProfile.getId())
-                    .userAvatar(userProfile.getAvatarUrl())
-                    .githubUserName(userProfile.getLoginUserName())
-                    .userGender(UserGenderEnum.UNKNOWN.getValue())
-                    .userAccount(userProfile.getLoginUserName())
-                    .userRole(UserRoleEnum.USER.getValue())
-                    .userName(userProfile.getName())
-                    .build();
-            this.save(userInfo);
+            userInfo = new User();
+            UserConvertor.INSTANCE.copyAllPropertiesIgnoringId(oauthUserInfo, userInfo);
+        }
+        else {
+            userInfo = UserConvertor.INSTANCE.copyPropertiesWithStrategy(
+                    oauthUserInfo,
+                    userInfo,
+                    new HashSet<>(Arrays.asList("id", "userPassword", "createTime", "updateTime", "isDelete", "userRole")),
+                    ((sourceValue, targetValue) -> sourceValue != null && targetValue == null));
 
         }
-        return loginUser(userInfo, request);
+        userInfo.setUserRole(UserRoleEnum.USER.getValue());
+        boolean result = isRegister ? this.save(userInfo) : this.updateById(userInfo);
+        log.info("UserInfo: {}", userInfo);
+        if (result){
+            loginUser(userInfo, request);
+        }
+        return result;
     }
 
     /**
