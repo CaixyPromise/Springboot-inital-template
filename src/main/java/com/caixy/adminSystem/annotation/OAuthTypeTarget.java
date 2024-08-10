@@ -1,5 +1,7 @@
 package com.caixy.adminSystem.annotation;
 
+import com.caixy.adminSystem.model.enums.OAuthProviderEnum;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -16,5 +18,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface OAuthTypeTarget
 {
-    String clientName();
+    OAuthProviderEnum clientName();
 }
