@@ -144,3 +144,4 @@ fabric.properties
 
 # 不需要上传的上传文件夹
 /uploads/
+/src/main/resources/application-dev.yml
