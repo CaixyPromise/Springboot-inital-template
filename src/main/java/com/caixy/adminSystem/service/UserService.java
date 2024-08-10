@@ -2,12 +2,13 @@ package com.caixy.adminSystem.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.caixy.adminSystem.model.dto.oauth.github.GithubUserProfileDTO;
+import com.caixy.adminSystem.model.dto.oauth.OAuthResultResponse;
 import com.caixy.adminSystem.model.dto.user.UserLoginRequest;
 import com.caixy.adminSystem.model.dto.user.UserModifyPasswordRequest;
 import com.caixy.adminSystem.model.dto.user.UserQueryRequest;
 import com.caixy.adminSystem.model.dto.user.UserRegisterRequest;
 import com.caixy.adminSystem.model.entity.User;
+import com.caixy.adminSystem.model.enums.OAuthProviderEnum;
 import com.caixy.adminSystem.model.vo.user.LoginUserVO;
 import com.caixy.adminSystem.model.vo.user.UserVO;
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
@@ -126,5 +127,5 @@ public interface UserService extends IService<User>
 
     void validUserInfo(User user, boolean add);
 
-    User doOAuthLogin(GithubUserProfileDTO userProfile, HttpServletRequest request);
+    Boolean doOAuthLogin(OAuthResultResponse resultResponse, OAuthProviderEnum providerEnum, HttpServletRequest request);
 }
