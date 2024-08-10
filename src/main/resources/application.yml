@@ -1,5 +1,11 @@
 # 公共配置文件
 spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchDataAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchRepositoriesAutoConfiguration
+      - org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration
+
   application:
     name: caixy-admin-system
   # 默认 dev 环境
@@ -40,6 +46,11 @@ spring:
     multipart:
       # 大小限制
       max-file-size: 10MB
+  data:
+    elasticsearch:
+      repositories:
+        enabled: false
+
 server:
   address: 0.0.0.0
   port: 7529
@@ -127,15 +138,7 @@ storage:
   forceCreated: true
   staticPath: /static
 
-oauth2:
-  instance:
-    Github:
-      authServerUrl: https://github.com/login/oauth/authorize
-      accessTokenUrl: https://github.com/login/oauth/access_token
-      fetchInfoUrl: https://api.github.com/user
-      clientId: Ov23linP6FicPDQccva1
-      clientSecret: 19635956b8db7f74b2f4917bd1a42e9b84b9ed72
-      callBackUrl: http://localhost:7529/api/user/oauth2/github/callback
+
 
 info:
   app:
@@ -158,9 +161,13 @@ info:
     osName: ${os.name}
     osArch: ${os.arch}
     osVersion: ${os.version}
-
-
 management:
+  metrics:
+    web:
+      server:
+        request:
+          autotime:
+            enabled: true
   endpoints:
     web:
       base-path: "/actuator"
@@ -171,6 +178,21 @@ management:
       show-details: "always"
     info:
       enabled: true
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+    httptrace:
+      enabled: true
   info:
     env:
       enabled: true
+  health:
+    elasticsearch:
+      enabled: false
+
+
+spring.boot.admin:
+  context-path: /admin
+  client:
+    url: http://localhost:7529/admin
