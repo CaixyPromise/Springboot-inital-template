@@ -1,5 +1,7 @@
 package com.caixy.adminSystem.annotation;
 
+import com.caixy.adminSystem.model.enums.OAuthProviderEnum;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -16,6 +18,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface InjectOAuthConfig
 {
-    String clientName();
+    OAuthProviderEnum clientName();
     String name() default "";
 }

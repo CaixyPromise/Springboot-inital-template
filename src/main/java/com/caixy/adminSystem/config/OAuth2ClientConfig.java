@@ -48,8 +48,7 @@ public class OAuth2ClientConfig implements BeanPostProcessor
                 field.setAccessible(true);
                 try
                 {
-                    OAuth2ClientProperties.OAuth2Client oAuth2Client = oAuth2Properties.getInstance().get(
-                            annotation.clientName());
+                    OAuth2ClientProperties.OAuth2Client oAuth2Client = oAuth2Properties.getInstance(annotation.clientName());
                     Optional<OAuth2ClientProperties.OAuth2Client> optionalOAuth2Client = Optional.ofNullable(oAuth2Client);
                     if (optionalOAuth2Client.isPresent())
                     {

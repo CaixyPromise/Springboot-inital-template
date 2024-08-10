@@ -6,11 +6,17 @@ import com.caixy.adminSystem.annotation.OAuthTypeTarget;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.config.properties.OAuth2ClientProperties;
 import com.caixy.adminSystem.exception.BusinessException;
+import com.caixy.adminSystem.model.dto.oauth.OAuthResultResponse;
 import com.caixy.adminSystem.model.dto.oauth.github.GithubCallbackRequest;
 import com.caixy.adminSystem.model.dto.oauth.github.GithubCallbackResponse;
 import com.caixy.adminSystem.model.dto.oauth.github.GithubGetAuthorizationUrlRequest;
 import com.caixy.adminSystem.model.dto.oauth.github.GithubUserProfileDTO;
+import com.caixy.adminSystem.model.dto.user.UserLoginByOAuthAdapter;
+import com.caixy.adminSystem.model.entity.User;
+import com.caixy.adminSystem.model.enums.OAuthProviderEnum;
 import com.caixy.adminSystem.model.enums.RedisConstant;
+import com.caixy.adminSystem.model.enums.UserGenderEnum;
+import com.caixy.adminSystem.model.enums.UserRoleEnum;
 import com.caixy.adminSystem.strategy.OAuth2ActionStrategy;
 import com.caixy.adminSystem.utils.HttpUtils;
 import com.caixy.adminSystem.utils.JsonUtils;
@@ -35,14 +41,14 @@ import java.util.Map;
  */
 @Slf4j
 @Component
-@OAuthTypeTarget(clientName = "Github")
+@OAuthTypeTarget(clientName = OAuthProviderEnum.GITHUB)
 public class GithubOAuthActionStrategyImpl extends OAuth2ActionStrategy<
         GithubCallbackResponse,
         GithubUserProfileDTO,
         GithubGetAuthorizationUrlRequest,
         GithubCallbackRequest>
 {
-    @InjectOAuthConfig(clientName = "Github")
+    @InjectOAuthConfig(clientName = OAuthProviderEnum.GITHUB)
     private OAuth2ClientProperties.OAuth2Client githubClient;
 
     private static final String STATE_KEY = "state";
@@ -100,6 +106,43 @@ public class GithubOAuthActionStrategyImpl extends OAuth2ActionStrategy<
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "获取用户信息失败");
         }
         return githubUserProfileDTO;
+    }
+
+    @Override
+    public OAuthResultResponse doAuth(Map<String, Object> paramMaps)
+    {
+        GithubCallbackRequest githubCallbackRequest = safetyConvertMapToObject(paramMaps, GithubCallbackRequest.class);
+        GithubCallbackResponse githubCallbackResponse = doCallback(githubCallbackRequest);
+        GithubUserProfileDTO userProfile = getUserProfile(githubCallbackResponse);
+        if (userProfile == null)
+        {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "获取用户信息失败");
+        }
+        OAuthResultResponse.OAuthResultResponseBuilder resultBuilder = OAuthResultResponse.builder();
+        resultBuilder.result(userProfile)
+                     .success(true)
+                     .redirectUrl(githubCallbackResponse.getRedirectUri())
+                     .loginAdapter(getUserLoginByOAuthAdapter(userProfile));
+        return resultBuilder.build();
+    }
+
+    private UserLoginByOAuthAdapter getUserLoginByOAuthAdapter(GithubUserProfileDTO userProfileDTO)
+    {
+        UserLoginByOAuthAdapter.UserLoginByOAuthAdapterBuilder adapterBuilder = UserLoginByOAuthAdapter.builder();
+        User.UserBuilder userBuilder = User.builder();
+        userBuilder.userEmail(userProfileDTO.getEmail())
+                   .githubId(userProfileDTO.getId())
+                   .userAvatar(userProfileDTO.getAvatarUrl())
+                   .githubUserName(userProfileDTO.getLoginUserName())
+                   .userGender(UserGenderEnum.UNKNOWN.getValue())
+                   .userAccount(userProfileDTO.getLoginUserName())
+                   .userRole(UserRoleEnum.USER.getValue())
+                   .userName(userProfileDTO.getName());
+
+        adapterBuilder.uniqueFieldName("githubId")
+                      .uniqueFieldValue(userProfileDTO.getId())
+                      .userInfo(userBuilder.build());
+        return adapterBuilder.build();
     }
 
     private String getAccessToken(String code)

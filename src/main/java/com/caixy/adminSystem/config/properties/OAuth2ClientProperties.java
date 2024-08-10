@@ -1,5 +1,6 @@
 package com.caixy.adminSystem.config.properties;
 
+import com.caixy.adminSystem.model.enums.OAuthProviderEnum;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +20,11 @@ import java.util.HashMap;
 public class OAuth2ClientProperties
 {
     private HashMap<String, OAuth2Client> instance = new HashMap<>();
+
+    public OAuth2Client getInstance(OAuthProviderEnum provider)
+    {
+        return instance.get(provider.getProviderCode());
+    }
 
     @Data
     public static class OAuth2Client
