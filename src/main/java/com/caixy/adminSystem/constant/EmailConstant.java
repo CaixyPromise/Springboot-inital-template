@@ -13,12 +13,12 @@ public interface EmailConstant
     /**
      * 电子邮件html内容路径 resources目录下
      */
-    String EMAIL_HTML_CONTENT_PATH = "captcha.html";
+    String EMAIL_HTML_CONTENT_PATH = "email-template/captcha.html";
 
     /**
      * 电子邮件html支付成功路径
      */
-    String EMAIL_HTML_PAY_SUCCESS_PATH = "pay.html";
+    String EMAIL_HTML_PAY_SUCCESS_PATH = "email-template/pay.html";
 
     /**
      * 修改邮箱请求captcha缓存键 校验之前的邮箱

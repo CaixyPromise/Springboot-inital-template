@@ -15,8 +15,10 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 邮箱服务类实现
@@ -32,8 +34,14 @@ public class EmailServiceImpl implements EmailService
     @Resource
     private JavaMailSender mailSender;
 
-    @Resource
-    private ThreadPoolExecutor threadPoolExecutor;
+
+    private final ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(
+            10,
+            10,
+            60L,
+            TimeUnit.SECONDS,
+            new ArrayBlockingQueue<>(1000),
+            new ThreadPoolExecutor.AbortPolicy());
 
     @Resource
     private EmailConfig emailConfig;
