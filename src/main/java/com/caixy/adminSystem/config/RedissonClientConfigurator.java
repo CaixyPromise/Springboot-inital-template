@@ -3,7 +3,6 @@ package com.caixy.adminSystem.config;
 import com.caixy.adminSystem.annotation.InjectRedissonClient;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.config.properties.RedissonProperties;
-import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.exception.ThrowUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
