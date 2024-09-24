@@ -1,6 +1,8 @@
 package com.caixy.adminSystem;
 
+import com.caixy.adminSystem.utils.NetUtils;
 import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchDataAutoConfiguration;
@@ -26,11 +28,16 @@ import java.time.format.DateTimeFormatter;
 @EnableAspectJAutoProxy(proxyTargetClass = true, exposeProxy = true)
 public class MainApplication
 {
+    @Value("${server.port}")
+    private Integer port;
+    @Value("${server.servlet.context-path}")
+    private String contextPath;
     public static void main(String[] args)
     {
         String startTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
+        String serverHost = NetUtils.getServerHost();
         System.setProperty("app.startup-time", startTime);
+        System.setProperty("app.serverHost", serverHost);
         SpringApplication.run(MainApplication.class, args);
     }
-
 }
