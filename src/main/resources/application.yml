@@ -102,13 +102,18 @@ cos:
 knife4j:
   enable: true
   openapi:
-    title: "接口文档"
+    title: "${spring.application.name}-接口文档"
     version: 1.0
     group:
       default:
         api-rule: package
         api-rule-resources:
           - com.caixy.adminSystem.controller
+    concat: ${info.author.email}
+    description: "${info.app.description}"
+    license: ${info.app.license}
+    email: ${info.author.email}
+
 redis-session:
   instances:
     limiter:
@@ -147,6 +152,8 @@ info:
     version: 1.0.0
     license: MIT
     startup-time: ${app.startup-time}
+    serverAddress: ${app.serverHost}:${server.port}${server.servlet.context-path}
+    api-document: ${info.app.serverAddress}/doc.html
   author:
     name: CAIXYPROMISE
     email: caixypromised@gmail.com
