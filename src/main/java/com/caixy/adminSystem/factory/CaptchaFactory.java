@@ -18,6 +18,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -64,7 +65,11 @@ public class CaptchaFactory
     {
         // 获取SessionId
         String sessionId = request.getRequestedSessionId();
-        String sessionUuid = request.getSession().getAttribute(CommonConstant.CAPTCHA_SIGN).toString();
+        String sessionUuid = Optional.ofNullable(request.getSession().getAttribute(CommonConstant.CAPTCHA_SIGN))
+                                     .orElseThrow(()->{
+                                         log.error("验证码校验失败，session中不存在验证码标识，sessionId:{}", sessionId);
+                                         return new BusinessException(ErrorCode.OPERATION_ERROR, "验证码校验失败");
+                                     }).toString();
         // 1.2 校验验证码
         Map<String, String> result = redisUtils.getHashMap(
                 RedisConstant.CAPTCHA_CODE,
