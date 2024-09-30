@@ -265,7 +265,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         UserVO userVO = userService.getUserVO(user);
         postVO.setUser(userVO);
         // 2. 已登录，获取用户点赞、收藏状态
-        User loginUser = userService.getLoginUserPermitNull(request);
+        UserVO loginUser = userService.getLoginUserPermitNull(request);
         if (loginUser != null)
         {
             // 获取点赞
@@ -300,7 +300,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         // 2. 已登录，获取用户点赞、收藏状态
         Map<Long, Boolean> postIdHasThumbMap = new HashMap<>();
         Map<Long, Boolean> postIdHasFavourMap = new HashMap<>();
-        User loginUser = userService.getLoginUserPermitNull(request);
+        UserVO loginUser = userService.getLoginUserPermitNull(request);
         if (loginUser != null)
         {
             Set<Long> postIdSet = postList.stream().map(Post::getId).collect(Collectors.toSet());

@@ -36,7 +36,7 @@ public interface UserService extends IService<User>
      * @param request
      * @return 脱敏后的用户信息
      */
-    User userLogin(UserLoginRequest userLoginRequest, HttpServletRequest request);
+    LoginUserVO userLogin(UserLoginRequest userLoginRequest, HttpServletRequest request);
 
     /**
      * 用户登录（微信开放平台）
@@ -53,7 +53,7 @@ public interface UserService extends IService<User>
      * @param request
      * @return
      */
-    User getLoginUser(HttpServletRequest request);
+    UserVO getLoginUser(HttpServletRequest request);
 
     /**
      * 获取当前登录用户（允许未登录）
@@ -61,7 +61,7 @@ public interface UserService extends IService<User>
      * @param request
      * @return
      */
-    User getLoginUserPermitNull(HttpServletRequest request);
+    UserVO getLoginUserPermitNull(HttpServletRequest request);
 
     /**
      * 是否为管理员
@@ -77,7 +77,7 @@ public interface UserService extends IService<User>
      * @param user
      * @return
      */
-    boolean isAdmin(User user);
+    boolean isAdmin(UserVO user);
 
     /**
      * 用户注销
@@ -92,7 +92,7 @@ public interface UserService extends IService<User>
      *
      * @return
      */
-    LoginUserVO getLoginUserVO(User user);
+    LoginUserVO getLoginUserVO(UserVO user);
 
     /**
      * 获取脱敏的用户信息
@@ -119,7 +119,7 @@ public interface UserService extends IService<User>
     QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest);
 
     //    Long makeRegister(String userAccount, String userPassword);
-    Long makeRegister(User user);
+    Long doRegister(User user);
 
     String generatePassword();
 
@@ -128,4 +128,6 @@ public interface UserService extends IService<User>
     void validUserInfo(User user, boolean add);
 
     Boolean doOAuthLogin(OAuthResultResponse resultResponse, OAuthProviderEnum providerEnum, HttpServletRequest request);
+
+    Boolean updateUserAndSessionById(User user, HttpServletRequest request);
 }

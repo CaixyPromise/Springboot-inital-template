@@ -17,6 +17,7 @@ import com.caixy.adminSystem.model.dto.oauth.github.GithubGetAuthorizationUrlReq
 import com.caixy.adminSystem.model.dto.user.*;
 import com.caixy.adminSystem.model.entity.User;
 import com.caixy.adminSystem.model.enums.OAuthProviderEnum;
+import com.caixy.adminSystem.model.enums.UserRoleEnum;
 import com.caixy.adminSystem.model.vo.user.AboutMeVO;
 import com.caixy.adminSystem.model.vo.user.AddUserVO;
 import com.caixy.adminSystem.model.vo.user.LoginUserVO;
@@ -55,7 +56,7 @@ public class UserController
 
     // region 登录相关
     @GetMapping("/oauth2/{provider}/login")
-    public BaseResponse<String> initiateGithubLogin(
+    public BaseResponse<String> initOAuthLogin(
             @PathVariable String provider,
             @ModelAttribute GithubGetAuthorizationUrlRequest authorizationUrlRequest,
             HttpServletRequest request)
@@ -73,7 +74,7 @@ public class UserController
     }
 
     @GetMapping("/oauth2/{provider}/callback")
-    public void githubLoginCallback(
+    public void oAuthLoginCallback(
             @PathVariable("provider") String provider,
             @RequestParam Map<String, Object> allParams,
             HttpServletRequest request,
@@ -152,8 +153,7 @@ public class UserController
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        User loginUserVO = userService.userLogin(userLoginRequest, request);
-        return ResultUtils.success(userService.getLoginUserVO(loginUserVO));
+        return ResultUtils.success(userService.userLogin(userLoginRequest, request));
     }
 
 
@@ -175,14 +175,14 @@ public class UserController
     }
 
     /**
-     * 获取当前登录用户
+     * 实时系统中，用于获取当前登录状态的用户
      *
      * @param request
      */
     @GetMapping("/get/login")
     public BaseResponse<LoginUserVO> getLoginUser(HttpServletRequest request)
     {
-        User user = userService.getLoginUser(request);
+        UserVO user = userService.getLoginUser(request);
         return ResultUtils.success(userService.getLoginUserVO(user));
     }
 
@@ -228,7 +228,7 @@ public class UserController
      * @return
      */
     @PostMapping("/add")
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserRoleEnum.ADMIN)
     public BaseResponse<AddUserVO> addUser(@RequestBody UserAddRequest userAddRequest, HttpServletRequest request)
     {
         // 检查请求信息
@@ -254,7 +254,7 @@ public class UserController
         String defaultPassword = userService.generatePassword();
         user.setUserPassword(defaultPassword);
         // 创建
-        Long resultId = userService.makeRegister(user);
+        Long resultId = userService.doRegister(user);
         // 返回结果
         AddUserVO resultAddUserInfo = AddUserVO.builder()
                                                .userName(userAddRequest.getUserName())
@@ -273,7 +273,7 @@ public class UserController
      * @return
      */
     @PostMapping("/delete")
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserRoleEnum.ADMIN)
     public BaseResponse<Boolean> deleteUser(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request)
     {
         if (deleteRequest == null || deleteRequest.getId() <= 0)
@@ -292,7 +292,7 @@ public class UserController
      * @return
      */
     @PostMapping("/update")
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserRoleEnum.ADMIN)
     public BaseResponse<Boolean> updateUser(@RequestBody UserUpdateRequest userUpdateRequest,
                                             HttpServletRequest request)
     {
@@ -316,7 +316,7 @@ public class UserController
      * @return
      */
     @GetMapping("/get")
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserRoleEnum.ADMIN)
     public BaseResponse<User> getUserById(long id, HttpServletRequest request)
     {
         if (id <= 0)
@@ -353,7 +353,7 @@ public class UserController
      * @return
      */
     @PostMapping("/list/page")
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserRoleEnum.ADMIN)
     public BaseResponse<Page<User>> listUserByPage(@RequestBody
                                                    UserQueryRequest userQueryRequest,
                                                    HttpServletRequest request)
@@ -399,7 +399,7 @@ public class UserController
     @GetMapping("/get/me")
     public BaseResponse<AboutMeVO> getMe(HttpServletRequest request)
     {
-        User loginUser = userService.getLoginUser(request);
+        UserVO loginUser = userService.getLoginUser(request);
         User currentUser = userService.getById(loginUser.getId());
 
         return ResultUtils.success(AboutMeVO.of(currentUser));
@@ -415,7 +415,7 @@ public class UserController
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
 
-        User loginUser = userService.getLoginUser(request);
+        UserVO loginUser = userService.getLoginUser(request);
         Boolean result = userService.modifyPassword(loginUser.getId(), userModifyPasswordRequest);
         // 如果修改成功，修改登录状态
         if (result)
@@ -428,25 +428,25 @@ public class UserController
     /**
      * 更新个人信息
      *
-     * @param userUpdateMyRequest
+     * @param userUpdateProfileRequest
      * @param request
      * @return
      */
-    @PostMapping("/update/my")
-    public BaseResponse<Boolean> updateMyUser(@RequestBody
-                                              UserUpdateMyRequest userUpdateMyRequest,
-                                              HttpServletRequest request)
+    @PostMapping("/update/me")
+    public BaseResponse<Boolean> updateMeProfile(@RequestBody
+                                                     UserUpdateProfileRequest userUpdateProfileRequest,
+                                          HttpServletRequest request)
     {
-        if (userUpdateMyRequest == null)
+        if (userUpdateProfileRequest == null)
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        User loginUser = userService.getLoginUser(request);
+        UserVO loginUser = userService.getLoginUser(request);
         User user = new User();
-        BeanUtils.copyProperties(userUpdateMyRequest, user);
+        BeanUtils.copyProperties(userUpdateProfileRequest, user);
         user.setId(loginUser.getId());
         userService.validUserInfo(user, false);
-        boolean result = userService.updateById(user);
+        boolean result = userService.updateUserAndSessionById(user, request);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);
     }

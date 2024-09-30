@@ -16,7 +16,7 @@ import com.caixy.adminSystem.model.dto.file.UploadFileRequest;
 import com.caixy.adminSystem.model.dto.oauth.OAuthResultResponse;
 import com.caixy.adminSystem.model.dto.user.*;
 import com.caixy.adminSystem.model.entity.User;
-import com.caixy.adminSystem.model.entity.convertor.UserConvertor;
+import com.caixy.adminSystem.model.convertor.user.UserConvertor;
 import com.caixy.adminSystem.model.enums.FileActionBizEnum;
 import com.caixy.adminSystem.model.enums.OAuthProviderEnum;
 import com.caixy.adminSystem.model.enums.UserGenderEnum;
@@ -55,6 +55,7 @@ import static com.caixy.adminSystem.constant.UserConstant.USER_LOGIN_STATE;
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService, FileActionStrategy
 {
     private final CaptchaService captchaService;
+    private final UserConvertor userConvertor = UserConvertor.INSTANCE;
 
     @Override
     public long userRegister(UserRegisterRequest userRegisterRequest)
@@ -67,11 +68,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 2. 插入数据
         user.setUserPassword(userPassword);
         user.setUserRole(UserConstant.DEFAULT_ROLE);
-        return makeRegister(user);
+        return doRegister(user);
     }
 
     @Override
-    public User userLogin(UserLoginRequest userLoginRequest, HttpServletRequest request)
+    public LoginUserVO userLogin(UserLoginRequest userLoginRequest, HttpServletRequest request)
     {
         // 0. 提取参数
         String userAccount = userLoginRequest.getUserAccount();
@@ -99,12 +100,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 用户不存在
         if (user == null)
         {
-            log.info("user login failed, userAccount cannot match userPassword");
+            log.error("user login failed, userAccount cannot match userPassword");
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
         }
         if (!EncryptionUtils.matches(userPassword, user.getUserPassword()))
         {
-            log.info("user login failed, userAccount cannot match userPassword");
+            log.error("userINFO: {}", user);
+            log.error("user login failed, userAccount cannot match userPassword. userAccount: {}, userPassword: {}",
+                    userAccount, userPassword);
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
         }
         // 检查是否被封号
@@ -114,7 +117,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户已被封号");
         }
         // 3. 记录用户的登录态
-        return loginUser(user, request);
+        return doLogin(user, request);
     }
 
     @Override
@@ -148,10 +151,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                     throw new BusinessException(ErrorCode.SYSTEM_ERROR, "登录失败");
                 }
             }
-            user.setUserPassword(null);
-            // 记录用户的登录态
-            request.getSession().setAttribute(USER_LOGIN_STATE, user);
-            return getLoginUserVO(user);
+            return doLogin(user, request);
         }
     }
 
@@ -162,16 +162,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @return
      */
     @Override
-    public User getLoginUser(HttpServletRequest request)
+    public UserVO getLoginUser(HttpServletRequest request)
     {
         // 先判断是否已登录
         Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
-        User currentUser = (User) userObj;
+        UserVO currentUser = (UserVO) userObj;
         if (currentUser == null || currentUser.getId() == null)
         {
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
         }
-        if (currentUser.getUserRole().equals(UserConstant.BAN_ROLE))
+        if (currentUser.getUserRole().equals(UserRoleEnum.BAN))
         {
             // 被封号的用户，先断开连接
             userLogout(request);
@@ -187,11 +187,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @return
      */
     @Override
-    public User getLoginUserPermitNull(HttpServletRequest request)
+    public UserVO getLoginUserPermitNull(HttpServletRequest request)
     {
         // 先判断是否已登录
         Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
-        User currentUser = (User) userObj;
+        UserVO currentUser = (UserVO) userObj;
         if (currentUser == null || currentUser.getId() == null)
         {
             return null;
@@ -210,14 +210,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     {
         // 仅管理员可查询
         Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
-        User user = (User) userObj;
+        UserVO user = (UserVO) userObj;
         return isAdmin(user);
     }
 
     @Override
-    public boolean isAdmin(User user)
+    public boolean isAdmin(UserVO user)
     {
-        return user != null && UserRoleEnum.ADMIN.getValue().equals(user.getUserRole());
+        return user != null && UserRoleEnum.ADMIN.equals(user.getUserRole());
     }
 
     /**
@@ -238,14 +238,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public LoginUserVO getLoginUserVO(User user)
+    public LoginUserVO getLoginUserVO(UserVO user)
     {
         if (user == null)
         {
             return null;
         }
         LoginUserVO loginUserVO = new LoginUserVO();
-        BeanUtils.copyProperties(user, loginUserVO);
+        userConvertor.voToLoginVO(user, loginUserVO);
         return loginUserVO;
     }
 
@@ -301,7 +301,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     // 重载的 makeRegister 方法，接收 User 对象
     @Override
-    public Long makeRegister(User user)
+    public Long doRegister(User user)
     {
         synchronized (user.getUserAccount().intern())
         {
@@ -309,7 +309,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             checkUserAccount(user.getUserAccount());
 
             // 加密密码并设置
-            String encryptPassword = EncryptionUtils.encodePassword(user.getUserPassword());
+            String encryptPassword = EncryptionUtils.encryptPassword(user.getUserPassword());
             user.setUserPassword(encryptPassword);
 
             // 插入数据
@@ -401,7 +401,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         // 加密密码
-        String encryptPassword = EncryptionUtils.encodePassword(userPassword);
+        String encryptPassword = EncryptionUtils.encryptPassword(userPassword);
         currenUser.setUserPassword(encryptPassword);
         // 清空登录状态
         return this.updateById(currenUser);
@@ -467,21 +467,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (isRegister)
         {
             userInfo = new User();
-            UserConvertor.INSTANCE.copyAllPropertiesIgnoringId(oauthUserInfo, userInfo);
+            userConvertor.copyAllPropertiesIgnoringId(oauthUserInfo, userInfo);
         }
-        else {
-            userInfo = UserConvertor.INSTANCE.copyPropertiesWithStrategy(
+        else
+        {
+            userInfo = userConvertor.copyPropertiesWithStrategy(
                     oauthUserInfo,
                     userInfo,
-                    new HashSet<>(Arrays.asList("id", "userPassword", "createTime", "updateTime", "isDelete", "userRole")),
+                    new HashSet<>(
+                            Arrays.asList("id", "userPassword", "createTime", "updateTime", "isDelete", "userRole")),
                     ((sourceValue, targetValue) -> sourceValue != null && targetValue == null));
 
         }
         userInfo.setUserRole(UserRoleEnum.USER.getValue());
         boolean result = isRegister ? this.save(userInfo) : this.updateById(userInfo);
         log.info("UserInfo: {}", userInfo);
-        if (result){
-            loginUser(userInfo, request);
+        if (result)
+        {
+            doLogin(userInfo, request);
         }
         return result;
     }
@@ -528,6 +531,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return false;
     }
 
+    /**
+     * 更新用户信息，同时更新Session内的信息
+     *
+     * @author CAIXYPROMISE
+     * @version 1.0
+     * @since 2024/9/30 上午2:01
+     */
+    @Override
+    public Boolean updateUserAndSessionById(User user, HttpServletRequest request)
+    {
+        boolean result = this.updateById(user);
+        if (result)
+        {
+            setUserInfoInSession(getById(user.getId()), request);
+        }
+        return result;
+    }
+
     // 私有方法，用于检查账户是否重复
     private void checkUserAccount(String userAccount)
     {
@@ -546,12 +567,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 "验证码错误");
     }
 
-    private User loginUser(User user, HttpServletRequest request)
+    private LoginUserVO doLogin(User user, HttpServletRequest request)
     {
-        User userVo = new User();
-        BeanUtils.copyProperties(user, userVo);
-        userVo.setUserPassword(null);
-        request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, userVo);
-        return userVo;
+        LoginUserVO loginUserVO = new LoginUserVO();
+        userConvertor.toLoginVO(user, loginUserVO);
+        setUserInfoInSession(user, request);
+        return loginUserVO;
+    }
+
+    private void setUserInfoInSession(User user, HttpServletRequest request)
+    {
+        UserVO userVO = new UserVO();
+        userConvertor.toVO(user, userVO);
+        request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, userVO);
     }
 }

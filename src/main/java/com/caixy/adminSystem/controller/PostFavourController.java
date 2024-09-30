@@ -12,6 +12,7 @@ import com.caixy.adminSystem.model.dto.postfavour.PostFavourQueryRequest;
 import com.caixy.adminSystem.model.entity.Post;
 import com.caixy.adminSystem.model.entity.User;
 import com.caixy.adminSystem.model.vo.post.PostVO;
+import com.caixy.adminSystem.model.vo.user.UserVO;
 import com.caixy.adminSystem.service.PostFavourService;
 import com.caixy.adminSystem.service.PostService;
 import com.caixy.adminSystem.service.UserService;
@@ -58,7 +59,7 @@ public class PostFavourController
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         // 登录才能操作
-        final User loginUser = userService.getLoginUser(request);
+        final UserVO loginUser = userService.getLoginUser(request);
         long postId = postFavourAddRequest.getPostId();
         int result = postFavourService.doPostFavour(postId, loginUser);
         return ResultUtils.success(result);
@@ -78,7 +79,7 @@ public class PostFavourController
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        User loginUser = userService.getLoginUser(request);
+        UserVO loginUser = userService.getLoginUser(request);
         long current = postQueryRequest.getCurrent();
         long size = postQueryRequest.getPageSize();
         // 限制爬虫

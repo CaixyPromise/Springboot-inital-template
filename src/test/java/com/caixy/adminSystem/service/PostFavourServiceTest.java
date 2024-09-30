@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.caixy.adminSystem.model.entity.Post;
 import com.caixy.adminSystem.model.entity.User;
 import javax.annotation.Resource;
+
+import com.caixy.adminSystem.model.vo.user.UserVO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -21,7 +23,7 @@ class PostFavourServiceTest {
     @Resource
     private PostFavourService postFavourService;
 
-    private static final User loginUser = new User();
+    private static final UserVO loginUser = new UserVO();
 
     @BeforeAll
     static void setUp() {

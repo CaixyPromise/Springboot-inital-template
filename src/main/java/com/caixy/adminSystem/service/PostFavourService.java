@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.caixy.adminSystem.model.entity.Post;
 import com.caixy.adminSystem.model.entity.PostFavour;
-import com.caixy.adminSystem.model.entity.User;
+import com.caixy.adminSystem.model.vo.user.UserVO;
 
 /**
  * 帖子收藏服务
@@ -22,7 +22,7 @@ public interface PostFavourService extends IService<PostFavour> {
      * @param loginUser
      * @return
      */
-    int doPostFavour(long postId, User loginUser);
+    int doPostFavour(long postId, UserVO loginUser);
 
     /**
      * 分页获取用户收藏的帖子列表
