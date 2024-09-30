@@ -3,9 +3,7 @@ package com.caixy.adminSystem.utils;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.crypto.digest.DigestAlgorithm;
 import cn.hutool.crypto.digest.Digester;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -26,12 +24,12 @@ public class EncryptionUtils
 
 
     //
-    public static String encodePassword(String rawPassword)
+    public static String encryptPassword(String rawPassword)
     {
         return passwordEncoder.encode(rawPassword);
     }
 
-    public static boolean matches(String originPassword, String hashPassword)
+    public static boolean matchPassword(String originPassword, String hashPassword)
     {
         return passwordEncoder.matches(originPassword, hashPassword);
     }

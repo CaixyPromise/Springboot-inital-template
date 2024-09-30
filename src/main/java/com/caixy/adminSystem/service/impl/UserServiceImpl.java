@@ -103,7 +103,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             log.error("user login failed, userAccount cannot match userPassword");
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
         }
-        if (!EncryptionUtils.matches(userPassword, user.getUserPassword()))
+        if (!EncryptionUtils.matchPassword(userPassword, user.getUserPassword()))
         {
             log.error("userINFO: {}", user);
             log.error("user login failed, userAccount cannot match userPassword. userAccount: {}, userPassword: {}",
@@ -394,7 +394,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         // 校验密码
         boolean matches =
-                EncryptionUtils.matches(userModifyPasswordRequest.getOldPassword(), currenUser.getUserPassword());
+                EncryptionUtils.matchPassword(userModifyPasswordRequest.getOldPassword(), currenUser.getUserPassword());
         if (!matches)
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "原密码错误");
