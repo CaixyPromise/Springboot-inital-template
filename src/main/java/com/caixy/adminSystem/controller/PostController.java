@@ -16,7 +16,9 @@ import com.caixy.adminSystem.model.dto.post.PostQueryRequest;
 import com.caixy.adminSystem.model.dto.post.PostUpdateRequest;
 import com.caixy.adminSystem.model.entity.Post;
 import com.caixy.adminSystem.model.entity.User;
+import com.caixy.adminSystem.model.enums.UserRoleEnum;
 import com.caixy.adminSystem.model.vo.post.PostVO;
+import com.caixy.adminSystem.model.vo.user.UserVO;
 import com.caixy.adminSystem.service.PostService;
 import com.caixy.adminSystem.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -66,7 +68,7 @@ public class PostController
             post.setTags(JSONUtil.toJsonStr(tags));
         }
         postService.validPost(post, true);
-        User loginUser = userService.getLoginUser(request);
+        UserVO loginUser = userService.getLoginUser(request);
         post.setUserId(loginUser.getId());
         post.setFavourNum(0);
         post.setThumbNum(0);
@@ -90,7 +92,7 @@ public class PostController
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        User user = userService.getLoginUser(request);
+        UserVO user = userService.getLoginUser(request);
         long id = deleteRequest.getId();
         // 判断是否存在
         Post oldPost = postService.getById(id);
@@ -111,7 +113,7 @@ public class PostController
      * @return
      */
     @PostMapping("/update")
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserRoleEnum.ADMIN)
     public BaseResponse<Boolean> updatePost(@RequestBody PostUpdateRequest postUpdateRequest)
     {
         if (postUpdateRequest == null || postUpdateRequest.getId() <= 0)
@@ -163,7 +165,7 @@ public class PostController
      * @return
      */
     @PostMapping("/list/page")
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserRoleEnum.ADMIN)
     public BaseResponse<Page<Post>> listPostByPage(@RequestBody PostQueryRequest postQueryRequest)
     {
         long current = postQueryRequest.getCurrent();
@@ -208,7 +210,7 @@ public class PostController
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        User loginUser = userService.getLoginUser(request);
+        UserVO loginUser = userService.getLoginUser(request);
         postQueryRequest.setUserId(loginUser.getId());
         long current = postQueryRequest.getCurrent();
         long size = postQueryRequest.getPageSize();
@@ -262,7 +264,7 @@ public class PostController
         }
         // 参数校验
         postService.validPost(post, false);
-        User loginUser = userService.getLoginUser(request);
+        UserVO loginUser = userService.getLoginUser(request);
         long id = postEditRequest.getId();
         // 判断是否存在
         Post oldPost = postService.getById(id);

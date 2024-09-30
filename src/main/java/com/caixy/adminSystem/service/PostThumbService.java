@@ -2,7 +2,7 @@ package com.caixy.adminSystem.service;
 
 import com.caixy.adminSystem.model.entity.PostThumb;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.caixy.adminSystem.model.entity.User;
+import com.caixy.adminSystem.model.vo.user.UserVO;
 
 /**
  * 帖子点赞服务
@@ -18,7 +18,7 @@ public interface PostThumbService extends IService<PostThumb> {
      * @param loginUser
      * @return
      */
-    int doPostThumb(long postId, User loginUser);
+    int doPostThumb(long postId, UserVO loginUser);
 
     /**
      * 帖子点赞（内部服务）

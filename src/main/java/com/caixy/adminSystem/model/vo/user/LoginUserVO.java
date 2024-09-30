@@ -2,6 +2,8 @@ package com.caixy.adminSystem.model.vo.user;
 
 import java.io.Serializable;
 import java.util.Date;
+
+import com.caixy.adminSystem.model.enums.UserRoleEnum;
 import lombok.Data;
 
 /**
@@ -16,6 +18,21 @@ public class LoginUserVO implements Serializable {
      * 用户 id
      */
     private Long id;
+
+    /**
+     * 用户账号
+     */
+    private String userAccount;
+
+    /**
+     * 用户性别
+     */
+    private Integer userGender;
+
+    /**
+     * 用户邮箱
+     */
+    private String userEmail;
 
     /**
      * 用户昵称
@@ -35,17 +52,7 @@ public class LoginUserVO implements Serializable {
     /**
      * 用户角色：user/admin/ban
      */
-    private String userRole;
-
-    /**
-     * 创建时间
-     */
-    private Date createTime;
-
-    /**
-     * 更新时间
-     */
-    private Date updateTime;
+    private UserRoleEnum userRole;
 
     private static final long serialVersionUID = 1L;
 }

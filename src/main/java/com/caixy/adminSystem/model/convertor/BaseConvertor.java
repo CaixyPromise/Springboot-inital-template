@@ -1,4 +1,4 @@
-package com.caixy.adminSystem.utils;
+package com.caixy.adminSystem.model.convertor;
 
 import java.lang.reflect.Field;
 import java.util.Set;
@@ -7,7 +7,7 @@ import java.util.Set;
  * 基础转换器，提供反射与条件操作的基类方法
  *
  * @Author CAIXYPROMISE
- * @name com.caixy.adminSystem.utils.BaseConvertor
+ * @name com.caixy.adminSystem.model.convertor.BaseConvertor
  * @since 2024/8/9 上午2:04
  */
 public interface BaseConvertor<T>
@@ -41,7 +41,7 @@ public interface BaseConvertor<T>
                 throw new RuntimeException("系统错误，操作失败，操作字段失败");
             }
         }
-        return target;  // 返回修改后的对象
+        return target;
     }
 
     interface FieldCondition

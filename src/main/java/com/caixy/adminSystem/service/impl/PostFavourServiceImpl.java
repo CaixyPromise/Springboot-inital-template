@@ -10,7 +10,7 @@ import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.mapper.PostFavourMapper;
 import com.caixy.adminSystem.model.entity.Post;
 import com.caixy.adminSystem.model.entity.PostFavour;
-import com.caixy.adminSystem.model.entity.User;
+import com.caixy.adminSystem.model.vo.user.UserVO;
 import com.caixy.adminSystem.service.PostFavourService;
 import com.caixy.adminSystem.service.PostService;
 import org.springframework.aop.framework.AopContext;
@@ -38,7 +38,7 @@ public class PostFavourServiceImpl extends ServiceImpl<PostFavourMapper, PostFav
      * @return
      */
     @Override
-    public int doPostFavour(long postId, User loginUser)
+    public int doPostFavour(long postId, UserVO loginUser)
     {
         // 判断是否存在
         Post post = postService.getById(postId);

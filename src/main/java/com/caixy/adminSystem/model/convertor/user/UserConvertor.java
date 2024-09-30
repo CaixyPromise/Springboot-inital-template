@@ -1,11 +1,13 @@
-package com.caixy.adminSystem.model.entity.convertor;
+package com.caixy.adminSystem.model.convertor.user;
 
+
+import com.caixy.adminSystem.model.convertor.BaseConvertor;
 import com.caixy.adminSystem.model.entity.User;
-import com.caixy.adminSystem.utils.BaseConvertor;
+import com.caixy.adminSystem.model.enums.UserRoleEnum;
+import com.caixy.adminSystem.model.vo.user.LoginUserVO;
+import com.caixy.adminSystem.model.vo.user.UserVO;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
-
-import java.util.Set;
 
 
 /**
@@ -20,18 +22,27 @@ public interface UserConvertor extends BaseConvertor<User>
 {
     UserConvertor INSTANCE = Mappers.getMapper(UserConvertor.class);
 
+    @Mapping(source = "userRole", target = "userRole", qualifiedByName = "roleStringToEnum")
+    void toVO(User user, @MappingTarget UserVO userVO);
+
+    @Mapping(source = "userRole", target = "userRole", qualifiedByName = "roleStringToEnum")
+    void toLoginVO(User user, @MappingTarget LoginUserVO userVO);
+
+    void voToLoginVO(UserVO userVO, @MappingTarget LoginUserVO loginUserVO);
+
+
     /**
      * 忽略id字段进行转换
      */
     @Mapping(target = "id", ignore = true)
-    // 如果需要忽略特定字段
-    User copyAllPropertiesIgnoringId(User source, @MappingTarget User target);
+    void copyAllPropertiesIgnoringId(User source, @MappingTarget User target);
 
     /**
      * 所有字段进行转换
      */
 
-    User copyAllProperties(User source, @MappingTarget User target);
+    void copyAllProperties(User source, @MappingTarget User target);
+
     @AfterMapping
     default void copyIfSourceValueIsNotNull(User source, @MappingTarget User target)
     {
@@ -51,5 +62,9 @@ public interface UserConvertor extends BaseConvertor<User>
         copyFields(source, target, null, (sourceValue, targetValue) -> !sourceValue.equals(targetValue));
     }
 
-
+    @Named("roleStringToEnum")
+    default UserRoleEnum mapRole(String role)
+    {
+        return UserRoleEnum.getEnumByValue(role);
+    }
 }

@@ -14,6 +14,7 @@ import com.caixy.adminSystem.model.dto.file.UploadFileRequest;
 import com.caixy.adminSystem.model.entity.User;
 import com.caixy.adminSystem.model.enums.FileActionBizEnum;
 import com.caixy.adminSystem.model.enums.SaveFileMethodEnum;
+import com.caixy.adminSystem.model.vo.user.UserVO;
 import com.caixy.adminSystem.strategy.FileActionStrategy;
 import com.caixy.adminSystem.service.UploadFileService;
 import com.caixy.adminSystem.service.UserService;
@@ -128,7 +129,7 @@ public class FileController
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "业务类型不存在");
         }
-        User loginUser = userService.getLoginUser(request);
+        UserVO loginUser = userService.getLoginUser(request);
 
         FileActionStrategy fileActionStrategy = getFileActionService(fileActionBizEnum);
         DownloadFileDTO downloadFileDTO = new DownloadFileDTO();
@@ -223,7 +224,7 @@ public class FileController
                                               HttpServletRequest request)
     {
         FileActionBizEnum fileActionBizEnum = validFile(multipartFile, uploadFileRequest);
-        User loginUser = userService.getLoginUser(request);
+        UserVO loginUser = userService.getLoginUser(request);
         UploadFileDTO uploadFileDTO = new UploadFileDTO();
         uploadFileDTO.setFileActionBizEnum(fileActionBizEnum);
         uploadFileDTO.setMultipartFile(multipartFile);

@@ -7,7 +7,7 @@ import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.mapper.PostThumbMapper;
 import com.caixy.adminSystem.model.entity.Post;
 import com.caixy.adminSystem.model.entity.PostThumb;
-import com.caixy.adminSystem.model.entity.User;
+import com.caixy.adminSystem.model.vo.user.UserVO;
 import com.caixy.adminSystem.service.PostService;
 import com.caixy.adminSystem.service.PostThumbService;
 import org.springframework.aop.framework.AopContext;
@@ -35,7 +35,7 @@ public class PostThumbServiceImpl extends ServiceImpl<PostThumbMapper, PostThumb
      * @return
      */
     @Override
-    public int doPostThumb(long postId, User loginUser)
+    public int doPostThumb(long postId, UserVO loginUser)
     {
         // 判断实体是否存在，根据类别获取实体
         Post post = postService.getById(postId);

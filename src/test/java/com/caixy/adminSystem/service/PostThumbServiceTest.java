@@ -2,6 +2,8 @@ package com.caixy.adminSystem.service;
 
 import com.caixy.adminSystem.model.entity.User;
 import javax.annotation.Resource;
+
+import com.caixy.adminSystem.model.vo.user.UserVO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -18,7 +20,7 @@ class PostThumbServiceTest {
     @Resource
     private PostThumbService postThumbService;
 
-    private static final User loginUser = new User();
+    private static final UserVO loginUser = new UserVO();
 
     @BeforeAll
     static void setUp() {

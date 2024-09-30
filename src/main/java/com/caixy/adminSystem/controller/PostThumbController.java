@@ -6,6 +6,7 @@ import com.caixy.adminSystem.common.ResultUtils;
 import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.model.dto.postthumb.PostThumbAddRequest;
 import com.caixy.adminSystem.model.entity.User;
+import com.caixy.adminSystem.model.vo.user.UserVO;
 import com.caixy.adminSystem.service.PostThumbService;
 import com.caixy.adminSystem.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +49,7 @@ public class PostThumbController
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         // 登录才能点赞
-        final User loginUser = userService.getLoginUser(request);
+        final UserVO loginUser = userService.getLoginUser(request);
         long postId = postThumbAddRequest.getPostId();
         int result = postThumbService.doPostThumb(postId, loginUser);
         return ResultUtils.success(result);
