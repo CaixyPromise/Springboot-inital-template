@@ -73,4 +73,24 @@ public class NetUtils
     {
         return request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
     }
+
+    /**
+     * 获取服务的 Host 地址
+     *
+     * @return 本机 IP 地址或主机名
+     */
+    public static String getServerHost()
+    {
+        String host = "localhost";
+        try
+        {
+            InetAddress inet = InetAddress.getLocalHost();
+            host = inet.getHostAddress();  // 可以使用 inet.getHostName() 获取主机名
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return host;
+    }
 }
