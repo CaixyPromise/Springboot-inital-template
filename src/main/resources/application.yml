@@ -5,9 +5,8 @@ spring:
       - org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchDataAutoConfiguration
       - org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchRepositoriesAutoConfiguration
       - org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration
-
   application:
-    name: caixy-admin-system
+    name: @application.name@
   # 默认 dev 环境
   profiles:
     active: dev
@@ -148,9 +147,9 @@ storage:
 info:
   app:
     name: ${spring.application.name}
-    description: This is my Spring Boot application.
-    version: 1.0.0
-    license: MIT
+    description: @application.description@
+    version: @project.release.version@
+    license: @license.name@
     startup-time: ${app.startup-time}
     serverAddress: ${app.serverHost}:${server.port}${server.servlet.context-path}
     api-document: ${info.app.serverAddress}/doc.html
