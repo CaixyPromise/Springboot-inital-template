@@ -1,4 +1,4 @@
-package com.caixy.adminSystem.utils;
+package com.caixy.adminSystem.manager.UploadManager.utils;
 
 import org.springframework.web.multipart.MultipartFile;
 
@@ -13,7 +13,7 @@ import java.security.NoSuchAlgorithmException;
  * 文件操作根据类
  *
  * @author CAIXYPROMISE
- * @name com.caixy.adminSystem.utils.FileUtils
+ * @name com.caixy.adminSystem.manager.UploadManager.utils.FileUtils
  * @since 2024-06-11 17:32
  **/
 public class FileUtils

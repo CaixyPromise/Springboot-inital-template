@@ -1,6 +1,6 @@
 package com.caixy.adminSystem.config;
 
-import com.caixy.adminSystem.annotation.InjectOAuthConfig;
+import com.caixy.adminSystem.manager.OAuth.annotation.InjectOAuthConfig;
 import com.caixy.adminSystem.config.properties.OAuth2ClientProperties;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;

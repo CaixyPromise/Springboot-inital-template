@@ -1,4 +1,4 @@
-package com.caixy.adminSystem.annotation;
+package com.caixy.adminSystem.manager.UploadManager.annotation;
 
 import com.caixy.adminSystem.model.enums.SaveFileMethodEnum;
 
@@ -8,7 +8,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @name: com.caixy.adminSystem.annotation.UploadMethodTarget
+ * @name: com.caixy.adminSystem.manager.UploadManager.annotation.UploadMethodTarget
  * @description: 上传服务标注
  * @author: CAIXYPROMISE
  * @date: 2024-06-21 20:41

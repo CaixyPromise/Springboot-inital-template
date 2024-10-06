@@ -1,6 +1,6 @@
 package com.caixy.adminSystem.service.impl;
 
-import com.caixy.adminSystem.annotation.UploadMethodTarget;
+import com.caixy.adminSystem.manager.UploadManager.annotation.UploadMethodTarget;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.strategy.UploadFileMethodStrategy;

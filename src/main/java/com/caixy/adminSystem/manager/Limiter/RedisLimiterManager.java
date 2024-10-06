@@ -1,9 +1,6 @@
-package com.caixy.adminSystem.manager.limiter;
+package com.caixy.adminSystem.manager.Limiter;
 
 import com.caixy.adminSystem.annotation.InjectRedissonClient;
-import com.caixy.adminSystem.common.ErrorCode;
-import com.caixy.adminSystem.config.RedissonClientConfigurator;
-import com.caixy.adminSystem.exception.ThrowUtils;
 import com.caixy.adminSystem.model.enums.RedisLimiterEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RRateLimiter;

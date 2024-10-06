@@ -1,7 +1,7 @@
 package com.caixy.adminSystem.factory;
 
 import cn.hutool.core.util.RandomUtil;
-import com.caixy.adminSystem.annotation.CaptchaTypeTarget;
+import com.caixy.adminSystem.manager.Captcha.annotation.CaptchaTypeTarget;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.constant.CommonConstant;
 import com.caixy.adminSystem.exception.BusinessException;

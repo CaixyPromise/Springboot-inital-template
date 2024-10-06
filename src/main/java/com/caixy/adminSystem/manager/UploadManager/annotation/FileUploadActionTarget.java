@@ -1,4 +1,4 @@
-package com.caixy.adminSystem.annotation;
+package com.caixy.adminSystem.manager.UploadManager.annotation;
 
 import com.caixy.adminSystem.model.enums.FileActionBizEnum;
 
@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
  * 文件上传业务处理器
  *
  * @author CAIXYPROMISE
- * @name com.caixy.adminSystem.annotation.FileUploadActionTarget
+ * @name com.caixy.adminSystem.manager.UploadManager.annotation.FileUploadActionTarget
  * @since 2024-07-18 01:39
  **/
 @Retention(RetentionPolicy.RUNTIME)

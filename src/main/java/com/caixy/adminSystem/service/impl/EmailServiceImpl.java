@@ -6,7 +6,7 @@ import com.caixy.adminSystem.config.EmailConfig;
 import com.caixy.adminSystem.constant.EmailConstant;
 import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.service.EmailService;
-import com.caixy.adminSystem.utils.EmailTemplateUtil;
+import com.caixy.adminSystem.manager.Email.utils.EmailTemplateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;

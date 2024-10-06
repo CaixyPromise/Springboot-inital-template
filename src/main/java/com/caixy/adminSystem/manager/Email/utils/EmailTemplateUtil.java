@@ -1,4 +1,4 @@
-package com.caixy.adminSystem.utils;
+package com.caixy.adminSystem.manager.Email.utils;
 
 
 import com.caixy.adminSystem.config.EmailConfig;

@@ -1,10 +1,10 @@
-package com.caixy.adminSystem.aop;
+package com.caixy.adminSystem.manager.Limiter.aop;
 
-import com.caixy.adminSystem.annotation.RateLimitFlow;
+import com.caixy.adminSystem.manager.Limiter.annotation.RateLimitFlow;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.exception.BusinessException;
-import com.caixy.adminSystem.manager.limiter.RateLimiterBuilder;
-import com.caixy.adminSystem.manager.limiter.RedisLimiterManager;
+import com.caixy.adminSystem.manager.Limiter.RateLimiterBuilder;
+import com.caixy.adminSystem.manager.Limiter.RedisLimiterManager;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -23,7 +23,7 @@ import javax.annotation.Resource;
  * 限流器注解切面
  *
  * @author CAIXYPROMISE
- * @name com.caixy.adminSystem.aop.RateLimiterInterceptor
+ * @name com.caixy.adminSystem.manager.Limiter.aop.RateLimiterInterceptor
  * @since 2024-07-17 03:13
  **/
 @Aspect

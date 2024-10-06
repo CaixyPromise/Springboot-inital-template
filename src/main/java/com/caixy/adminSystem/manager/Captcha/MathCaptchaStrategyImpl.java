@@ -1,6 +1,6 @@
-package com.caixy.adminSystem.manager.captcha;
+package com.caixy.adminSystem.manager.Captcha;
 
-import com.caixy.adminSystem.annotation.CaptchaTypeTarget;
+import com.caixy.adminSystem.manager.Captcha.annotation.CaptchaTypeTarget;
 import com.caixy.adminSystem.model.vo.captcha.CaptchaVO;
 import com.caixy.adminSystem.strategy.CaptchaGenerationStrategy;
 import com.google.code.kaptcha.Producer;
