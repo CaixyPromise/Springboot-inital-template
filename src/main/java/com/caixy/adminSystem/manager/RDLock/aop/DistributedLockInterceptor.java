@@ -1,6 +1,6 @@
-package com.caixy.adminSystem.aop;
+package com.caixy.adminSystem.manager.RDLock.aop;
 
-import com.caixy.adminSystem.annotation.DistributedLock;
+import com.caixy.adminSystem.manager.RDLock.annotation.DistributedLock;
 import com.caixy.adminSystem.manager.RDLock.DistributedLockManager;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -19,7 +19,7 @@ import javax.annotation.Resource;
  * 分布式锁切面方法
  *
  * @author CAIXYPROMISE
- * @name com.caixy.adminSystem.aop.DistributedLockInterceptor
+ * @name com.caixy.adminSystem.manager.RDLock.aop.DistributedLockInterceptor
  * @since 2024-07-20 01:55
  **/
 @Aspect

@@ -236,20 +236,20 @@ public class HttpUtils
      * @param path
      * @param method
      * @param headers
-     * @param querys
+     * @param queryParams
      * @param body
      * @return
      * @throws Exception
      */
     public static HttpResponse doPut(String host, String path, String method,
                                      Map<String, String> headers,
-                                     Map<String, String> querys,
+                                     Map<String, String> queryParams,
                                      String body)
             throws Exception
     {
         HttpClient httpClient = wrapClient(host);
 
-        HttpPut request = new HttpPut(buildUrl(host, path, querys));
+        HttpPut request = new HttpPut(buildUrl(host, path, queryParams));
         for (Map.Entry<String, String> e : headers.entrySet())
         {
             request.addHeader(e.getKey(), e.getValue());
@@ -270,20 +270,20 @@ public class HttpUtils
      * @param path
      * @param method
      * @param headers
-     * @param querys
+     * @param queryParams
      * @param body
      * @return
      * @throws Exception
      */
     public static HttpResponse doPut(String host, String path, String method,
                                      Map<String, String> headers,
-                                     Map<String, String> querys,
+                                     Map<String, String> queryParams,
                                      byte[] body)
             throws Exception
     {
         HttpClient httpClient = wrapClient(host);
 
-        HttpPut request = new HttpPut(buildUrl(host, path, querys));
+        HttpPut request = new HttpPut(buildUrl(host, path, queryParams));
         for (Map.Entry<String, String> e : headers.entrySet())
         {
             request.addHeader(e.getKey(), e.getValue());
@@ -304,18 +304,18 @@ public class HttpUtils
      * @param path
      * @param method
      * @param headers
-     * @param querys
+     * @param queryParams
      * @return
      * @throws Exception
      */
     public static HttpResponse doDelete(String host, String path, String method,
                                         Map<String, String> headers,
-                                        Map<String, String> querys)
+                                        Map<String, String> queryParams)
             throws Exception
     {
         HttpClient httpClient = wrapClient(host);
 
-        HttpDelete request = new HttpDelete(buildUrl(host, path, querys));
+        HttpDelete request = new HttpDelete(buildUrl(host, path, queryParams));
         for (Map.Entry<String, String> e : headers.entrySet())
         {
             request.addHeader(e.getKey(), e.getValue());
@@ -324,8 +324,10 @@ public class HttpUtils
         return httpClient.execute(request);
     }
 
-    private static String buildUrl(String host, String path, Map<String, String> querys) throws
-                                                                                         UnsupportedEncodingException
+    private static String buildUrl(String host,
+                                   String path,
+                                   Map<String, String> queryParams)
+            throws UnsupportedEncodingException
     {
         StringBuilder sbUrl = new StringBuilder();
         sbUrl.append(host);
@@ -333,10 +335,10 @@ public class HttpUtils
         {
             sbUrl.append(path);
         }
-        if (querys != null)
+        if (queryParams != null)
         {
             StringBuilder sbQuery = new StringBuilder();
-            for (Map.Entry<String, String> query : querys.entrySet())
+            for (Map.Entry<String, String> query : queryParams.entrySet())
             {
                 if (0 < sbQuery.length())
                 {

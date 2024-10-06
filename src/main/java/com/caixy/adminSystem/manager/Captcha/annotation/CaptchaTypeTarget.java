@@ -1,4 +1,4 @@
-package com.caixy.adminSystem.annotation;
+package com.caixy.adminSystem.manager.Captcha.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @name: com.caixy.adminSystem.annotation.CaptchaTypeTarget
+ * @name: com.caixy.adminSystem.manager.Captcha.annotation.CaptchaTypeTarget
  * @description: 验证码类型标注注解
  * @author: CAIXYPROMISE
  * @date: 2024-07-16 03:35

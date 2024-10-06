@@ -1,4 +1,4 @@
-package com.caixy.adminSystem.annotation;
+package com.caixy.adminSystem.manager.OAuth.annotation;
 
 import com.caixy.adminSystem.model.enums.OAuthProviderEnum;
 
@@ -8,15 +8,16 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * OAuth类型注解
+ * 注入OAuth服务端配置
  *
  * @Author CAIXYPROMISE
- * @name com.caixy.adminSystem.annotation.OAuthTypeTarget
- * @since 2024/8/3 下午4:04
+ * @name com.caixy.adminSystem.manager.OAuth.annotation.InjectOAuthConfig
+ * @since 2024/8/3 上午2:04
  */
+@Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface OAuthTypeTarget
+public @interface InjectOAuthConfig
 {
     OAuthProviderEnum clientName();
+    String name() default "";
 }

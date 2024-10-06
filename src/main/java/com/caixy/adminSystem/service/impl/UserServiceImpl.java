@@ -4,7 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.caixy.adminSystem.annotation.FileUploadActionTarget;
+import com.caixy.adminSystem.manager.UploadManager.annotation.FileUploadActionTarget;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.constant.CommonConstant;
 import com.caixy.adminSystem.constant.UserConstant;

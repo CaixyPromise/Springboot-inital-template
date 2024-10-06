@@ -1,6 +1,6 @@
-package com.caixy.adminSystem.manager.uploadManager;
+package com.caixy.adminSystem.manager.UploadManager;
 
-import com.caixy.adminSystem.annotation.UploadMethodTarget;
+import com.caixy.adminSystem.manager.UploadManager.annotation.UploadMethodTarget;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.config.CosClientConfig;
 import com.caixy.adminSystem.constant.FileConstant;

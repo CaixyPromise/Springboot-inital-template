@@ -1,6 +1,6 @@
 package com.caixy.adminSystem.factory;
 
-import com.caixy.adminSystem.annotation.OAuthTypeTarget;
+import com.caixy.adminSystem.manager.OAuth.annotation.OAuthTypeTarget;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.model.dto.oauth.OAuthResultResponse;

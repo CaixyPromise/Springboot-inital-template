@@ -1,4 +1,4 @@
-package com.caixy.adminSystem.manager.limiter;
+package com.caixy.adminSystem.manager.Limiter;
 
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.exception.BusinessException;
