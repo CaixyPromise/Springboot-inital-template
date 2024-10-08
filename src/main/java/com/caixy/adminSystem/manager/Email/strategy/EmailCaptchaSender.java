@@ -28,6 +28,7 @@ public class EmailCaptchaSender implements EmailSenderStrategy
         String code = RandomUtil.randomNumbers(6);
         EmailCaptchaDTO emailCaptchaDTO = new EmailCaptchaDTO();
         emailCaptchaDTO.setCaptcha(code);
+        // todo: 补充剩余发送邮件的业务逻辑，例如存入缓存数据等。
         return FreeMarkEmailUtil.generateContent(EmailSenderEnum.CAPTCHA.getTemplateName(), emailCaptchaDTO);
     }
 }
