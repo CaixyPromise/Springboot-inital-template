@@ -3,15 +3,15 @@ create table user
 (
     id             bigint auto_increment comment 'id'
         primary key,
-    userAccount    varchar(20)                            not null comment '账号',
+    userAccount    varchar(20) collate utf8mb4_bin        not null comment '用户账号，关注大小写',
     userPassword   varchar(60)                            null comment '密码',
     unionId        varchar(256)                           null comment '微信开放平台id',
     githubId       bigint                                 null comment 'github用户Id',
     githubUserName varchar(30)                            null comment 'github用户名',
     userPhone      varchar(20)                            null comment '用户手机号(后期允许拓展区号和国际号码）',
-    userEmail      varchar(254)                           null comment '用户邮箱',
+    userEmail      varchar(254) collate utf8mb4_bin       null comment '用户邮箱',
     mpOpenId       varchar(256)                           null comment '公众号openId',
-    userName       varchar(30)                            null comment '用户昵称',
+    userName       varchar(30) collate utf8mb4_bin        null comment '用户昵称',
     userGender     int                                    not null comment '用户性别',
     userAvatar     varchar(1024)                          null comment '用户头像',
     userProfile    varchar(512)                           null comment '用户简介',
