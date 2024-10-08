@@ -14,13 +14,15 @@
     <version>0.0.1-SNAPSHOT</version>
     <name>caixy-admin-system</name>
     <properties>
+        <application.name>caixy-admin-system</application.name>
+        <application.description>This is a fast starter of Spring Boot of application.</application.description>
+        <project.release.version>1.0.0</project.release.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
         <springboot.version>2.7.6</springboot.version>
-        <Release.version>1.0.0</Release.version>
-        <Release.date>2023-03-01</Release.date>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <lombok.version>1.18.24</lombok.version>
+        <license.name>MIT LICENSE</license.name>
     </properties>
     <dependencies>
         <!-- 验证码组件-->
@@ -216,6 +218,15 @@
                 </configuration>
             </plugin>
         </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>*/**</include>
+                </includes>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
     </build>
 
 </project>

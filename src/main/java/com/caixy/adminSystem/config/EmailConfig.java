@@ -26,6 +26,7 @@ public class EmailConfig
     private String username;
     private String password;
     private String defaultEncoding;
+    private String protocol;
     private Properties properties;
 
     @Bean
@@ -37,6 +38,7 @@ public class EmailConfig
         mailSender.setUsername(username);
         mailSender.setPassword(password);
         mailSender.setDefaultEncoding(defaultEncoding);
+        mailSender.setProtocol(protocol);
 
         if (properties != null)
         {
