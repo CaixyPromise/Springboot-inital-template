@@ -17,7 +17,13 @@ import java.util.Map;
  * @name com.caixy.adminSystem.manager.Email.strategy.EmailCaptchaSender
  * @since 2024/10/7 上午12:54
  */
-@EmailSender(EmailSenderEnum.RESET_PASSWORD)
+@EmailSender({                           // 分别处理以下业务的发送：
+        EmailSenderEnum.RESET_PASSWORD,  // 修改密码
+        EmailSenderEnum.FORGET_PASSWORD, // 忘记密码
+        EmailSenderEnum.REGISTER,        // 注册账号
+        EmailSenderEnum.ACTIVE_USER,     // 激活用户
+        EmailSenderEnum.RESET_EMAIL,     // 修改邮箱
+})
 @Component
 public class EmailCaptchaSender implements EmailSenderStrategy
 {
@@ -26,7 +32,8 @@ public class EmailCaptchaSender implements EmailSenderStrategy
     public String getEmailContent(Map<String, Object> params)
     {
         Object code = params.get("code");
-        if (code == null) {
+        if (code == null)
+        {
             throw new IllegalEmailParamException("验证码信息为空");
         }
         // 创建邮箱内容实体类
