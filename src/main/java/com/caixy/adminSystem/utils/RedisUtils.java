@@ -1,6 +1,7 @@
 package com.caixy.adminSystem.utils;
 
-import com.caixy.adminSystem.model.enums.RedisConstant;
+
+import com.caixy.adminSystem.common.BaseCacheableEnum;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -54,7 +55,7 @@ public class RedisUtils
      * @version 2.0
      * @since 2024/2/16 21:02
      */
-    private String getFullKey(RedisConstant keyEnum, Object itemName)
+    private String getFullKey(BaseCacheableEnum keyEnum, Object itemName)
     {
         // 使用StringBuilder来构建完整的Key
         StringBuilder fullKey = new StringBuilder(keyEnum.getKey());
@@ -94,7 +95,7 @@ public class RedisUtils
      * @version 2.0
      * @since 2024/2/16 20:19
      */
-    public boolean delete(RedisConstant Enum, String... items)
+    public boolean delete(BaseCacheableEnum Enum, Object... items)
     {
         return Boolean.TRUE.equals(stringRedisTemplate.delete(Enum.generateKey(items)));
     }
@@ -106,7 +107,7 @@ public class RedisUtils
      * @version 2.0
      * @since 2024/2/16 20:19
      */
-    public void refreshExpire(RedisConstant Enum, long expire, String... items)
+    public void refreshExpire(BaseCacheableEnum Enum, long expire, Object... items)
     {
         stringRedisTemplate.expire(Enum.generateKey(items), expire, TimeUnit.SECONDS);
     }
@@ -130,7 +131,7 @@ public class RedisUtils
      * @version 1.0
      * @since 2023/1220 20:18
      */
-    public String getString(RedisConstant Enum, String... items)
+    public String getString(BaseCacheableEnum Enum, Object... items)
     {
         return stringRedisTemplate.opsForValue().get(Enum.generateKey(items));
     }
@@ -147,7 +148,7 @@ public class RedisUtils
         return stringRedisTemplate.opsForValue().get(key);
     }
 
-    public <JsonType> List<JsonType> getJson(RedisConstant keyEnum, String... items)
+    public <JsonType> List<JsonType> getJson(BaseCacheableEnum keyEnum, Object... items)
     {
         String cacheData = stringRedisTemplate.opsForValue().get(keyEnum.generateKey(items));
         if (StringUtils.isNotBlank(cacheData))
@@ -159,7 +160,7 @@ public class RedisUtils
         return null;
     }
 
-    public <JsonType> JsonType getJson(RedisConstant keyEnum, Class<JsonType> returnType, String... items)
+    public <JsonType> JsonType getJson(BaseCacheableEnum keyEnum, Class<JsonType> returnType, Object... items)
     {
         String cacheData = stringRedisTemplate.opsForValue().get(keyEnum.generateKey(items));
         if (StringUtils.isNotBlank(cacheData))
@@ -176,7 +177,7 @@ public class RedisUtils
      * @version 1.0
      * @since 2024/6/16 上午10:32
      */
-    public void setObject(RedisConstant keyEnum, Object value, String... items)
+    public void setObject(BaseCacheableEnum keyEnum, Object value, Object... items)
     {
         setString(keyEnum, JsonUtils.toJsonString(value), items);
     }
@@ -188,7 +189,7 @@ public class RedisUtils
      * @version 1.0
      * @since 2024/7/2 下午9:18
      */
-    public <T> T getObject(RedisConstant keyEnum, Class<T> returnType, String... items)
+    public <T> T getObject(BaseCacheableEnum keyEnum, Class<T> returnType, Object... items)
     {
         return getJson(keyEnum, returnType, items);
     }
@@ -201,7 +202,7 @@ public class RedisUtils
      * @version 1.0
      * @since 2023/1220 20:18
      */
-    public Map<Object, Object> getHashMap(RedisConstant Enum, String... items)
+    public Map<Object, Object> getHashMap(BaseCacheableEnum Enum, Object... items)
     {
         return stringRedisTemplate.opsForHash().entries(Enum.generateKey(items));
     }
@@ -218,7 +219,7 @@ public class RedisUtils
      * @version 1.0
      * @since 2024/2/24 00:16
      */
-    public <K, V> HashMap<K, V> getHashMap(RedisConstant enumKey,
+    public <K, V> HashMap<K, V> getHashMap(BaseCacheableEnum enumKey,
                                            Class<K> keyType,
                                            Class<V> valueType,
                                            String items
@@ -243,7 +244,7 @@ public class RedisUtils
      * @version 1.0
      * @since 2023/12/20 2:16
      */
-    public <Key, Value> void setHashMap(RedisConstant Enum, Map<Key, Value> data, String... item)
+    public <Key, Value> void setHashMap(BaseCacheableEnum Enum, Map<Key, Value> data, Object... item)
     {
         Long expire = Enum.getExpire();
         String fullKey = Enum.generateKey(item);
@@ -284,7 +285,7 @@ public class RedisUtils
      * @version 1.0
      * @since 2023/12/0 20:16
      */
-    public void setString(RedisConstant Enum, String value, String... items)
+    public void setString(BaseCacheableEnum Enum, String value, Object... items)
     {
         stringRedisTemplate.opsForValue().set(Enum.generateKey(items), value, Enum.getExpire(), TimeUnit.SECONDS);
     }
@@ -297,9 +298,9 @@ public class RedisUtils
      * @version 1.0
      * @since 2023/12/20 12:25
      */
-    public boolean hasKey(RedisConstant Enum, Object itemName)
+    public boolean hasKey(BaseCacheableEnum redisEnum, Object... keyItems)
     {
-        String key = getFullKey(Enum, itemName);
+        String key = redisEnum.generateKey(keyItems);
         return Boolean.TRUE.equals(stringRedisTemplate.hasKey(key));
     }
 
@@ -327,7 +328,7 @@ public class RedisUtils
      * @author CAIXYPROMISE
      * @since 2023-12-29
      */
-    public boolean zAdd(RedisConstant rankKey, Object value, double score)
+    public boolean zAdd(BaseCacheableEnum rankKey, Object value, double score)
     {
         // 检查排行榜大小，并可能移除最低分数的记录
         manageRankSize(rankKey.getKey());
@@ -343,7 +344,7 @@ public class RedisUtils
      * @param score 分数
      * @return 是否添加成功
      */
-    public boolean zAddMap(RedisConstant key, HashMap<String, Object> map, double score)
+    public boolean zAddMap(BaseCacheableEnum key, HashMap<String, Object> map, double score)
     {
         String valueAsJson = JsonUtils.mapToString(map);
         return zAdd(key, valueAsJson, score);

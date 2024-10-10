@@ -1,9 +1,10 @@
 package com.caixy.adminSystem.model.enums;
 
+import com.caixy.adminSystem.common.BaseCacheableEnum;
 import lombok.Getter;
 
 @Getter
-public enum RedisConstant
+public enum RedisConstant implements BaseCacheableEnum
 {
 
     CATEGORY_PARENT_BY_KEY("category:parent:", -1L),
@@ -18,6 +19,8 @@ public enum RedisConstant
      */
     GITHUB_OAUTH("github_oauth:", 60L * 5),
 
+    RESET_PASSWORD("reset_psw", 60L * 5),
+
     ;
 
     private final String key;
@@ -27,14 +30,5 @@ public enum RedisConstant
     {
         this.key = key.endsWith(":") ? key : key + ":";
         this.expire = expire;
-    }
-
-    public String generateKey(String... items)
-    {
-        if (items == null || items.length == 0)
-        {
-            return key;
-        }
-        return key.concat(String.join(":", items));
     }
 }
