@@ -4,7 +4,7 @@ import com.caixy.adminSystem.common.BaseCacheableEnum;
 import lombok.Getter;
 
 @Getter
-public enum RedisConstant implements BaseCacheableEnum
+public enum RedisKeyEnum implements BaseCacheableEnum
 {
 
     CATEGORY_PARENT_BY_KEY("category:parent:", -1L),
@@ -26,7 +26,7 @@ public enum RedisConstant implements BaseCacheableEnum
     private final String key;
     private final Long expire;
 
-    RedisConstant(String key, Long expire)
+    RedisKeyEnum(String key, Long expire)
     {
         this.key = key.endsWith(":") ? key : key + ":";
         this.expire = expire;
