@@ -34,6 +34,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
@@ -58,7 +59,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private final UserConvertor userConvertor = UserConvertor.INSTANCE;
 
     @Override
-    public long userRegister(UserRegisterRequest userRegisterRequest)
+    public long userRegister(@NotNull UserRegisterRequest userRegisterRequest)
     {
         String userPassword = userRegisterRequest.getUserPassword();
         User user = new User();
@@ -72,7 +73,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public LoginUserVO userLogin(UserLoginRequest userLoginRequest, HttpServletRequest request)
+    public LoginUserVO userLogin(@NotNull UserLoginRequest userLoginRequest, HttpServletRequest request)
     {
         // 0. 提取参数
         String userAccount = userLoginRequest.getUserAccount();
@@ -121,7 +122,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public LoginUserVO userLoginByMpOpen(WxOAuth2UserInfo wxOAuth2UserInfo, HttpServletRequest request)
+    public LoginUserVO userLoginByMpOpen(@NotNull WxOAuth2UserInfo wxOAuth2UserInfo, HttpServletRequest request)
     {
         String unionId = wxOAuth2UserInfo.getUnionId();
         String mpOpenId = wxOAuth2UserInfo.getOpenid();
@@ -162,7 +163,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @return
      */
     @Override
-    public UserVO getLoginUser(HttpServletRequest request)
+    public UserVO getLoginUser(@NotNull HttpServletRequest request)
     {
         // 先判断是否已登录
         Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
@@ -187,7 +188,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @return
      */
     @Override
-    public UserVO getLoginUserPermitNull(HttpServletRequest request)
+    public UserVO getLoginUserPermitNull(@NotNull HttpServletRequest request)
     {
         // 先判断是否已登录
         Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
@@ -206,7 +207,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @return
      */
     @Override
-    public boolean isAdmin(HttpServletRequest request)
+    public boolean isAdmin(@NotNull HttpServletRequest request)
     {
         // 仅管理员可查询
         Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
@@ -226,7 +227,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @param request
      */
     @Override
-    public boolean userLogout(HttpServletRequest request)
+    public boolean userLogout(@NotNull HttpServletRequest request)
     {
         if (request.getSession().getAttribute(USER_LOGIN_STATE) == null)
         {
@@ -301,7 +302,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     // 重载的 makeRegister 方法，接收 User 对象
     @Override
-    public Long doRegister(User user)
+    public Long doRegister(@NotNull User user)
     {
         synchronized (user.getUserAccount().intern())
         {
@@ -370,7 +371,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
 
     @Override
-    public Boolean modifyPassword(Long userId, UserModifyPasswordRequest userModifyPasswordRequest)
+    public Boolean modifyPassword(Long userId, @NotNull UserModifyPasswordRequest userModifyPasswordRequest)
     {
         String userPassword = userModifyPasswordRequest.getNewPassword();
         if (userPassword.length() < 8)
@@ -415,7 +416,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @since 2024/5/21 下午3:56
      */
     @Override
-    public void validUserInfo(User user, boolean add)
+    public void validUserInfo(@NotNull User user, boolean add)
     {
         if (add)
         {
@@ -449,8 +450,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public Boolean doOAuthLogin(OAuthResultResponse resultResponse, OAuthProviderEnum providerEnum,
-                                HttpServletRequest request)
+    public Boolean doOAuthLogin(@NotNull OAuthResultResponse resultResponse,
+                                @NotNull OAuthProviderEnum providerEnum,
+                                @NotNull HttpServletRequest request)
     {
         if (!resultResponse.isSuccess())
         {
@@ -497,7 +499,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @since 2024/6/7 下午4:31
      */
     @Override
-    public Boolean doAfterUploadAction(UploadFileDTO uploadFileDTO, Path savePath,
+    public Boolean doAfterUploadAction(@NotNull UploadFileDTO uploadFileDTO, Path savePath,
                                        UploadFileRequest uploadFileRequest) throws IOException
     {
         Long userId = uploadFileDTO.getUserId();
@@ -567,6 +569,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 "验证码错误");
     }
 
+    @NotNull
     private LoginUserVO doLogin(User user, HttpServletRequest request)
     {
         LoginUserVO loginUserVO = new LoginUserVO();
@@ -575,7 +578,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return loginUserVO;
     }
 
-    private void setUserInfoInSession(User user, HttpServletRequest request)
+    private void setUserInfoInSession(User user, @NotNull HttpServletRequest request)
     {
         UserVO userVO = new UserVO();
         userConvertor.toVO(user, userVO);
