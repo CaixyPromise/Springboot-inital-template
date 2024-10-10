@@ -2,14 +2,11 @@ package com.caixy.adminSystem.manager.Email;
 
 import com.caixy.adminSystem.config.EmailConfig;
 import com.caixy.adminSystem.constant.EmailConstant;
-import com.caixy.adminSystem.manager.Email.annotation.EmailSender;
-import com.caixy.adminSystem.manager.Email.core.BaseEmailContentDTO;
 import com.caixy.adminSystem.manager.Email.core.EmailSenderDTO;
 import com.caixy.adminSystem.manager.Email.core.EmailSenderEnum;
 import com.caixy.adminSystem.manager.Email.core.EmailSenderStrategy;
+import com.caixy.adminSystem.manager.Email.exception.IllegalEmailParamException;
 import com.caixy.adminSystem.manager.Email.factory.EmailSenderFactory;
-import com.caixy.adminSystem.manager.Email.models.EmailCaptchaDTO;
-import com.qcloud.cos.model.ciModel.auditing.Conf;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -17,11 +14,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -51,7 +45,6 @@ public class EmailSenderManager
             TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(1000),
             new ThreadPoolExecutor.DiscardPolicy());
-    private final HashMap<String, Boolean> resultMap = new HashMap<>();
 
     /**
      * 异步发送邮件
@@ -62,9 +55,10 @@ public class EmailSenderManager
      */
     public void doSendBySync(EmailSenderEnum senderEnum, EmailSenderDTO emailSenderDTO, Map<String, Object> params)
     {
-        CompletableFuture.runAsync(() -> {
+        CompletableFuture.runAsync(() ->
+        {
             boolean sendEmail = sendEmail(senderEnum, emailSenderDTO, params);
-            log.info("邮件发送结果：{}", sendEmail);
+            printResultLog(emailSenderDTO.getToEmail(), senderEnum.getName(), sendEmail);
         }, EMAIL_SENDER_POOL);
     }
 
@@ -77,7 +71,9 @@ public class EmailSenderManager
      */
     public boolean doSend(EmailSenderEnum senderEnum, EmailSenderDTO emailSenderDTO, Map<String, Object> params)
     {
-        return sendEmail(senderEnum, emailSenderDTO, params);
+        boolean sendEmail = sendEmail(senderEnum, emailSenderDTO, params);
+        printResultLog(emailSenderDTO.getToEmail(), senderEnum.getName(), sendEmail);
+        return sendEmail;
     }
 
     private boolean sendEmail(EmailSenderEnum senderEnum, EmailSenderDTO emailSenderDTO, Map<String, Object> params)
@@ -106,12 +102,22 @@ public class EmailSenderManager
             mailSender.send(message);
             return true;
         }
-        catch (MessagingException e)
+        catch (MessagingException | IllegalEmailParamException e)
         {
-            log.error("邮件发送失败", e);
+            log.error("邮件： {}，类型：{}，发送失败：{}", emailSenderDTO.getToEmail(), senderEnum.getName(), e.getMessage());
             return false;
         }
     }
 
-
+    private void printResultLog(String email, String scenes, boolean result)
+    {
+        if (result)
+        {
+            log.info("目标邮箱：{}, 场景：{}, 邮件发送成功", email, scenes);
+        }
+        else
+        {
+            log.error("目标邮箱：{}, 场景：{}, 邮件发送失败", email, scenes);
+        }
+    }
 }

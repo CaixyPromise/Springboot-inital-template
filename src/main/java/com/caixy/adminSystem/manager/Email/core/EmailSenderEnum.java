@@ -1,5 +1,6 @@
 package com.caixy.adminSystem.manager.Email.core;
 
+import com.caixy.adminSystem.common.BaseCacheableEnum;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -12,17 +13,62 @@ import lombok.Getter;
  */
 @Getter
 @AllArgsConstructor
-public enum EmailSenderEnum
+public enum EmailSenderEnum implements BaseCacheableEnum
 {
-    REGISTER(1, "注册邮件", "captcha.html.ftl"),
-    FORGET_PASSWORD(2, "忘记密码邮件", "captcha.html.ftl"),
-    CAPTCHA(3, "验证码邮件", "captcha.html.ftl"),
-    PAYMENT_INFO(4, "支付信息", "captcha.html.ftl"),
-    ACTIVE_USER(5, "激活用户", "captcha.html.ftl");
+    /**
+     * 注册账号
+     */
+    REGISTER("register",
+            60L * 5,
+            1,
+            "注册账号",
+            "captcha.html.ftl"
+            , false),
+    /**
+     * 忘记密码
+     */
+    FORGET_PASSWORD("forget_psw",
+            60L * 5,
+            2,
+            "忘记密码",
+            "captcha.html.ftl",
+            true),
+    /**
+     * 激活用户
+     */
+    ACTIVE_USER("active_user",
+            60L * 5,
+            5,
+            "激活用户",
+            "captcha.html.ftl",
+            false),
+    /**
+     * 修改密码
+     */
+    RESET_PASSWORD("reset_psw",
+            60L * 5,
+            3,
+            "修改密码",
+            "captcha.html.ftl",
+            true),
+    /**
+     * 修改邮箱
+     */
+    RESET_EMAIL("reset_email",
+            60L * 5,
+            10,
+            "修改邮箱",
+            "captcha.html.ftl",
+            true),
 
+    ;
+    private final String key;
+    private final Long expire;
     private final Integer code;
     private final String name;
     private final String templateName;
+    private final Boolean requireLogin;
+
 
     public static EmailSenderEnum getByCode(Integer code)
     {
