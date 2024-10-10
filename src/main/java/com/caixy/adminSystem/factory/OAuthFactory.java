@@ -38,7 +38,6 @@ public class OAuthFactory
     {
         oAuth2ActionStrategyMap = SpringContextUtils.getServiceFromAnnotation(oAuth2ActionStrategy,
                 OAuthTypeTarget.class, "clientName");
-        log.info("OAuth2ActionStrategyMap: {}", oAuth2ActionStrategyMap);
     }
 
     @SuppressWarnings("unchecked")

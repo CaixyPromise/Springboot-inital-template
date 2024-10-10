@@ -14,7 +14,7 @@ import com.caixy.adminSystem.model.dto.oauth.github.GithubUserProfileDTO;
 import com.caixy.adminSystem.model.dto.user.UserLoginByOAuthAdapter;
 import com.caixy.adminSystem.model.entity.User;
 import com.caixy.adminSystem.model.enums.OAuthProviderEnum;
-import com.caixy.adminSystem.model.enums.RedisConstant;
+import com.caixy.adminSystem.model.enums.RedisKeyEnum;
 import com.caixy.adminSystem.model.enums.UserGenderEnum;
 import com.caixy.adminSystem.model.enums.UserRoleEnum;
 import com.caixy.adminSystem.strategy.OAuth2ActionStrategy;
@@ -69,14 +69,14 @@ public class GithubOAuthActionStrategyImpl extends OAuth2ActionStrategy<
         log.info("stateMap: {}", stateMap);
         log.info("authorizationUrlRequest: {}", authorizationUrlRequest);
         log.info("url: {}", url);
-        redisUtils.setHashMap(RedisConstant.GITHUB_OAUTH, stateMap, authorizationUrlRequest.getSessionId());
+        redisUtils.setHashMap(RedisKeyEnum.GITHUB_OAUTH, stateMap, authorizationUrlRequest.getSessionId());
         return url;
     }
 
     @Override
     public GithubCallbackResponse doCallback(GithubCallbackRequest callbackRequest)
     {
-        HashMap<String, Object> authorizationMap = redisUtils.getHashMap(RedisConstant.GITHUB_OAUTH, String.class,
+        HashMap<String, Object> authorizationMap = redisUtils.getHashMap(RedisKeyEnum.GITHUB_OAUTH, String.class,
                 Object.class,
                 callbackRequest.getSessionId());
         if (authorizationMap == null)

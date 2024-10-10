@@ -4,7 +4,7 @@ import cn.hutool.core.codec.Base64;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.constant.CommonConstant;
 import com.caixy.adminSystem.exception.BusinessException;
-import com.caixy.adminSystem.model.enums.RedisConstant;
+import com.caixy.adminSystem.model.enums.RedisKeyEnum;
 import com.caixy.adminSystem.model.vo.captcha.CaptchaVO;
 import com.caixy.adminSystem.utils.RedisUtils;
 import com.google.code.kaptcha.Producer;
@@ -62,7 +62,7 @@ public abstract class CaptchaGenerationStrategy
         // 写入redis
         // 以uuid作为凭证，
         // 并设置过期时间: 5分钟
-        redisUtils.setHashMap(RedisConstant.CAPTCHA_CODE,
+        redisUtils.setHashMap(RedisKeyEnum.CAPTCHA_CODE,
                 resultMap,
                 request.getRequestedSessionId());
         // 过期时间5分钟
@@ -79,7 +79,7 @@ public abstract class CaptchaGenerationStrategy
         Object lastUuid = request.getSession().getAttribute(CommonConstant.CAPTCHA_SIGN);
         if (lastUuid != null)
         {
-            redisUtils.delete(RedisConstant.CAPTCHA_CODE, request.getRequestedSessionId());
+            redisUtils.delete(RedisKeyEnum.CAPTCHA_CODE, request.getRequestedSessionId());
         }
     }
 }
