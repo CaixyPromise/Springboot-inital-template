@@ -39,9 +39,13 @@ public class EmailSenderFactory
         {
             // 获取类上的 @EmailSenderStrategy 注解
             EmailSender annotation = bean.getClass().getAnnotation(EmailSender.class);
-            EmailSenderEnum emailSenderEnum = annotation.value();
-            // 注册到策略 Map 中
-            strategies.put(emailSenderEnum, (EmailSenderStrategy) bean);
+            // 获取注解中的所有枚举值
+            EmailSenderEnum[] emailSenderEnum = annotation.value();
+            for (EmailSenderEnum type : emailSenderEnum)
+            {
+                // 注册到策略 Map 中
+                strategies.put(type, (EmailSenderStrategy) bean);
+            }
         }
     }
 

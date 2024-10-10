@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * Email验证码DTO
+ * Email内容：验证码DTO
  *
  * @Author CAIXYPROMISE
  * @name com.caixy.adminSystem.manager.Email.models.EmailCaptchaDTO

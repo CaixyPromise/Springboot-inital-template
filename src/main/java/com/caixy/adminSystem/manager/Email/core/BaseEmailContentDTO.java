@@ -8,7 +8,7 @@ import org.joda.time.LocalDateTime;
 import java.io.Serializable;
 
 /**
- * 基础FreeMark基类
+ * 基础Email邮件模板FreeMark基类
  *
  * @Author CAIXYPROMISE
  * @name com.caixy.adminSystem.manager.Email.core.BaseFreeMarkDTO
