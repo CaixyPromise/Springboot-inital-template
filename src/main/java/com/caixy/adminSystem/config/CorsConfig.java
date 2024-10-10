@@ -42,7 +42,7 @@ public class CorsConfig implements WebMvcConfigurer
             String pathPattern = localFileConfig.getStaticPath() + "/" + bizEnum.getRoutePath() + "/**";
             String location =
                     "file:///" + localFileConfig.getRootLocation().toString().replace("\\", "/") + "/" + bizEnum.getValue() + "/";
-            log.info("AddResourceHandlers: {} -> {}", pathPattern, location);
+            log.info("AddResourceHandlers: {} -> \"{}\"", pathPattern, location);
             registry.addResourceHandler(pathPattern).addResourceLocations(location);
         }
     }
