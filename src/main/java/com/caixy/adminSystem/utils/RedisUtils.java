@@ -202,9 +202,9 @@ public class RedisUtils
      * @version 1.0
      * @since 2023/1220 20:18
      */
-    public Map<Object, Object> getHashMap(BaseCacheableEnum Enum, Object... items)
+    public HashMap<String, Object> getHashMap(BaseCacheableEnum Enum, Object... items)
     {
-        return stringRedisTemplate.opsForHash().entries(Enum.generateKey(items));
+        return getHashMap(Enum, String.class, Object.class, items);
     }
 
 
@@ -222,7 +222,7 @@ public class RedisUtils
     public <K, V> HashMap<K, V> getHashMap(BaseCacheableEnum enumKey,
                                            Class<K> keyType,
                                            Class<V> valueType,
-                                           String items
+                                           Object... items
     )
     {
         Map<Object, Object> rawMap = stringRedisTemplate.opsForHash().entries(enumKey.generateKey(items));
