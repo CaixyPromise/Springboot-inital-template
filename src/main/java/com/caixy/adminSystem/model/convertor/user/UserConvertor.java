@@ -1,11 +1,13 @@
 package com.caixy.adminSystem.model.convertor.user;
 
 
+import com.caixy.adminSystem.constant.RegexPatternConstants;
 import com.caixy.adminSystem.model.convertor.BaseConvertor;
 import com.caixy.adminSystem.model.entity.User;
 import com.caixy.adminSystem.model.enums.UserRoleEnum;
 import com.caixy.adminSystem.model.vo.user.LoginUserVO;
 import com.caixy.adminSystem.model.vo.user.UserVO;
+import com.caixy.adminSystem.utils.RegexUtils;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
@@ -28,6 +30,7 @@ public interface UserConvertor extends BaseConvertor<User>
     @Mapping(source = "userRole", target = "userRole", qualifiedByName = "roleStringToEnum")
     void toLoginVO(User user, @MappingTarget LoginUserVO userVO);
 
+    @Mapping(source = "userEmail", target = "userEmail", qualifiedByName = "encryptEmailText")
     void voToLoginVO(UserVO userVO, @MappingTarget LoginUserVO loginUserVO);
 
 
@@ -66,5 +69,19 @@ public interface UserConvertor extends BaseConvertor<User>
     default UserRoleEnum mapRole(String role)
     {
         return UserRoleEnum.getEnumByValue(role);
+    }
+
+    @Named("encryptEmailText")
+    default String encryptEmailText(String email)
+    {
+        return RegexUtils.encryptText(email, RegexPatternConstants.EMAIL_ENCRYPT_REGEX,
+                "$1****$2");
+    }
+
+    @Named("encryptPhoneText")
+    default String encryptPhoneText(String phone)
+    {
+        return RegexUtils.encryptText(phone, RegexPatternConstants.PHONE_ENCRYPT_REGEX,
+                "$1****$2");
     }
 }

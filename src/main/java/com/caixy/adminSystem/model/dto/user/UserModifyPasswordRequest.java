@@ -21,9 +21,7 @@ public class UserModifyPasswordRequest implements Serializable
      * 旧密码
      */
     @NotNull
-    @Min(8)
-    @Max(20)
-    private String oldPassword;
+    private String captchaCode;
 
 
     /**

@@ -8,6 +8,7 @@ import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.common.ResultUtils;
 import com.caixy.adminSystem.config.WxOpenConfig;
 import com.caixy.adminSystem.constant.CommonConstant;
+import com.caixy.adminSystem.constant.RegexPatternConstants;
 import com.caixy.adminSystem.constant.UserConstant;
 import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.exception.ThrowUtils;
@@ -18,11 +19,10 @@ import com.caixy.adminSystem.model.dto.user.*;
 import com.caixy.adminSystem.model.entity.User;
 import com.caixy.adminSystem.model.enums.OAuthProviderEnum;
 import com.caixy.adminSystem.model.enums.UserRoleEnum;
-import com.caixy.adminSystem.model.vo.user.AboutMeVO;
-import com.caixy.adminSystem.model.vo.user.AddUserVO;
-import com.caixy.adminSystem.model.vo.user.LoginUserVO;
-import com.caixy.adminSystem.model.vo.user.UserVO;
+import com.caixy.adminSystem.model.vo.user.*;
 import com.caixy.adminSystem.service.UserService;
+import com.caixy.adminSystem.utils.RegexUtils;
+import com.caixy.adminSystem.utils.ServletUtils;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
 import me.chanjar.weixin.common.bean.oauth2.WxOAuth2AccessToken;
@@ -34,6 +34,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -421,7 +422,7 @@ public class UserController
         // 如果修改成功，修改登录状态
         if (result)
         {
-            request.getSession().removeAttribute(UserConstant.USER_LOGIN_STATE);
+            ServletUtils.removeAttributeInSession(UserConstant.USER_LOGIN_STATE, request);
         }
         return ResultUtils.success(result);
     }
@@ -450,5 +451,35 @@ public class UserController
         boolean result = userService.updateUserAndSessionById(user, request);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);
+    }
+
+    @PostMapping("/reset/email")
+    public BaseResponse<Boolean> resetEmail(@RequestBody @Valid UserResetEmailRequest userResetEmailRequest, HttpServletRequest request)
+    {
+        if (userResetEmailRequest == null ||
+            StringUtils.isAnyBlank(userResetEmailRequest.getPassword(), userResetEmailRequest.getCode()))
+        {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        UserVO loginUser = userService.getLoginUser(request);
+        Boolean result = userService.resetEmail(loginUser.getId(), userResetEmailRequest, request);
+        return ResultUtils.success(result);
+    }
+    /**
+     * 获取加密后的邮箱数据
+     *
+     * @author CAIXYPROMISE
+     * @version 1.0
+     * @since 2024/10/14 下午10:16
+     */
+    @GetMapping("/get/encrypt/info")
+    public BaseResponse<EncryptAccountVO> getEncryptEmailInfo(HttpServletRequest request) {
+        UserVO loginUser = userService.getLoginUser(request);
+        String encryptedEmail = RegexUtils.encryptText(loginUser.getUserEmail(), RegexPatternConstants.EMAIL_ENCRYPT_REGEX,
+                "$1****$2");
+        String encryptedPhone = RegexUtils.encryptText(loginUser.getUserPhone(), RegexPatternConstants.PHONE_ENCRYPT_REGEX,
+                "$1****$2");
+        return ResultUtils.success(new EncryptAccountVO(encryptedEmail, encryptedPhone));
+
     }
 }
