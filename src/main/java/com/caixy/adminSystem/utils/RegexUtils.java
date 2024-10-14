@@ -15,6 +15,22 @@ import java.util.regex.Pattern;
 public class RegexUtils
 {
     /**
+     * 加密文字
+     *
+     * @author CAIXYPROMISE
+     * @version 1.0
+     * @since 2024/10/14 下午10:27
+     */
+    public static String encryptText(String text, String regex, String replaceText)
+    {
+        if (text.isEmpty())
+        {
+            return "";
+        }
+        return text.replaceAll(regex, replaceText);
+    }
+
+    /**
      * 校验手机号格式
      *
      * @author CAIXYPROMISE
@@ -92,6 +108,10 @@ public class RegexUtils
 
     private static boolean match(String regex, String input)
     {
+        if (input == null || input.isEmpty())
+        {
+            return false;
+        }
         return Pattern.matches(regex, input);
     }
 

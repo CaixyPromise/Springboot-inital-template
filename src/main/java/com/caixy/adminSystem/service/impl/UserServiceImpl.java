@@ -4,6 +4,8 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.caixy.adminSystem.manager.Email.core.EmailSenderEnum;
+import com.caixy.adminSystem.manager.Email.models.captcha.EmailCaptchaConstant;
 import com.caixy.adminSystem.manager.UploadManager.annotation.FileUploadActionTarget;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.constant.CommonConstant;
@@ -27,9 +29,7 @@ import com.caixy.adminSystem.service.CaptchaService;
 import com.caixy.adminSystem.service.UserService;
 import com.caixy.adminSystem.strategy.FileActionStrategy;
 import com.caixy.adminSystem.strategy.UploadFileMethodStrategy;
-import com.caixy.adminSystem.utils.EncryptionUtils;
-import com.caixy.adminSystem.utils.RegexUtils;
-import com.caixy.adminSystem.utils.SqlUtils;
+import com.caixy.adminSystem.utils.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
@@ -57,6 +57,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 {
     private final CaptchaService captchaService;
     private final UserConvertor userConvertor = UserConvertor.INSTANCE;
+    private static final String HEADER_RESET_EMAIL_NONCE = "reset-email-nonce";
+    private static final String HEADER_RESET_PASSWORD_TIMESTAMP = "reset-email-timestamp";
+    private final RedisUtils redisUtils;
 
     @Override
     public long userRegister(@NotNull UserRegisterRequest userRegisterRequest)
@@ -76,23 +79,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public LoginUserVO userLogin(@NotNull UserLoginRequest userLoginRequest, HttpServletRequest request)
     {
         // 0. 提取参数
-        String userAccount = userLoginRequest.getUserAccount();
-        String userPassword = userLoginRequest.getUserPassword();
-        String captcha = userLoginRequest.getCaptcha().trim();
-        String captchaId = userLoginRequest.getCaptchaId();
-        // 1. 校验
         // 1.1 检查参数是否完整
-        if (StringUtils.isAnyBlank(userAccount, userPassword))
-        {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
-        }
+        String userAccount = Optional.ofNullable(userLoginRequest.getUserAccount()).orElseThrow(() -> new BusinessException(ErrorCode.PARAMS_ERROR, "用户名为空"));
+        String userPassword = Optional.ofNullable(userLoginRequest.getUserPassword()).orElseThrow(() -> new BusinessException(ErrorCode.PARAMS_ERROR, "密码为空"));
+        String captcha = Optional.ofNullable(userLoginRequest.getCaptcha()).orElseThrow(() -> new BusinessException(ErrorCode.PARAMS_ERROR, "验证码为空"));
+        String captchaId = Optional.ofNullable(userLoginRequest.getCaptchaId()).orElseThrow(() -> new BusinessException(ErrorCode.PARAMS_ERROR, "验证码信息为空"));
+        // 1. 校验
         if (userAccount.length() < 4)
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号错误");
         }
         // 1.2 校验验证码
         verifyCaptchaCode(captcha, captchaId, request);
-
         // 2. 根据账号查询用户是否存在
         // 查询用户是否存在
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
@@ -386,6 +384,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "两次输入密码不一致");
         }
+        // 检查密码是否合法
+        ThrowUtils.throwIf(!RegexUtils.validatePassword(userPassword), ErrorCode.PARAMS_ERROR, "密码不符合要求");
+
         // 查询用户
         User currenUser = this.getById(userId);
         if (currenUser == null)
@@ -393,13 +394,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "用户不存在");
         }
 
-        // 校验密码
-        boolean matches =
-                EncryptionUtils.matchPassword(userModifyPasswordRequest.getOldPassword(), currenUser.getUserPassword());
-        if (!matches)
-        {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "原密码错误");
-        }
+        // 校验邮箱验证码
+        verifyEmailCaptcha(userModifyPasswordRequest.getCaptchaCode(), currenUser.getUserEmail(), EmailSenderEnum.RESET_PASSWORD);
 
         // 加密密码
         String encryptPassword = EncryptionUtils.encryptPassword(userPassword);
@@ -549,6 +545,71 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             setUserInfoInSession(getById(user.getId()), request);
         }
         return result;
+    }
+
+    @Override
+    public Boolean resetEmail(Long id, UserResetEmailRequest userResetEmailRequest, HttpServletRequest request)
+    {
+        // 从Session内获取新的邮箱值
+        String newEmail = ServletUtils.<String>getAttributeFromSession(EmailSenderEnum.RESET_EMAIL.getKey(), request)
+                                      .orElseThrow(() -> new BusinessException(ErrorCode.FORBIDDEN_ERROR, "无效请求"));
+        // 获取用户信息
+        User userInfo = getById(id);
+        if (userInfo == null)
+        {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "用户不存在");
+        }
+        // 检查新旧邮箱是否一致
+        if (Objects.equals(userInfo.getUserEmail(), newEmail))
+        {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "新旧邮箱不能一致");
+        }
+        // 检查用户密码是否正确
+        boolean matchPassword = EncryptionUtils.matchPassword(userResetEmailRequest.getPassword(),
+                userInfo.getUserPassword());
+        if (!matchPassword)
+        {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码错误");
+        }
+        // 校验邮箱验证码
+        verifyEmailCaptcha(userResetEmailRequest.getCode(), newEmail, EmailSenderEnum.RESET_EMAIL);
+        // 更新邮箱
+        userInfo.setUserEmail(newEmail);
+        boolean updated = this.updateById(userInfo);
+        if (updated)
+        {
+            // 删除缓存
+            redisUtils.delete(EmailSenderEnum.RESET_EMAIL, newEmail);
+            // 清除登录状态-需要重新登录
+            ServletUtils.removeAttributeInSession(UserConstant.USER_LOGIN_STATE, request);
+            // 清除验证码签名
+            ServletUtils.removeAttributeInSession(EmailSenderEnum.RESET_EMAIL.getKey(), request);
+            return true;
+        }
+        return false;
+    }
+
+    private void verifyEmailCaptcha(String code, String newEmail, EmailSenderEnum senderEnum)
+    {
+        // 从缓存获取信息
+        HashMap<String, Object> captchaInCache = redisUtils.getHashMap(senderEnum, newEmail);
+        if (captchaInCache == null || captchaInCache.isEmpty())
+        {
+            throw new BusinessException(ErrorCode.FORBIDDEN_ERROR, "无效请求");
+        }
+        String captcha = MapUtils.safetyGetValueByKey(captchaInCache, EmailCaptchaConstant.CACHE_KEY_CODE,
+                String.class);
+
+        if (StringUtils.isBlank(captcha))
+        {
+            throw new BusinessException(ErrorCode.FORBIDDEN_ERROR, "无效请求");
+        }
+
+        // 验证码验证
+        if (!captcha.equals(code))
+        {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "验证码错误");
+        }
     }
 
     // 私有方法，用于检查账户是否重复

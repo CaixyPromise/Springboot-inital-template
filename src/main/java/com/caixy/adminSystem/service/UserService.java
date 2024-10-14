@@ -3,10 +3,7 @@ package com.caixy.adminSystem.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.caixy.adminSystem.model.dto.oauth.OAuthResultResponse;
-import com.caixy.adminSystem.model.dto.user.UserLoginRequest;
-import com.caixy.adminSystem.model.dto.user.UserModifyPasswordRequest;
-import com.caixy.adminSystem.model.dto.user.UserQueryRequest;
-import com.caixy.adminSystem.model.dto.user.UserRegisterRequest;
+import com.caixy.adminSystem.model.dto.user.*;
 import com.caixy.adminSystem.model.entity.User;
 import com.caixy.adminSystem.model.enums.OAuthProviderEnum;
 import com.caixy.adminSystem.model.vo.user.LoginUserVO;
@@ -130,4 +127,6 @@ public interface UserService extends IService<User>
     Boolean doOAuthLogin(OAuthResultResponse resultResponse, OAuthProviderEnum providerEnum, HttpServletRequest request);
 
     Boolean updateUserAndSessionById(User user, HttpServletRequest request);
+
+    Boolean resetEmail(Long id, UserResetEmailRequest userResetEmailRequest, HttpServletRequest request);
 }
