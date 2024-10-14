@@ -1,10 +1,9 @@
 package com.caixy.adminSystem.model.vo.user;
 
-import java.io.Serializable;
-import java.util.Date;
-
 import com.caixy.adminSystem.model.enums.UserRoleEnum;
 import lombok.Data;
+
+import java.io.Serializable;
 
 /**
  * 已登录用户视图（脱敏）
@@ -13,12 +12,6 @@ import lombok.Data;
  **/
 @Data
 public class LoginUserVO implements Serializable {
-
-    /**
-     * 用户 id
-     */
-    private Long id;
-
     /**
      * 用户账号
      */
