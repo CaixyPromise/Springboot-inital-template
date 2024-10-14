@@ -22,17 +22,10 @@ public enum EmailSenderEnum implements BaseCacheableEnum
             60L * 5,
             1,
             "注册账号",
-            "captcha.html.ftl"
-            , false),
-    /**
-     * 忘记密码
-     */
-    FORGET_PASSWORD("forget_psw",
-            60L * 5,
-            2,
-            "忘记密码",
             "captcha.html.ftl",
+            false,
             true),
+
     /**
      * 激活用户
      */
@@ -41,7 +34,8 @@ public enum EmailSenderEnum implements BaseCacheableEnum
             5,
             "激活用户",
             "captcha.html.ftl",
-            false),
+            false,
+            true),
     /**
      * 修改密码
      */
@@ -50,7 +44,8 @@ public enum EmailSenderEnum implements BaseCacheableEnum
             3,
             "修改密码",
             "captcha.html.ftl",
-            true),
+            true,
+            false),
     /**
      * 修改邮箱
      */
@@ -59,6 +54,7 @@ public enum EmailSenderEnum implements BaseCacheableEnum
             10,
             "修改邮箱",
             "captcha.html.ftl",
+            true,
             true),
 
     ;
@@ -68,6 +64,7 @@ public enum EmailSenderEnum implements BaseCacheableEnum
     private final String name;
     private final String templateName;
     private final Boolean requireLogin;
+    private final Boolean requireToEmail;
 
 
     public static EmailSenderEnum getByCode(Integer code)
