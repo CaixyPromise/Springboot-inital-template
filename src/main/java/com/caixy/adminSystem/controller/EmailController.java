@@ -6,14 +6,18 @@ import com.caixy.adminSystem.common.ResultUtils;
 import com.caixy.adminSystem.exception.ThrowUtils;
 import com.caixy.adminSystem.manager.Email.core.EmailSenderEnum;
 import com.caixy.adminSystem.model.dto.email.SendEmailRequest;
+import com.caixy.adminSystem.model.vo.user.UserVO;
 import com.caixy.adminSystem.service.EmailService;
 import com.caixy.adminSystem.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.constraints.Email;
 
 /**
  * Email发送接口控制器
@@ -42,13 +46,19 @@ public class EmailController
     @PostMapping("/send")
     public BaseResponse<Boolean> sendEmail(@RequestBody SendEmailRequest sendEmailRequest, HttpServletRequest request)
     {
+        // 无需校验邮箱
         Integer scenes = sendEmailRequest.getScenes();
         EmailSenderEnum senderEnum = EmailSenderEnum.getByCode(scenes);
         ThrowUtils.throwIf(senderEnum == null, ErrorCode.PARAMS_ERROR);
+        UserVO userInfo = null;
         if (senderEnum.getRequireLogin())
         {
-            userService.getLoginUser(request);
+            userInfo = userService.getLoginUser(request);
         }
-        return ResultUtils.success(emailService.sendEmail(sendEmailRequest, senderEnum, request));
+        if (senderEnum.getRequireToEmail())
+        {
+            ThrowUtils.throwIf(StringUtils.isBlank(sendEmailRequest.getToEmail()), ErrorCode.PARAMS_ERROR);
+        }
+        return ResultUtils.success(emailService.sendEmail(sendEmailRequest, senderEnum, request, userInfo));
     }
 }

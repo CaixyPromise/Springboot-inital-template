@@ -4,7 +4,8 @@ import com.caixy.adminSystem.manager.Email.annotation.EmailSender;
 import com.caixy.adminSystem.manager.Email.core.EmailSenderEnum;
 import com.caixy.adminSystem.manager.Email.core.EmailSenderStrategy;
 import com.caixy.adminSystem.manager.Email.exception.IllegalEmailParamException;
-import com.caixy.adminSystem.manager.Email.models.EmailCaptchaDTO;
+import com.caixy.adminSystem.manager.Email.models.captcha.EmailCaptchaConstant;
+import com.caixy.adminSystem.manager.Email.models.captcha.EmailCaptchaDTO;
 import com.caixy.adminSystem.manager.Email.utils.FreeMarkEmailUtil;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +20,6 @@ import java.util.Map;
  */
 @EmailSender({                           // 分别处理以下业务的发送：
         EmailSenderEnum.RESET_PASSWORD,  // 修改密码
-        EmailSenderEnum.FORGET_PASSWORD, // 忘记密码
         EmailSenderEnum.REGISTER,        // 注册账号
         EmailSenderEnum.ACTIVE_USER,     // 激活用户
         EmailSenderEnum.RESET_EMAIL,     // 修改邮箱
@@ -31,7 +31,7 @@ public class EmailCaptchaSender implements EmailSenderStrategy
     @Override
     public String getEmailContent(Map<String, Object> params)
     {
-        Object code = params.get("code");
+        Object code = params.get(EmailCaptchaConstant.CACHE_KEY_CODE);
         if (code == null)
         {
             throw new IllegalEmailParamException("验证码信息为空");

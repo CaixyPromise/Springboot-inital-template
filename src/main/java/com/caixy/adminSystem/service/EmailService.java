@@ -2,6 +2,7 @@ package com.caixy.adminSystem.service;
 
 import com.caixy.adminSystem.manager.Email.core.EmailSenderEnum;
 import com.caixy.adminSystem.model.dto.email.SendEmailRequest;
+import com.caixy.adminSystem.model.vo.user.UserVO;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -14,5 +15,6 @@ import javax.servlet.http.HttpServletRequest;
 public interface EmailService
 {
 
-    Boolean sendEmail(SendEmailRequest sendEmailRequest, EmailSenderEnum senderEnum, HttpServletRequest request);
+    Boolean sendEmail(SendEmailRequest sendEmailRequest, EmailSenderEnum senderEnum, HttpServletRequest request,
+                      UserVO userInfo);
 }
