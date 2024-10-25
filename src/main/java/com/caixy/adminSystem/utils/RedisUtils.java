@@ -4,9 +4,9 @@ package com.caixy.adminSystem.utils;
 import com.caixy.adminSystem.common.BaseCacheableEnum;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.caixy.adminSystem.utils.StringUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
 
@@ -179,7 +179,9 @@ public class RedisUtils
      */
     public void setObject(BaseCacheableEnum keyEnum, Object value, Object... items)
     {
-        setString(keyEnum, JsonUtils.toJsonString(value), items);
+        ValueOperations<String, Object> operation = redisTemplate.opsForValue();
+        String key = keyEnum.generateKey(items);
+        operation.set(key, value);
     }
 
     /**
@@ -189,10 +191,17 @@ public class RedisUtils
      * @version 1.0
      * @since 2024/7/2 下午9:18
      */
-    public <T> T getObject(BaseCacheableEnum keyEnum, Class<T> returnType, Object... items)
-    {
-        return getJson(keyEnum, returnType, items);
+    public <T> Optional<T> getObject(BaseCacheableEnum keyEnum, Class<T> type, Object... items) {
+        ValueOperations<String, Object> operation = redisTemplate.opsForValue();
+        Object value = operation.get(keyEnum.generateKey(items));
+
+        if (type.isInstance(value)) {
+            return Optional.of(type.cast(value));
+        } else {
+            return Optional.empty();
+        }
     }
+
 
 
     /**
