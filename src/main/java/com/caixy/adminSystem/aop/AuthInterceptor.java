@@ -3,11 +3,9 @@ package com.caixy.adminSystem.aop;
 import com.caixy.adminSystem.annotation.AuthCheck;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.exception.BusinessException;
-import com.caixy.adminSystem.model.entity.User;
+import com.caixy.adminSystem.manager.Authorization.AuthManager;
 import com.caixy.adminSystem.model.enums.UserRoleEnum;
 import com.caixy.adminSystem.model.vo.user.UserVO;
-import com.caixy.adminSystem.service.UserService;
-import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -26,9 +24,8 @@ import javax.servlet.http.HttpServletRequest;
 @Component
 public class AuthInterceptor
 {
-
     @Resource
-    private UserService userService;
+    private AuthManager authManager;
 
     /**
      * 执行拦截
@@ -44,7 +41,7 @@ public class AuthInterceptor
         RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
         HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
         // 当前登录用户
-        UserVO loginUser = userService.getLoginUser(request);
+        UserVO loginUser = authManager.getLoginUser(request);
         UserRoleEnum userRole = loginUser.getUserRole();
 
         // 必须有该权限才通过
