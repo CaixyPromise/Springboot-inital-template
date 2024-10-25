@@ -2,13 +2,19 @@ package com.caixy.adminSystem.utils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 /**
  * 网络工具类
  */
 public class NetUtils
 {
-
+    public final static String REGX_0_255 = "(25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]\\d|\\d)";
+    // 匹配 ip
+    public final static String REGX_IP = "((" + REGX_0_255 + "\\.){3}" + REGX_0_255 + ")";
+    public final static String REGX_IP_WILDCARD = "(((\\*\\.){3}\\*)|(" + REGX_0_255 + "(\\.\\*){3})|(" + REGX_0_255 + "\\." + REGX_0_255 + ")(\\.\\*){2}" + "|((" + REGX_0_255 + "\\.){3}\\*))";
+    // 匹配网段
+    public final static String REGX_IP_SEG = "(" + REGX_IP + "\\-" + REGX_IP + ")";
     /**
      * 获取客户端 IP 地址
      *
@@ -79,9 +85,9 @@ public class NetUtils
      *
      * @return 本机 IP 地址或主机名
      */
-    public static String getServerHost()
+    public static String getHostIp()
     {
-        String host = "localhost";
+        String host = "127.0.0.1";
         try
         {
             InetAddress inet = InetAddress.getLocalHost();
@@ -92,5 +98,23 @@ public class NetUtils
             e.printStackTrace();
         }
         return host;
+    }
+
+    /**
+     * 获取主机名
+     *
+     * @return 本地主机名
+     */
+    public static String getHostName()
+    {
+        try
+        {
+            return InetAddress.getLocalHost().getHostName();
+        }
+        catch (UnknownHostException e)
+        {
+            e.printStackTrace();
+        }
+        return "未知";
     }
 }

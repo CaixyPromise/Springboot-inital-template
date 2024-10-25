@@ -9,7 +9,7 @@ import com.caixy.adminSystem.manager.Email.exception.IllegalEmailParamException;
 import com.caixy.adminSystem.manager.Email.factory.EmailSenderFactory;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+import com.caixy.adminSystem.utils.StringUtils;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;

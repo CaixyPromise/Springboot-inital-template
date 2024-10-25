@@ -5,7 +5,7 @@ import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.manager.Limiter.RateLimiterBuilder;
 import com.caixy.adminSystem.manager.Limiter.RedisLimiterManager;
-import org.apache.commons.lang3.StringUtils;
+import com.caixy.adminSystem.utils.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;

@@ -1,5 +1,6 @@
 package com.caixy.adminSystem.manager.UploadManager;
 
+import com.caixy.adminSystem.constant.CommonConstant;
 import com.caixy.adminSystem.manager.UploadManager.annotation.UploadMethodTarget;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.config.LocalFileConfig;
@@ -91,10 +92,33 @@ public class LocalFileStrategyImpl implements UploadFileMethodStrategy
     }
 
     @Override
+    public Boolean deleteFileAllowFail(Path key)
+    {
+        try
+        {
+            deleteFile(key);
+            return true;
+        }
+        catch (IOException e)
+        {
+            log.error("Failed to delete file: {}", key, e);
+            return false;
+        }
+    }
+
+    @Override
     public Resource getFile(Path key) throws IOException
     {
         Path finalPath = localFileConfig.getRootLocation().resolve(key);
         File file = finalPath.toFile();
         return new FileSystemResource(file);
+    }
+
+
+    @Override
+    public String buildFileURL(Long userId, String fileName)
+    {
+        String pathPattern = localFileConfig.getStaticPath() + "/" + FileActionBizEnum.USER_AVATAR.getRoutePath();
+        return String.format("%s%s/%s/%s", CommonConstant.BACKEND_URL + "/api", pathPattern, userId, fileName);
     }
 }

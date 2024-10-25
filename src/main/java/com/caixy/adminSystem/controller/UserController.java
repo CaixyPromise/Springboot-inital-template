@@ -6,38 +6,30 @@ import com.caixy.adminSystem.common.BaseResponse;
 import com.caixy.adminSystem.common.DeleteRequest;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.common.ResultUtils;
-import com.caixy.adminSystem.config.WxOpenConfig;
-import com.caixy.adminSystem.constant.CommonConstant;
 import com.caixy.adminSystem.constant.RegexPatternConstants;
 import com.caixy.adminSystem.constant.UserConstant;
 import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.exception.ThrowUtils;
-import com.caixy.adminSystem.factory.OAuthFactory;
-import com.caixy.adminSystem.model.dto.oauth.OAuthResultResponse;
-import com.caixy.adminSystem.model.dto.oauth.github.GithubGetAuthorizationUrlRequest;
+import com.caixy.adminSystem.manager.Authorization.AuthManager;
 import com.caixy.adminSystem.model.dto.user.*;
 import com.caixy.adminSystem.model.entity.User;
-import com.caixy.adminSystem.model.enums.OAuthProviderEnum;
 import com.caixy.adminSystem.model.enums.UserRoleEnum;
-import com.caixy.adminSystem.model.vo.user.*;
+import com.caixy.adminSystem.model.vo.user.AboutMeVO;
+import com.caixy.adminSystem.model.vo.user.AddUserVO;
+import com.caixy.adminSystem.model.vo.user.EncryptAccountVO;
+import com.caixy.adminSystem.model.vo.user.UserVO;
 import com.caixy.adminSystem.service.UserService;
 import com.caixy.adminSystem.utils.RegexUtils;
 import com.caixy.adminSystem.utils.ServletUtils;
 import lombok.extern.slf4j.Slf4j;
-import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
-import me.chanjar.weixin.common.bean.oauth2.WxOAuth2AccessToken;
-import me.chanjar.weixin.mp.api.WxMpService;
-import org.apache.commons.lang3.StringUtils;
+import com.caixy.adminSystem.utils.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 用户接口
@@ -49,61 +41,11 @@ public class UserController
 {
     @Resource
     private UserService userService;
-
+    
     @Resource
-    private WxOpenConfig wxOpenConfig;
+    private AuthManager authManager;
 
-    @Resource
-    private OAuthFactory oAuthFactory;
-
-    // region 登录相关
-    @GetMapping("/oauth2/{provider}/login")
-    public BaseResponse<String> initOAuthLogin(
-            @PathVariable String provider,
-            @ModelAttribute GithubGetAuthorizationUrlRequest authorizationUrlRequest,
-            HttpServletRequest request)
-    {
-        OAuthProviderEnum providerEnum = OAuthProviderEnum.getProviderEnum(provider);
-        if (providerEnum == null)
-        {
-            throw new BusinessException(ErrorCode.OPERATION_ERROR, "不支持的OAuth2登录方式");
-        }
-        authorizationUrlRequest.setSessionId(request.getSession().getId());
-        log.info("authorizationUrlRequest:{}", authorizationUrlRequest);
-        String authorizationUrl = oAuthFactory.getOAuth2ActionStrategy(providerEnum).getAuthorizationUrl(
-                authorizationUrlRequest);
-        return ResultUtils.success(authorizationUrl);
-    }
-
-    @GetMapping("/oauth2/{provider}/callback")
-    public void oAuthLoginCallback(
-            @PathVariable("provider") String provider,
-            @RequestParam Map<String, Object> allParams,
-            HttpServletRequest request,
-            HttpServletResponse response) throws IOException
-    {
-        allParams.put("sessionId", request.getSession().getId());
-        try
-        {
-            OAuthProviderEnum providerEnum = OAuthProviderEnum.getProviderEnum(provider);
-            if (providerEnum == null)
-            {
-                throw new BusinessException(ErrorCode.OPERATION_ERROR, "不支持的OAuth2登录方式");
-            }
-            OAuthResultResponse oAuthResultResponse = oAuthFactory.doAuth(providerEnum, allParams);
-            if (oAuthResultResponse.isSuccess())
-            {
-                userService.doOAuthLogin(oAuthResultResponse, providerEnum, request);
-            }
-            response.sendRedirect(oAuthResultResponse.getRedirectUrl());
-        }
-        catch (Exception e)
-        {
-            response.sendRedirect(CommonConstant.FRONTED_URL);
-            throw new BusinessException(ErrorCode.OPERATION_ERROR, e.getMessage());
-        }
-    }
-
+    // region 注册相关
     /**
      * 用户注册
      *
@@ -133,92 +75,8 @@ public class UserController
         long saveResult = userService.userRegister(userRegisterRequest);
         return ResultUtils.success(saveResult > 0);
     }
-
-    /**
-     * 用户登录
-     *
-     * @param userLoginRequest
-     * @param request
-     * @return
-     */
-    @PostMapping("/login")
-    public BaseResponse<LoginUserVO> userLogin(@RequestBody UserLoginRequest userLoginRequest,
-                                               HttpServletRequest request)
-    {
-        if (userLoginRequest == null)
-        {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
-        String userAccount = userLoginRequest.getUserAccount();
-        String userPassword = userLoginRequest.getUserPassword();
-        if (StringUtils.isAnyBlank(userAccount, userPassword))
-        {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
-        return ResultUtils.success(userService.userLogin(userLoginRequest, request));
-    }
-
-
-    /**
-     * 用户注销
-     *
-     * @param request
-     * @return
-     */
-    @PostMapping("/logout")
-    public BaseResponse<Boolean> userLogout(HttpServletRequest request)
-    {
-        if (request == null)
-        {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
-        boolean result = userService.userLogout(request);
-        return ResultUtils.success(result);
-    }
-
-    /**
-     * 实时系统中，用于获取当前登录状态的用户
-     *
-     * @param request
-     */
-    @GetMapping("/get/login")
-    public BaseResponse<LoginUserVO> getLoginUser(HttpServletRequest request)
-    {
-        UserVO user = userService.getLoginUser(request);
-        return ResultUtils.success(userService.getLoginUserVO(user));
-    }
-
     // endregion
 
-
-    // region 微信操作
-    @GetMapping("/login/wx_open")
-    public BaseResponse<LoginUserVO> userLoginByWxOpen(HttpServletRequest request, HttpServletResponse response,
-                                                       @RequestParam("code") String code)
-    {
-        WxOAuth2AccessToken accessToken;
-        try
-        {
-            WxMpService wxService = wxOpenConfig.getWxMpService();
-            accessToken = wxService.getOAuth2Service().getAccessToken(code);
-            WxOAuth2UserInfo userInfo = wxService.getOAuth2Service().getUserInfo(accessToken, code);
-            String unionId = userInfo.getUnionId();
-            String mpOpenId = userInfo.getOpenid();
-            if (StringUtils.isAnyBlank(unionId, mpOpenId))
-            {
-                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "登录失败，系统错误");
-            }
-            return ResultUtils.success(userService.userLoginByMpOpen(userInfo, request));
-        }
-        catch (Exception e)
-        {
-            log.error("userLoginByWxOpen error", e);
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "登录失败，系统错误");
-        }
-    }
-
-
-    // endregion
 
     // region 管理员增删改查
 
@@ -401,7 +259,7 @@ public class UserController
     @GetMapping("/get/me")
     public BaseResponse<AboutMeVO> getMe(HttpServletRequest request)
     {
-        UserVO loginUser = userService.getLoginUser(request);
+        UserVO loginUser = authManager.getLoginUser(request);
         User currentUser = userService.getById(loginUser.getId());
 
         return ResultUtils.success(AboutMeVO.of(currentUser));
@@ -417,7 +275,7 @@ public class UserController
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
 
-        UserVO loginUser = userService.getLoginUser(request);
+        UserVO loginUser = authManager.getLoginUser(request);
         Boolean result = userService.modifyPassword(loginUser.getId(), userModifyPasswordRequest);
         // 如果修改成功，修改登录状态
         if (result)
@@ -443,7 +301,7 @@ public class UserController
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        UserVO loginUser = userService.getLoginUser(request);
+        UserVO loginUser = authManager.getLoginUser(request);
         User user = new User();
         BeanUtils.copyProperties(userUpdateProfileRequest, user);
         user.setId(loginUser.getId());
@@ -461,7 +319,7 @@ public class UserController
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        UserVO loginUser = userService.getLoginUser(request);
+        UserVO loginUser = authManager.getLoginUser(request);
         Boolean result = userService.resetEmail(loginUser.getId(), userResetEmailRequest, request);
         return ResultUtils.success(result);
     }
@@ -474,7 +332,7 @@ public class UserController
      */
     @GetMapping("/get/encrypt/info")
     public BaseResponse<EncryptAccountVO> getEncryptEmailInfo(HttpServletRequest request) {
-        UserVO loginUser = userService.getLoginUser(request);
+        UserVO loginUser = authManager.getLoginUser(request);
         String encryptedEmail = RegexUtils.encryptText(loginUser.getUserEmail(), RegexPatternConstants.EMAIL_ENCRYPT_REGEX,
                 "$1****$2");
         String encryptedPhone = RegexUtils.encryptText(loginUser.getUserPhone(), RegexPatternConstants.PHONE_ENCRYPT_REGEX,

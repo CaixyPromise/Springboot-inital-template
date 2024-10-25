@@ -6,7 +6,7 @@ import com.caixy.adminSystem.constant.CommonConstant;
 import com.caixy.adminSystem.model.entity.Post;
 import com.caixy.adminSystem.utils.JsonUtils;
 import lombok.Data;
-import org.apache.commons.lang3.StringUtils;
+import com.caixy.adminSystem.utils.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.DateFormat;

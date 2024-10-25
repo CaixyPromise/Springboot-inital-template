@@ -8,10 +8,10 @@ import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.constant.CommonConstant;
 import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.exception.ThrowUtils;
+import com.caixy.adminSystem.manager.Authorization.AuthManager;
 import com.caixy.adminSystem.mapper.PostFavourMapper;
 import com.caixy.adminSystem.mapper.PostMapper;
 import com.caixy.adminSystem.mapper.PostThumbMapper;
-import com.caixy.adminSystem.model.dto.post.PostEsDTO;
 import com.caixy.adminSystem.model.dto.post.PostQueryRequest;
 import com.caixy.adminSystem.model.entity.Post;
 import com.caixy.adminSystem.model.entity.PostFavour;
@@ -24,23 +24,15 @@ import com.caixy.adminSystem.service.UserService;
 import com.caixy.adminSystem.utils.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.sort.SortBuilder;
-import org.elasticsearch.search.sort.SortBuilders;
-import org.elasticsearch.search.sort.SortOrder;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
-import org.springframework.data.elasticsearch.core.SearchHit;
-import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import com.caixy.adminSystem.utils.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -52,13 +44,16 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 {
 
     @Resource
-    private UserService userService;
+    private AuthManager authManager;
 
     @Resource
     private PostThumbMapper postThumbMapper;
 
     @Resource
     private PostFavourMapper postFavourMapper;
+
+    @Resource
+    private UserService userService;
 
 //    @Resource
 //    private ElasticsearchRestTemplate elasticsearchRestTemplate;
@@ -265,7 +260,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         UserVO userVO = userService.getUserVO(user);
         postVO.setUser(userVO);
         // 2. 已登录，获取用户点赞、收藏状态
-        UserVO loginUser = userService.getLoginUserPermitNull(request);
+        UserVO loginUser = authManager.getLoginUserPermitNull(request);
         if (loginUser != null)
         {
             // 获取点赞
@@ -300,11 +295,11 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         // 2. 已登录，获取用户点赞、收藏状态
         Map<Long, Boolean> postIdHasThumbMap = new HashMap<>();
         Map<Long, Boolean> postIdHasFavourMap = new HashMap<>();
-        UserVO loginUser = userService.getLoginUserPermitNull(request);
+        UserVO loginUser = authManager.getLoginUserPermitNull(request);
         if (loginUser != null)
         {
             Set<Long> postIdSet = postList.stream().map(Post::getId).collect(Collectors.toSet());
-            loginUser = userService.getLoginUser(request);
+            loginUser = authManager.getLoginUser(request);
             // 获取点赞
             QueryWrapper<PostThumb> postThumbQueryWrapper = new QueryWrapper<>();
             postThumbQueryWrapper.in("postId", postIdSet);

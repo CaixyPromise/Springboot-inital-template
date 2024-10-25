@@ -4,6 +4,7 @@ import com.caixy.adminSystem.model.dto.file.DownloadFileDTO;
 import com.caixy.adminSystem.model.dto.file.UploadFileDTO;
 import com.caixy.adminSystem.model.dto.file.UploadFileRequest;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -22,7 +23,8 @@ public interface FileActionStrategy
      * @version 1.0
      * @since 2024/6/10 下午11:51
      */
-    Boolean doAfterUploadAction(UploadFileDTO uploadFileDTO, Path savePath, UploadFileRequest uploadFileRequest) throws IOException;
+    Boolean doAfterUploadAction(UploadFileDTO uploadFileDTO, Path savePath, UploadFileRequest uploadFileRequest,
+                                HttpServletRequest request) throws IOException;
 
     /**
      * 文件上传前处理操作

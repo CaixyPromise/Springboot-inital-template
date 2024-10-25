@@ -1,7 +1,6 @@
 package com.caixy.adminSystem.utils;
 
 import lombok.Getter;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;

@@ -1,13 +1,14 @@
 package com.caixy.adminSystem.manager.UploadManager;
 
-import com.caixy.adminSystem.manager.UploadManager.annotation.UploadMethodTarget;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.config.CosClientConfig;
 import com.caixy.adminSystem.constant.FileConstant;
 import com.caixy.adminSystem.exception.BusinessException;
-import com.caixy.adminSystem.strategy.UploadFileMethodStrategy;
+import com.caixy.adminSystem.manager.UploadManager.annotation.UploadMethodTarget;
 import com.caixy.adminSystem.model.dto.file.UploadFileDTO;
+import com.caixy.adminSystem.model.enums.FileActionBizEnum;
 import com.caixy.adminSystem.model.enums.SaveFileMethodEnum;
+import com.caixy.adminSystem.strategy.UploadFileMethodStrategy;
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.model.COSObject;
 import com.qcloud.cos.model.GetObjectRequest;
@@ -131,5 +132,27 @@ public class CosStrategyImpl implements UploadFileMethodStrategy
         COSObject fileObject = cosClient.getObject(objectRequest);
         byte[] bytes = IOUtils.toByteArray(fileObject.getObjectContent());
         return new ByteArrayResource(bytes);
+    }
+
+    @Override
+    public Boolean deleteFileAllowFail(Path key)
+    {
+        try
+        {
+            deleteFile(key);
+            return true;
+        }
+        catch (Exception e)
+        {
+            log.error("file delete error, filepath = {}", key, e);
+            return false;
+        }
+    }
+
+    @Override
+    public String buildFileURL(Long userId, String fileName)
+    {
+        String pathPattern = FileActionBizEnum.USER_AVATAR.getRoutePath();
+        return String.format("%s/%s/%s/%s", cosClientConfig.getRegion(), pathPattern, userId, fileName);
     }
 }

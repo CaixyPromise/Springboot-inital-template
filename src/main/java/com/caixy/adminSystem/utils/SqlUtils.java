@@ -1,6 +1,6 @@
 package com.caixy.adminSystem.utils;
 
-import org.apache.commons.lang3.StringUtils;
+import com.caixy.adminSystem.utils.StringUtils;
 
 /**
  * SQL 工具

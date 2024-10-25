@@ -2,7 +2,7 @@ package com.caixy.adminSystem.manager.RDLock.aop;
 
 import com.caixy.adminSystem.manager.RDLock.annotation.DistributedLock;
 import com.caixy.adminSystem.manager.RDLock.DistributedLockManager;
-import org.apache.commons.lang3.StringUtils;
+import com.caixy.adminSystem.utils.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;

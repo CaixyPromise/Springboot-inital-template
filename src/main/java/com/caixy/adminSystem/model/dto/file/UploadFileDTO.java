@@ -110,7 +110,6 @@ public class UploadFileDTO
 
         // 使用 FileActionBizEnum 枚举类中的方法生成路径和URL
         Path fileAbsoluteName = fileActionBizEnum.buildFileAbsolutePathAndName(userId, filename);
-        String fileURL = fileActionBizEnum.buildFileURL(userId, filename);
         Path filePath = fileActionBizEnum.buildFilePath(userId);
 
         return FileInfo.builder()
@@ -119,7 +118,6 @@ public class UploadFileDTO
                 .fileInnerName(filename)
                 .fileAbsolutePathAndName(fileAbsoluteName)
                 .filePath(filePath)
-                .fileURL(fileURL)
                 .fileSuffix(fileSuffix)
                 .build();
     }

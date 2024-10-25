@@ -3,7 +3,7 @@ package com.caixy.adminSystem.model.enums;
 import com.caixy.adminSystem.model.dto.oauth.github.GithubUserProfileDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.apache.commons.lang3.StringUtils;
+import com.caixy.adminSystem.utils.StringUtils;
 
 /**
  * OAuth验证服务端类型枚举

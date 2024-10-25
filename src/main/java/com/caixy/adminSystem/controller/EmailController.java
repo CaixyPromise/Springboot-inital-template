@@ -4,14 +4,14 @@ import com.caixy.adminSystem.common.BaseResponse;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.common.ResultUtils;
 import com.caixy.adminSystem.exception.ThrowUtils;
+import com.caixy.adminSystem.manager.Authorization.AuthManager;
 import com.caixy.adminSystem.manager.Email.core.EmailSenderEnum;
 import com.caixy.adminSystem.model.dto.email.SendEmailRequest;
 import com.caixy.adminSystem.model.vo.user.UserVO;
 import com.caixy.adminSystem.service.EmailService;
-import com.caixy.adminSystem.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+import com.caixy.adminSystem.utils.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,7 +34,7 @@ public class EmailController
 {
     private final EmailService emailService;
 
-    private final UserService userService;
+    private final AuthManager authManager;
 
     /**
      * 发送邮件信息
@@ -53,7 +53,7 @@ public class EmailController
         UserVO userInfo = null;
         if (senderEnum.getRequireLogin())
         {
-            userInfo = userService.getLoginUser(request);
+            userInfo = authManager.getLoginUser(request);
         }
         if (senderEnum.getRequireToEmail())
         {

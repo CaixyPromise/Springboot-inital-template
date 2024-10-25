@@ -1,6 +1,6 @@
-package com.caixy.adminSystem.utils;
+package com.caixy.adminSystem.utils.http;
 
-import org.apache.commons.lang3.StringUtils;
+import com.caixy.adminSystem.utils.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;

@@ -157,3 +157,11 @@ info:
     name: CAIXYPROMISE
     email: caixypromised@gmail.com
     github: https://github.com/CaixyPromise
+
+xss:
+  # 过滤开关
+  enabled: true
+  # 排除链接（多个用逗号分隔）
+  excludes: /auth/**,/captcha/**,/swagger-resources/**,/v2/api-docs,${storage.staticPath}/**
+  # 匹配链接
+  urlPatterns: /monitor/*,

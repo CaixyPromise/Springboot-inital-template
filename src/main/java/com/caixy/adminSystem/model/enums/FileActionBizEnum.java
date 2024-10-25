@@ -9,9 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * 文件上传业务类型枚举
@@ -22,7 +20,7 @@ public enum FileActionBizEnum
 
     USER_AVATAR(
             "用户头像",
-            "avatar",
+             "avatar",
             FileTypeConstant.AVATAR,
             SizeUtils.of(2, SizeUtils.SizeType.MB),
             new HashSet<>(Arrays.asList("jpeg", "jpg", "svg", "png", "webp")),
@@ -35,7 +33,7 @@ public enum FileActionBizEnum
     private final String text;
 
     /**
-     * 文件的路由静态访问类型
+     * 文件的路由静态访问路由
      */
     private final String routePath;
 
@@ -137,6 +135,6 @@ public enum FileActionBizEnum
     {
         // /{routePath}/{userId}/{fileName}
         // 格式：/avatar/12345/8d2f03a7-md5hash12345.jpg
-        return String.format("/%s/%s/%s", routePath, userId, fileName);
+        return String.format("%s/%s/%s", routePath, userId, fileName);
     }
 }

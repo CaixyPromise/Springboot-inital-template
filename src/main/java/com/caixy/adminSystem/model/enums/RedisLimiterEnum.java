@@ -1,7 +1,7 @@
 package com.caixy.adminSystem.model.enums;
 
 import lombok.Getter;
-import org.apache.commons.lang3.StringUtils;
+import com.caixy.adminSystem.utils.StringUtils;
 import org.redisson.api.RateIntervalUnit;
 
 /**

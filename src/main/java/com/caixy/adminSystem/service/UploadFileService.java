@@ -1,8 +1,12 @@
 package com.caixy.adminSystem.service;
 
 import com.caixy.adminSystem.model.dto.file.UploadFileDTO;
+import com.caixy.adminSystem.model.dto.file.UploadFileRequest;
 import com.caixy.adminSystem.model.enums.FileActionBizEnum;
+import com.caixy.adminSystem.model.enums.SaveFileMethodEnum;
+import com.caixy.adminSystem.strategy.FileActionStrategy;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -21,4 +25,9 @@ public interface UploadFileService
     void deleteFile(FileActionBizEnum fileActionBizEnum, Long userId, String filename);
 
     Path saveFile(UploadFileDTO uploadFileDTO) throws IOException;
+
+    FileActionStrategy getFileActionService(FileActionBizEnum fileActionBizEnum);
+
+    String handleUpload(UploadFileRequest uploadFileRequest, FileActionBizEnum uploadBizEnum,
+                        SaveFileMethodEnum saveFileMethod, UploadFileDTO uploadFileDTO, HttpServletRequest request);
 }

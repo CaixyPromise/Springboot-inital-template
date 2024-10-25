@@ -5,7 +5,31 @@ package com.caixy.adminSystem.constant;
  */
 public interface CommonConstant
 {
+    /**
+     * UTF-8 字符集
+     */
+    String UTF8 = "UTF-8";
 
+    /**
+     * GBK 字符集
+     */
+    String GBK = "GBK";
+
+    /**
+     * www主域
+     */
+    String WWW = "www.";
+
+    /**
+     * http请求
+     */
+    String HTTP = "http://";
+
+    /**
+     * https请求
+     */
+    String HTTPS = "https://";
+    
     /**
      * 升序
      */
@@ -26,5 +50,7 @@ public interface CommonConstant
      */
     String CAPTCHA_SIGN = "captcha";
 
-    String FRONTED_URL = "http://localhost:8000";
+    String FRONTED_URL = "http://localhost:3000";
+    String BACKEND_URL = "http://localhost:7529";
+
 }

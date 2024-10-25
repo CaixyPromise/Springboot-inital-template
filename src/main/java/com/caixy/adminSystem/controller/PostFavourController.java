@@ -6,16 +6,15 @@ import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.common.ResultUtils;
 import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.exception.ThrowUtils;
+import com.caixy.adminSystem.manager.Authorization.AuthManager;
 import com.caixy.adminSystem.model.dto.post.PostQueryRequest;
 import com.caixy.adminSystem.model.dto.postfavour.PostFavourAddRequest;
 import com.caixy.adminSystem.model.dto.postfavour.PostFavourQueryRequest;
 import com.caixy.adminSystem.model.entity.Post;
-import com.caixy.adminSystem.model.entity.User;
 import com.caixy.adminSystem.model.vo.post.PostVO;
 import com.caixy.adminSystem.model.vo.user.UserVO;
 import com.caixy.adminSystem.service.PostFavourService;
 import com.caixy.adminSystem.service.PostService;
-import com.caixy.adminSystem.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -41,7 +40,7 @@ public class PostFavourController
     private PostService postService;
 
     @Resource
-    private UserService userService;
+    private AuthManager authManager;
 
     /**
      * 收藏 / 取消收藏
@@ -59,7 +58,7 @@ public class PostFavourController
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         // 登录才能操作
-        final UserVO loginUser = userService.getLoginUser(request);
+        final UserVO loginUser = authManager.getLoginUser(request);
         long postId = postFavourAddRequest.getPostId();
         int result = postFavourService.doPostFavour(postId, loginUser);
         return ResultUtils.success(result);
@@ -79,7 +78,7 @@ public class PostFavourController
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        UserVO loginUser = userService.getLoginUser(request);
+        UserVO loginUser = authManager.getLoginUser(request);
         long current = postQueryRequest.getCurrent();
         long size = postQueryRequest.getPageSize();
         // 限制爬虫

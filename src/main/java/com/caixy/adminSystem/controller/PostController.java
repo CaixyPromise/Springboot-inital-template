@@ -7,20 +7,18 @@ import com.caixy.adminSystem.common.BaseResponse;
 import com.caixy.adminSystem.common.DeleteRequest;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.common.ResultUtils;
-import com.caixy.adminSystem.constant.UserConstant;
 import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.exception.ThrowUtils;
+import com.caixy.adminSystem.manager.Authorization.AuthManager;
 import com.caixy.adminSystem.model.dto.post.PostAddRequest;
 import com.caixy.adminSystem.model.dto.post.PostEditRequest;
 import com.caixy.adminSystem.model.dto.post.PostQueryRequest;
 import com.caixy.adminSystem.model.dto.post.PostUpdateRequest;
 import com.caixy.adminSystem.model.entity.Post;
-import com.caixy.adminSystem.model.entity.User;
 import com.caixy.adminSystem.model.enums.UserRoleEnum;
 import com.caixy.adminSystem.model.vo.post.PostVO;
 import com.caixy.adminSystem.model.vo.user.UserVO;
 import com.caixy.adminSystem.service.PostService;
-import com.caixy.adminSystem.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
@@ -42,7 +40,7 @@ public class PostController
     private PostService postService;
 
     @Resource
-    private UserService userService;
+    private AuthManager authManager;
 
     // region 增删改查
 
@@ -68,7 +66,7 @@ public class PostController
             post.setTags(JSONUtil.toJsonStr(tags));
         }
         postService.validPost(post, true);
-        UserVO loginUser = userService.getLoginUser(request);
+        UserVO loginUser = authManager.getLoginUser(request);
         post.setUserId(loginUser.getId());
         post.setFavourNum(0);
         post.setThumbNum(0);
@@ -92,13 +90,13 @@ public class PostController
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        UserVO user = userService.getLoginUser(request);
+        UserVO user = authManager.getLoginUser(request);
         long id = deleteRequest.getId();
         // 判断是否存在
         Post oldPost = postService.getById(id);
         ThrowUtils.throwIf(oldPost == null, ErrorCode.NOT_FOUND_ERROR);
         // 仅本人或管理员可删除
-        if (!oldPost.getUserId().equals(user.getId()) && !userService.isAdmin(request))
+        if (!oldPost.getUserId().equals(user.getId()) && !authManager.isAdmin(request))
         {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
@@ -210,7 +208,7 @@ public class PostController
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        UserVO loginUser = userService.getLoginUser(request);
+        UserVO loginUser = authManager.getLoginUser(request);
         postQueryRequest.setUserId(loginUser.getId());
         long current = postQueryRequest.getCurrent();
         long size = postQueryRequest.getPageSize();
@@ -264,13 +262,13 @@ public class PostController
         }
         // 参数校验
         postService.validPost(post, false);
-        UserVO loginUser = userService.getLoginUser(request);
+        UserVO loginUser = authManager.getLoginUser(request);
         long id = postEditRequest.getId();
         // 判断是否存在
         Post oldPost = postService.getById(id);
         ThrowUtils.throwIf(oldPost == null, ErrorCode.NOT_FOUND_ERROR);
         // 仅本人或管理员可编辑
-        if (!oldPost.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser))
+        if (!oldPost.getUserId().equals(loginUser.getId()) && !authManager.isAdmin(loginUser))
         {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }

@@ -1,7 +1,6 @@
 package com.caixy.adminSystem;
 
 import com.caixy.adminSystem.utils.EncryptionUtils;
-import com.caixy.adminSystem.utils.RegexUtils;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -18,7 +17,7 @@ public class TestRegex
     {
         String password = "As123456789";
         String encryptedPassword = "$2a$10$Q8T7GHowRg/TDefThcNQsuB2JtzoBlqV5BLInc0SnlfaoPX4KecYa";
-        boolean matches = EncryptionUtils.matches(password, encryptedPassword);
-        System.out.println(matches);
+
+        System.out.println(EncryptionUtils.encryptPassword("As123456789.."));
     }
 }

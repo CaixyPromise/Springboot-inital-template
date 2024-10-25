@@ -16,7 +16,7 @@ import com.caixy.adminSystem.utils.RedisUtils;
 import com.caixy.adminSystem.utils.ServletUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+import com.caixy.adminSystem.utils.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;

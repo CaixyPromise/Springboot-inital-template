@@ -1,9 +1,12 @@
 package com.caixy.adminSystem.utils;
 
-import org.apache.poi.ss.formula.functions.T;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.Optional;
 
@@ -25,6 +28,18 @@ public class ServletUtils
     public static Optional<String> getSessionId(HttpServletRequest request)
     {
         return Optional.ofNullable(request.getSession().getId());
+    }
+
+    /**
+     * 获取当前请求的 session 对象
+     *
+     * @author CAIXYPROMISE
+     * @version 1.0
+     * @since 2024/10/20 上午1:19
+     */
+    public static HttpSession getSession() {
+        HttpServletRequest request = getRequest();
+        return request.getSession();
     }
 
     /**
@@ -77,6 +92,31 @@ public class ServletUtils
     }
 
     /**
+     * 获取当前请求的 ServletRequestAttributes 对象，可以从中获得request
+     *
+     * @author CAIXYPROMISE
+     * @version 1.0
+     * @since 2024/10/20 上午1:16
+     */
+    public static ServletRequestAttributes getRequestAttributes()
+    {
+        RequestAttributes attributes = RequestContextHolder.getRequestAttributes();
+        return (ServletRequestAttributes) attributes;
+    }
+
+    /**
+     * 获取当前请求的 HttpServletRequest 对象
+     *
+     * @author CAIXYPROMISE
+     * @version 1.0
+     * @since 2024/10/20 上午1:20
+     */
+    public static HttpServletRequest getRequest()
+    {
+        return getRequestAttributes().getRequest();
+    }
+
+    /**
      * 使当前会话失效
      *
      * @param request HttpServletRequest 请求对象
@@ -84,6 +124,27 @@ public class ServletUtils
     public static void invalidate(HttpServletRequest request)
     {
         request.getSession().invalidate();
+    }
+
+    /**
+     * 将字符串渲染到客户端
+     *
+     * @param response 渲染对象
+     * @param string 待渲染的字符串
+     */
+    public static void renderString(HttpServletResponse response, String string)
+    {
+        try
+        {
+            response.setStatus(200);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("utf-8");
+            response.getWriter().print(string);
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     /**
