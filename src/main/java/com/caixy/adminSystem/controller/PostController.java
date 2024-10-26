@@ -66,7 +66,7 @@ public class PostController
             post.setTags(JSONUtil.toJsonStr(tags));
         }
         postService.validPost(post, true);
-        UserVO loginUser = authManager.getLoginUser(request);
+        UserVO loginUser = authManager.getLoginUser();
         post.setUserId(loginUser.getId());
         post.setFavourNum(0);
         post.setThumbNum(0);
@@ -90,7 +90,7 @@ public class PostController
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        UserVO user = authManager.getLoginUser(request);
+        UserVO user = authManager.getLoginUser();
         long id = deleteRequest.getId();
         // 判断是否存在
         Post oldPost = postService.getById(id);
@@ -208,7 +208,7 @@ public class PostController
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        UserVO loginUser = authManager.getLoginUser(request);
+        UserVO loginUser = authManager.getLoginUser();
         postQueryRequest.setUserId(loginUser.getId());
         long current = postQueryRequest.getCurrent();
         long size = postQueryRequest.getPageSize();
@@ -262,7 +262,7 @@ public class PostController
         }
         // 参数校验
         postService.validPost(post, false);
-        UserVO loginUser = authManager.getLoginUser(request);
+        UserVO loginUser = authManager.getLoginUser();
         long id = postEditRequest.getId();
         // 判断是否存在
         Post oldPost = postService.getById(id);

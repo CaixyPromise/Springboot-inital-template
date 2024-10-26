@@ -49,7 +49,7 @@ public class PostThumbController
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         // 登录才能点赞
-        final UserVO loginUser = authManager.getLoginUser(request);
+        final UserVO loginUser = authManager.getLoginUser();
         long postId = postThumbAddRequest.getPostId();
         int result = postThumbService.doPostThumb(postId, loginUser);
         return ResultUtils.success(result);

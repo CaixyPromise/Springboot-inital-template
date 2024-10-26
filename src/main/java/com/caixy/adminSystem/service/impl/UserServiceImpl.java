@@ -331,7 +331,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public Boolean resetEmail(Long id, UserResetEmailRequest userResetEmailRequest, HttpServletRequest request)
     {
         // 从Session内获取新的邮箱值
-        String newEmail = ServletUtils.<String>getAttributeFromSession(EmailSenderEnum.RESET_EMAIL.getKey(), request)
+        String newEmail = ServletUtils.getAttributeFromSession(EmailSenderEnum.RESET_EMAIL.getKey(), String.class)
                                       .orElseThrow(() -> new BusinessException(ErrorCode.FORBIDDEN_ERROR, "无效请求"));
         // 获取用户信息
         User userInfo = getById(id);
@@ -361,9 +361,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             // 删除缓存
             redisUtils.delete(EmailSenderEnum.RESET_EMAIL, newEmail);
             // 清除登录状态-需要重新登录
-            ServletUtils.removeAttributeInSession(UserConstant.USER_LOGIN_STATE, request);
+            ServletUtils.removeAttributeInSession(UserConstant.USER_LOGIN_STATE);
             // 清除验证码签名
-            ServletUtils.removeAttributeInSession(EmailSenderEnum.RESET_EMAIL.getKey(), request);
+            ServletUtils.removeAttributeInSession(EmailSenderEnum.RESET_EMAIL.getKey());
             return true;
         }
         return false;

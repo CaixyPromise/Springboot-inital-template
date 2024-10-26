@@ -80,11 +80,14 @@ public class AuthController
                 throw new BusinessException(ErrorCode.OPERATION_ERROR, "不支持的OAuth2登录方式");
             }
             OAuthResultResponse oAuthResultResponse = oAuthFactory.doAuth(providerEnum, allParams);
-            if (oAuthResultResponse.isSuccess())
+            Boolean doOAuthLogin = authManager.doOAuthLogin(oAuthResultResponse, providerEnum);
+            if (doOAuthLogin)
             {
-                authManager.doOAuthLogin(oAuthResultResponse, providerEnum, request);
+                response.sendRedirect(oAuthResultResponse.getRedirectUrl());
             }
-            response.sendRedirect(oAuthResultResponse.getRedirectUrl());
+            else {
+                response.sendRedirect(CommonConstant.FRONTED_URL);
+            }
         }
         catch (Exception e)
         {
@@ -100,13 +103,9 @@ public class AuthController
      * @return
      */
     @PostMapping("/logout")
-    public BaseResponse<Boolean> userLogout(HttpServletRequest request)
+    public BaseResponse<Boolean> userLogout()
     {
-        if (request == null)
-        {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
-        boolean result = authManager.userLogout(request);
+        boolean result = authManager.userLogout();
         return ResultUtils.success(result);
     }
 
@@ -133,13 +132,13 @@ public class AuthController
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        return ResultUtils.success(authManager.userLogin(userLoginRequest, request));
+        return ResultUtils.success(authManager.userLogin(userLoginRequest));
     }
 
     @GetMapping("/get/login")
     public BaseResponse<LoginUserVO> getLoginUser(HttpServletRequest request)
     {
-        UserVO user = authManager.getLoginUser(request);
+        UserVO user = authManager.getLoginUser();
         return ResultUtils.success(authManager.getLoginUserVO(user));
     }
 

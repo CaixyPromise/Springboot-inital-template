@@ -8,6 +8,7 @@ import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.model.enums.RedisKeyEnum;
 import com.caixy.adminSystem.strategy.CaptchaGenerationStrategy;
 import com.caixy.adminSystem.utils.RedisUtils;
+import com.caixy.adminSystem.utils.ServletUtils;
 import com.caixy.adminSystem.utils.SpringContextUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -31,7 +32,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 @Slf4j
 public class CaptchaFactory
-
 {
     @Resource
     private List<CaptchaGenerationStrategy> captchaGenerationStrategies;
@@ -61,15 +61,15 @@ public class CaptchaFactory
         return RandomUtil.randomEle(registeredStrategies);
     }
 
-    public boolean verifyCaptcha(String captchaCode, String captchaId, HttpServletRequest request)
+    public boolean verifyCaptcha(String captchaCode, String captchaId)
     {
         // 获取SessionId
-        String sessionId = request.getRequestedSessionId();
-        String sessionUuid = Optional.ofNullable(request.getSession().getAttribute(CommonConstant.CAPTCHA_SIGN))
+        String sessionId = ServletUtils.getSessionId();
+        String sessionUuid = Optional.ofNullable(ServletUtils.getAttributeFromSessionOrNull(CommonConstant.CAPTCHA_SIGN, String.class))
                                      .orElseThrow(()->{
                                          log.error("验证码校验失败，session中不存在验证码标识，sessionId:{}", sessionId);
                                          return new BusinessException(ErrorCode.OPERATION_ERROR, "验证码校验失败");
-                                     }).toString();
+                                     });
         // 1.2 校验验证码
         Map<String, String> result = redisUtils.getHashMap(
                 RedisKeyEnum.CAPTCHA_CODE,
@@ -83,7 +83,7 @@ public class CaptchaFactory
         String redisCode = result.get("code").trim();
         String redisUuid = result.get("uuid").trim();
         // 移除session缓存的uuid
-        request.getSession().removeAttribute(CommonConstant.CAPTCHA_SIGN);
+        ServletUtils.removeAttributeInSession(CommonConstant.CAPTCHA_SIGN);
         boolean removeByCache = redisUtils.delete(RedisKeyEnum.CAPTCHA_CODE, sessionId);
         if (!removeByCache)
         {

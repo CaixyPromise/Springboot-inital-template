@@ -259,7 +259,7 @@ public class UserController
     @GetMapping("/get/me")
     public BaseResponse<AboutMeVO> getMe(HttpServletRequest request)
     {
-        UserVO loginUser = authManager.getLoginUser(request);
+        UserVO loginUser = authManager.getLoginUser();
         User currentUser = userService.getById(loginUser.getId());
 
         return ResultUtils.success(AboutMeVO.of(currentUser));
@@ -275,12 +275,12 @@ public class UserController
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
 
-        UserVO loginUser = authManager.getLoginUser(request);
+        UserVO loginUser = authManager.getLoginUser();
         Boolean result = userService.modifyPassword(loginUser.getId(), userModifyPasswordRequest);
         // 如果修改成功，修改登录状态
         if (result)
         {
-            ServletUtils.removeAttributeInSession(UserConstant.USER_LOGIN_STATE, request);
+            ServletUtils.removeAttributeInSession(UserConstant.USER_LOGIN_STATE);
         }
         return ResultUtils.success(result);
     }
@@ -301,7 +301,7 @@ public class UserController
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        UserVO loginUser = authManager.getLoginUser(request);
+        UserVO loginUser = authManager.getLoginUser();
         User user = new User();
         BeanUtils.copyProperties(userUpdateProfileRequest, user);
         user.setId(loginUser.getId());
@@ -319,7 +319,7 @@ public class UserController
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        UserVO loginUser = authManager.getLoginUser(request);
+        UserVO loginUser = authManager.getLoginUser();
         Boolean result = userService.resetEmail(loginUser.getId(), userResetEmailRequest, request);
         return ResultUtils.success(result);
     }
@@ -332,7 +332,7 @@ public class UserController
      */
     @GetMapping("/get/encrypt/info")
     public BaseResponse<EncryptAccountVO> getEncryptEmailInfo(HttpServletRequest request) {
-        UserVO loginUser = authManager.getLoginUser(request);
+        UserVO loginUser = authManager.getLoginUser();
         String encryptedEmail = RegexUtils.encryptText(loginUser.getUserEmail(), RegexPatternConstants.EMAIL_ENCRYPT_REGEX,
                 "$1****$2");
         String encryptedPhone = RegexUtils.encryptText(loginUser.getUserPhone(), RegexPatternConstants.PHONE_ENCRYPT_REGEX,

@@ -53,7 +53,7 @@ public class EmailController
         UserVO userInfo = null;
         if (senderEnum.getRequireLogin())
         {
-            userInfo = authManager.getLoginUser(request);
+            userInfo = authManager.getLoginUser();
         }
         if (senderEnum.getRequireToEmail())
         {

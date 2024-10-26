@@ -63,7 +63,7 @@ public class EmailServiceImpl implements EmailService
             default:
                 throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        return doSendCaptcha(sendEmailRequest, senderEnum, request, paramsMap);
+        return doSendCaptcha(sendEmailRequest, senderEnum, paramsMap);
     }
 
     /**
@@ -74,7 +74,7 @@ public class EmailServiceImpl implements EmailService
      * @since 2024/10/10 下午7:11
      */
     private Boolean doSendCaptcha(SendEmailRequest sendEmailRequest, EmailSenderEnum senderEnum,
-                                  HttpServletRequest request, HashMap<String, Object> paramsMap)
+                                  HashMap<String, Object> paramsMap)
     {
         // 获取目标邮箱
         String toEmail = sendEmailRequest.getToEmail();
@@ -83,7 +83,7 @@ public class EmailServiceImpl implements EmailService
         //检查是否发送
         checkHasSend(toEmail, senderEnum);
         // 检查session是否发过同类型邮件
-        Boolean hasAttributeInSession = ServletUtils.hasAttributeInSession(senderEnum.getKey(), request);
+        Boolean hasAttributeInSession = ServletUtils.hasAttributeInSession(senderEnum.getKey());
         boolean hasSendKey = redisUtils.hasKey(senderEnum, toEmail);
         ThrowUtils.throwIf(hasSendKey && hasAttributeInSession, ErrorCode.PARAMS_ERROR, "邮件已发送，请到邮箱内查收。");
         // 生成验证码
@@ -91,7 +91,7 @@ public class EmailServiceImpl implements EmailService
         // 设置redis缓存信息，验证码，邮箱信息
         paramsMap.put(EmailCaptchaConstant.CACHE_KEY_CODE, code);
         // 将需要发送的邮箱账号写入redis和session，key为业务枚举值，后续不再相信前端上传的关于该邮箱的任何值，防止中间攻击。
-        ServletUtils.setAttributeInSession(senderEnum.getKey(), toEmail, request);
+        ServletUtils.setAttributeInSession(senderEnum.getKey(), toEmail);
         // 将验证码存入Redis，设置过期时间为5分钟
         redisUtils.setHashMap(senderEnum, paramsMap, toEmail);
         // 异步发送邮件时，上层调用不关心发送是否成功，已配置默认线程池失败策略为丢弃消息

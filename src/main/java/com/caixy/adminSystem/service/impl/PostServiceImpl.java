@@ -299,7 +299,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         if (loginUser != null)
         {
             Set<Long> postIdSet = postList.stream().map(Post::getId).collect(Collectors.toSet());
-            loginUser = authManager.getLoginUser(request);
+            loginUser = authManager.getLoginUser();
             // 获取点赞
             QueryWrapper<PostThumb> postThumbQueryWrapper = new QueryWrapper<>();
             postThumbQueryWrapper.in("postId", postIdSet);

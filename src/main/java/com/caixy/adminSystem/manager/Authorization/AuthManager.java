@@ -17,6 +17,7 @@ import com.caixy.adminSystem.model.vo.user.LoginUserVO;
 import com.caixy.adminSystem.model.vo.user.UserVO;
 import com.caixy.adminSystem.service.CaptchaService;
 import com.caixy.adminSystem.utils.EncryptionUtils;
+import com.caixy.adminSystem.utils.ServletUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
@@ -24,6 +25,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -49,10 +51,30 @@ public class AuthManager
 
     private static final UserConvertor userConvertor = UserConvertor.INSTANCE;
 
-    public UserVO getLoginUser(@NotNull HttpServletRequest request)
+    /**
+     * 检查是否登录
+     *
+     * @author CAIXYPROMISE
+     * @version 1.0
+     * @since 2024/10/27 上午1:13
+     */
+    public Boolean checkLogin()
     {
+        return ServletUtils.getAttributeFromSessionOrNull(USER_LOGIN_STATE, UserVO.class) != null;
+    }
+
+    /**
+     * 获取登录的用户信息
+     *
+     * @author CAIXYPROMISE
+     * @version 1.0
+     * @since 2024/10/27 上午12:12
+     */
+    public UserVO getLoginUser()
+    {
+        HttpSession httpSession = ServletUtils.getSession();
         // 先判断是否已登录
-        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+        Object userObj = httpSession.getAttribute(USER_LOGIN_STATE);
         UserVO currentUser = (UserVO) userObj;
         if (currentUser == null || currentUser.getId() == null)
         {
@@ -61,24 +83,32 @@ public class AuthManager
         if (currentUser.getUserRole().equals(UserRoleEnum.BAN))
         {
             // 被封号的用户，先断开连接
-            userLogout(request);
+            userLogout();
             throw new BusinessException(ErrorCode.FORBIDDEN_ERROR, "账号已被封禁");
         }
         return currentUser;
     }
 
-
-
+    /**
+     * 获取当前用户，允许不登录
+     *
+     * @return 当前用户信息，登录会检查是否是封号，未登录返回null
+     * @author CAIXYPROMISE
+     * @version 1.0
+     * @since 2024/10/27 上午12:42
+     */
     public UserVO getLoginUserPermitNull(@NotNull HttpServletRequest request)
     {
-        // 先判断是否已登录
-        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
-        UserVO currentUser = (UserVO) userObj;
-        if (currentUser == null || currentUser.getId() == null)
-        {
-            return null;
-        }
-        return currentUser;
+        return ServletUtils.getAttributeFromSession(USER_LOGIN_STATE, UserVO.class)
+                           .filter(user ->
+                           {
+                               if (UserRoleEnum.BAN.equals(user.getUserRole())) {
+                                   userLogout();
+                                   throw new BusinessException(ErrorCode.FORBIDDEN_ERROR, "账号已被封禁");
+                               }
+                               return true;
+                           })
+                           .orElse(null);
     }
 
     public LoginUserVO getLoginUserVO(UserVO user)
@@ -92,12 +122,18 @@ public class AuthManager
         return loginUserVO;
     }
 
+    /**
+     * 是否是管理员
+     *
+     * @author CAIXYPROMISE
+     * @version 1.0
+     * @since 2024/10/27 上午12:46
+     */
     public boolean isAdmin(@NotNull HttpServletRequest request)
     {
-        // 仅管理员可查询
-        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
-        UserVO user = (UserVO) userObj;
-        return isAdmin(user);
+        return ServletUtils.getAttributeFromSession(USER_LOGIN_STATE, UserVO.class)
+               .map(user -> UserRoleEnum.ADMIN.equals(user.getUserRole()))
+               .orElse(false);
     }
 
     public boolean isAdmin(UserVO user)
@@ -105,14 +141,16 @@ public class AuthManager
         return user != null && UserRoleEnum.ADMIN.equals(user.getUserRole());
     }
 
-    public boolean userLogout(@NotNull HttpServletRequest request)
+    public boolean userLogout()
     {
-        if (request.getSession().getAttribute(USER_LOGIN_STATE) == null)
+        HttpSession session = ServletUtils.getSession();
+        if (session.getAttribute(USER_LOGIN_STATE) == null)
         {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "未登录");
         }
         // 移除登录态
-        request.getSession().removeAttribute(USER_LOGIN_STATE);
+        session.removeAttribute(USER_LOGIN_STATE);
+        ServletUtils.invalidate(session);
         return true;
     }
 
@@ -146,10 +184,10 @@ public class AuthManager
                     throw new BusinessException(ErrorCode.SYSTEM_ERROR, "登录失败");
                 }
             }
-            return doLogin(user, request);
+            return doLogin(user);
         }
     }
-    public LoginUserVO userLogin(@NotNull UserLoginRequest userLoginRequest, HttpServletRequest request)
+    public LoginUserVO userLogin(@NotNull UserLoginRequest userLoginRequest)
     {
         // 0. 提取参数
         // 1.1 检查参数是否完整
@@ -163,7 +201,7 @@ public class AuthManager
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号错误");
         }
         // 1.2 校验验证码
-        ThrowUtils.throwIf(captchaService.verifyCaptcha(captchaCode, captchaId, request), ErrorCode.PARAMS_ERROR,
+        ThrowUtils.throwIf(captchaService.verifyCaptcha(captchaCode, captchaId), ErrorCode.PARAMS_ERROR,
                 "验证码错误");
         // 2. 根据账号查询用户是否存在
         // 查询用户是否存在
@@ -190,31 +228,30 @@ public class AuthManager
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户已被封号");
         }
         // 3. 记录用户的登录态
-        return doLogin(user, request);
+        return doLogin(user);
     }
 
-    private LoginUserVO doLogin(User user, HttpServletRequest request)
+    private LoginUserVO doLogin(User user)
     {
         LoginUserVO loginUserVO = new LoginUserVO();
         userConvertor.toLoginVO(user, loginUserVO);
-        setUserInfoInSession(user, request);
+        setUserInfoInSession(user);
         return loginUserVO;
     }
 
-    private void setUserInfoInSession(User user, @NotNull HttpServletRequest request)
+    private void setUserInfoInSession(User user)
     {
         UserVO userVO = new UserVO();
         userConvertor.toVO(user, userVO);
-        request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, userVO);
+        ServletUtils.setAttributeInSession(UserConstant.USER_LOGIN_STATE, userVO);
     }
 
     public Boolean doOAuthLogin(@NotNull OAuthResultResponse resultResponse,
-                                @NotNull OAuthProviderEnum providerEnum,
-                                @NotNull HttpServletRequest request)
+                                @NotNull OAuthProviderEnum providerEnum)
     {
         if (!resultResponse.isSuccess())
         {
-            throw new BusinessException(ErrorCode.OPERATION_ERROR, "验证失败");
+            return false;
         }
         UserLoginByOAuthAdapter loginAdapter = resultResponse.getLoginAdapter();
         User oauthUserInfo = loginAdapter.getUserInfo();
@@ -239,13 +276,16 @@ public class AuthManager
                     ((sourceValue, targetValue) -> sourceValue != null && targetValue == null));
 
         }
-        userInfo.setUserRole(UserRoleEnum.USER.getValue());
-        int result = isRegister ? userMapper.insert(userInfo) : userMapper.updateById(userInfo);
-        log.info("UserInfo: {}", userInfo);
-        if (result > 0)
+        if (isRegister)  // 用户不存在，则注册用户
         {
-            doLogin(userInfo, request);
+            // 注册时，设置为默认用户
+            userInfo.setUserRole(UserRoleEnum.USER.getValue());
+            return userMapper.insert(userInfo) > 0;
         }
-        return result > 0;
+        else // 更新用户信息
+        {
+            userMapper.updateById(userInfo);
+            return true;
+        }
     }
 }

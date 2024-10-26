@@ -27,5 +27,5 @@ public interface CaptchaService
      */
     CaptchaVO getCaptchaByType(HttpServletRequest request, String type);
 
-    boolean verifyCaptcha(String code, String captchaId, HttpServletRequest request);
+    boolean verifyCaptcha(String code, String captchaId);
 }

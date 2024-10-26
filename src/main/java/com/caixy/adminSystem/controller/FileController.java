@@ -74,7 +74,7 @@ public class FileController
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "业务类型不存在");
         }
-        UserVO loginUser = authManager.getLoginUser(request);
+        UserVO loginUser = authManager.getLoginUser();
 
         FileActionStrategy fileActionStrategy = uploadFileService.getFileActionService(fileActionBizEnum);
         DownloadFileDTO downloadFileDTO = new DownloadFileDTO();
@@ -169,7 +169,7 @@ public class FileController
                                               HttpServletRequest request)
     {
         FileActionBizEnum fileActionBizEnum = validFile(multipartFile, uploadFileRequest);
-        UserVO loginUser = authManager.getLoginUser(request);
+        UserVO loginUser = authManager.getLoginUser();
         UploadFileDTO uploadFileDTO = new UploadFileDTO();
         uploadFileDTO.setFileActionBizEnum(fileActionBizEnum);
         uploadFileDTO.setMultipartFile(multipartFile);

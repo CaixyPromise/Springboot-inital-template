@@ -41,7 +41,7 @@ public class AuthInterceptor
         RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
         HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
         // 当前登录用户
-        UserVO loginUser = authManager.getLoginUser(request);
+        UserVO loginUser = authManager.getLoginUser();
         UserRoleEnum userRole = loginUser.getUserRole();
 
         // 必须有该权限才通过

@@ -50,8 +50,8 @@ public class CaptchaServiceImpl implements CaptchaService
      * @since 2024/7/18 上午1:54
      */
     @Override
-    public boolean verifyCaptcha(String code, String captchaId, HttpServletRequest request)
+    public boolean verifyCaptcha(String code, String captchaId)
     {
-        return captchaFactory.verifyCaptcha(code, captchaId, request);
+        return captchaFactory.verifyCaptcha(code, captchaId);
     }
 }
