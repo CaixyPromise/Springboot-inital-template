@@ -107,7 +107,7 @@ public class RedisUtils
      * @version 2.0
      * @since 2024/2/16 20:19
      */
-    public void refreshExpire(BaseCacheableEnum Enum, long expire, Object... items)
+    public void settingExpire(BaseCacheableEnum Enum, long expire, Object... items)
     {
         stringRedisTemplate.expire(Enum.generateKey(items), expire, TimeUnit.SECONDS);
     }
@@ -119,7 +119,7 @@ public class RedisUtils
      * @version 1.0
      * @since 2023/1220 20:18
      */
-    public void refreshExpire(String key, long expire)
+    public void settingExpire(String key, long expire)
     {
         stringRedisTemplate.expire(key, expire, TimeUnit.SECONDS);
     }
@@ -148,7 +148,7 @@ public class RedisUtils
         return stringRedisTemplate.opsForValue().get(key);
     }
 
-    public <JsonType> List<JsonType> getJson(BaseCacheableEnum keyEnum, Object... items)
+    public <JsonType> List<JsonType> getJsonList(BaseCacheableEnum keyEnum, Object... items)
     {
         String cacheData = stringRedisTemplate.opsForValue().get(keyEnum.generateKey(items));
         if (StringUtils.isNotBlank(cacheData))
@@ -179,9 +179,14 @@ public class RedisUtils
      */
     public void setObject(BaseCacheableEnum keyEnum, Object value, Object... items)
     {
-        ValueOperations<String, Object> operation = redisTemplate.opsForValue();
         String key = keyEnum.generateKey(items);
-        operation.set(key, value);
+        setObject(key, value, keyEnum.getExpire());
+    }
+
+    public void setObject(String key, Object value, Long expire)
+    {
+        ValueOperations<String, Object> operation = redisTemplate.opsForValue();
+        operation.set(key, value, expire, TimeUnit.SECONDS);
     }
 
     /**
@@ -193,7 +198,12 @@ public class RedisUtils
      */
     public <T> Optional<T> getObject(BaseCacheableEnum keyEnum, Class<T> type, Object... items) {
         ValueOperations<String, Object> operation = redisTemplate.opsForValue();
-        Object value = operation.get(keyEnum.generateKey(items));
+        return getObject(keyEnum.generateKey(items), type);
+    }
+
+    public <T> Optional<T> getObject(String key, Class<T> type) {
+        ValueOperations<String, Object> operation = redisTemplate.opsForValue();
+        Object value = operation.get(key);
 
         if (type.isInstance(value)) {
             return Optional.of(type.cast(value));
@@ -201,8 +211,6 @@ public class RedisUtils
             return Optional.empty();
         }
     }
-
-
 
     /**
      * 获取哈希数据：接受来自常量的配置
@@ -215,7 +223,6 @@ public class RedisUtils
     {
         return getHashMap(Enum, String.class, Object.class, items);
     }
-
 
     /**
      * 获取hash数据，接受常量配置，并且根据类型回传对应类型的HashMap
@@ -257,11 +264,7 @@ public class RedisUtils
     {
         Long expire = Enum.getExpire();
         String fullKey = Enum.generateKey(item);
-        stringRedisTemplate.opsForHash().putAll(fullKey, data);
-        if (expire != null)
-        {
-            refreshExpire(fullKey, expire);
-        }
+        setHashMap(fullKey, data, expire);
     }
 
     /**
@@ -274,17 +277,13 @@ public class RedisUtils
      * @version 1.0
      * @since 2023/12/20 2:16
      */
-    public void setHashMap(String key, HashMap<String, Object> data, Long expire)
+    public <Key, Value> void setHashMap(String key, Map<Key, Value> data, Long expire)
     {
-        HashMap<String, String> stringData = new HashMap<>();
-        data.forEach((dataKey, value) ->
-                stringData.put(dataKey, JsonUtils.toJsonString(value)));
-        stringRedisTemplate.opsForHash().putAll(key, stringData);
+        stringRedisTemplate.opsForHash().putAll(key, data);
         if (expire != null)
         {
-            refreshExpire(key, expire);
+            settingExpire(key, expire);
         }
-        log.info("[setHashMap] key: {}, data: {}, expire: {}", key, data, expire);
     }
 
     /**
