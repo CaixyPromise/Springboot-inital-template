@@ -6,7 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
 
@@ -87,6 +86,11 @@ public class RedisUtils
         return Boolean.TRUE.equals(stringRedisTemplate.delete(key));
     }
 
+    public boolean delete(List<String> keys)
+    {
+        Long delete = stringRedisTemplate.delete(keys);
+        return delete != null && delete > 0;
+    }
 
     /**
      * 删除Key的数据：接受来自常量的配置
@@ -185,8 +189,7 @@ public class RedisUtils
 
     public void setObject(String key, Object value, Long expire)
     {
-        ValueOperations<String, Object> operation = redisTemplate.opsForValue();
-        operation.set(key, value, expire, TimeUnit.SECONDS);
+        setString(key, JsonUtils.toJsonString(value), expire);
     }
 
     /**
@@ -196,20 +199,19 @@ public class RedisUtils
      * @version 1.0
      * @since 2024/7/2 下午9:18
      */
-    public <T> Optional<T> getObject(BaseCacheableEnum keyEnum, Class<T> type, Object... items) {
-        ValueOperations<String, Object> operation = redisTemplate.opsForValue();
+    public <T> Optional<T> getObject(BaseCacheableEnum keyEnum, Class<T> type, Object... items)
+    {
         return getObject(keyEnum.generateKey(items), type);
     }
 
-    public <T> Optional<T> getObject(String key, Class<T> type) {
-        ValueOperations<String, Object> operation = redisTemplate.opsForValue();
-        Object value = operation.get(key);
-
-        if (type.isInstance(value)) {
-            return Optional.of(type.cast(value));
-        } else {
-            return Optional.empty();
+    public <T> Optional<T> getObject(String key, Class<T> type)
+    {
+        String result = getString(key);
+        if (StringUtils.isNotBlank(result))
+        {
+            return Optional.of(JsonUtils.jsonToObject(result, type));
         }
+        return Optional.empty();
     }
 
     /**
@@ -295,7 +297,12 @@ public class RedisUtils
      */
     public void setString(BaseCacheableEnum Enum, String value, Object... items)
     {
-        stringRedisTemplate.opsForValue().set(Enum.generateKey(items), value, Enum.getExpire(), TimeUnit.SECONDS);
+        setString(Enum.generateKey(items), value, Enum.getExpire());
+    }
+
+    public void setString(String key, String value, Long expire)
+    {
+        stringRedisTemplate.opsForValue().set(key, value, expire, TimeUnit.SECONDS);
     }
 
 
@@ -323,6 +330,83 @@ public class RedisUtils
     {
         return Boolean.TRUE.equals(stringRedisTemplate.hasKey(key));
     }
+
+    public Long getExpire(String key)
+    {
+        return stringRedisTemplate.getExpire(key, TimeUnit.SECONDS);
+    }
+
+    public Long getExpire(BaseCacheableEnum keyEnum, Object... keyItem)
+    {
+        String key = keyEnum.generateKey(keyItem);
+        return getExpire(key);
+    }
+
+    // region 集合操作
+
+    /**
+     * 向 Redis Set 中添加元素
+     *
+     * @param key    Redis 键
+     * @param values 要添加的值
+     */
+    public void addToSet(String key, String... values)
+    {
+        stringRedisTemplate.opsForSet().add(key, values);
+    }
+
+    /**
+     * 从 Redis Set 中移除元素
+     *
+     * @param key    Redis 键
+     * @param values 要移除的值
+     */
+    public void removeFromSet(String key, String... values)
+    {
+        stringRedisTemplate.opsForSet().remove(key, (Object[]) values);
+    }
+
+    public void removeFromSet(BaseCacheableEnum keyEnum, List<String> values, Object... keyItem)
+    {
+        String key = keyEnum.generateKey(keyItem);
+        removeFromSet(key, values.toArray(new String[0]));
+    }
+
+    /**
+     * 获取 Redis Set 中的所有元素
+     *
+     * @param key Redis 键
+     * @return Set 集合
+     */
+    public Set<String> getMembersFromSet(String key)
+    {
+        return stringRedisTemplate.opsForSet().members(key);
+    }
+
+    public Set<String> getMembersFromSet(BaseCacheableEnum keyEnum, Object... keyItem)
+    {
+        String key = keyEnum.generateKey(keyItem);
+        return getMembersFromSet(key);
+    }
+
+    /**
+     * 获取 Redis Set 的大小
+     *
+     * @param key Redis 键
+     * @return 集合大小
+     */
+    public Long getSetSize(String key)
+    {
+        return stringRedisTemplate.opsForSet().size(key);
+    }
+
+    public Long getSetSize(BaseCacheableEnum keyEnum, Object... keyItem)
+    {
+        String key = keyEnum.generateKey(keyItem);
+        return getSetSize(key);
+    }
+
+    // endregion
 
     // region 排行榜实现
     // ===================== 排行榜实现 =====================

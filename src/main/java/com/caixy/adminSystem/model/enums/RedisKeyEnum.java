@@ -1,6 +1,7 @@
 package com.caixy.adminSystem.model.enums;
 
 import com.caixy.adminSystem.common.BaseCacheableEnum;
+import com.caixy.adminSystem.utils.TimeUtils;
 import lombok.Getter;
 
 @Getter
@@ -20,6 +21,7 @@ public enum RedisKeyEnum implements BaseCacheableEnum
     GITHUB_OAUTH("github_oauth:", 60L * 5),
 
     RESET_PASSWORD("reset_psw", 60L * 5),
+
 
     ;
 

@@ -165,3 +165,6 @@ xss:
   excludes: /auth/**,/captcha/**,/swagger-resources/**,/v2/api-docs,${storage.staticPath}/**
   # 匹配链接
   urlPatterns: /monitor/*,
+
+login:
+  type: session

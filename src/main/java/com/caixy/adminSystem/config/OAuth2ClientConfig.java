@@ -1,7 +1,7 @@
 package com.caixy.adminSystem.config;
 
-import com.caixy.adminSystem.manager.OAuth.annotation.InjectOAuthConfig;
 import com.caixy.adminSystem.config.properties.OAuth2ClientProperties;
+import com.caixy.adminSystem.manager.OAuth.annotation.InjectOAuthConfig;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -10,7 +10,6 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.Configuration;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.lang.reflect.Field;
 import java.util.Optional;
@@ -68,24 +67,4 @@ public class OAuth2ClientConfig implements BeanPostProcessor
         }
         return bean;
     }
-
-    @PostConstruct
-    public void init()
-    {
-        System.out.println("OAuth2 Properties Loaded: " + oAuth2Properties.getInstance().size());
-        if (oAuth2Properties.getInstance() != null)
-        {
-            oAuth2Properties.getInstance().forEach((key, client) ->
-            {
-                System.out.println("Client [" + key + "] ID: " + client.getClientId());
-                System.out.println("Client Secret: " + client.getClientSecret());
-                System.out.println("Callback URL: " + client.getCallBackUrl());
-            });
-        }
-        else
-        {
-            System.out.println("OAuth2 properties instance is null");
-        }
-    }
-
 }

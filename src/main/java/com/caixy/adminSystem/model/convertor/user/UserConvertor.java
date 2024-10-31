@@ -25,15 +25,10 @@ public interface UserConvertor extends BaseConvertor<User>
     UserConvertor INSTANCE = Mappers.getMapper(UserConvertor.class);
 
     @Mapping(source = "userRole", target = "userRole", qualifiedByName = "roleStringToEnum")
-    void toVO(User user, @MappingTarget UserVO userVO);
-
-    @Mapping(source = "userRole", target = "userRole", qualifiedByName = "roleStringToEnum")
-    void toLoginVO(User user, @MappingTarget LoginUserVO userVO);
+    UserVO toVO(User user);
 
     @Mapping(source = "userEmail", target = "userEmail", qualifiedByName = "encryptEmailText")
-    void voToLoginVO(UserVO userVO, @MappingTarget LoginUserVO loginUserVO);
-
-
+    LoginUserVO voToLoginVO(UserVO userVO);
     /**
      * 忽略id字段进行转换
      */
@@ -44,7 +39,7 @@ public interface UserConvertor extends BaseConvertor<User>
      * 所有字段进行转换
      */
 
-    void copyAllProperties(User source, @MappingTarget User target);
+    User copyAllProperties(User source);
 
     @AfterMapping
     default void copyIfSourceValueIsNotNull(User source, @MappingTarget User target)

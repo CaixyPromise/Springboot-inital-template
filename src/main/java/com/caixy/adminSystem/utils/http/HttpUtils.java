@@ -31,6 +31,19 @@ import java.util.Map;
 
 public class HttpUtils
 {
+    /**
+     * 发起get请求
+     *
+     * @author CAIXYPROMISE
+     * @version 1.0
+     * @since 2024/10/28 上午2:29
+     */
+    public static HttpResponse doGet(String host, String path,  Map<String, String> params) throws IOException
+    {
+        HttpClient httpClient = wrapClient(host);
+        HttpGet request = new HttpGet(buildUrl(host, path, params));
+        return httpClient.execute(request);
+    }
 
     /**
      * get
@@ -43,7 +56,7 @@ public class HttpUtils
      * @return
      * @throws Exception
      */
-    public static HttpResponse doGet(String host, String path, String method,
+    public static HttpResponse doGet(String host, String path,
                                      Map<String, String> headers,
                                      Map<String, String> querys)
             throws Exception

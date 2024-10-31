@@ -1,10 +1,10 @@
 package com.caixy.adminSystem.model.vo.user;
 
-import java.io.Serializable;
-import java.util.Date;
-
 import com.caixy.adminSystem.model.enums.UserRoleEnum;
 import lombok.Data;
+
+import java.io.Serializable;
+import java.util.Date;
 
 /**
  * 用户视图（脱敏）
@@ -95,6 +95,46 @@ public class UserVO implements Serializable
      * 是否删除
      */
     private Integer isDelete;
+
+    /**
+     * 登录IP
+     */
+    private String loginIp;
+
+    /**
+     * 登录地点
+     */
+    private String loginLocation;
+
+    /**
+     * 浏览器类型
+     */
+    private String browser;
+
+    /**
+     * 操作系统
+     */
+    private String os;
+
+    /**
+     * 登录时间
+     */
+    private Long loginTime;
+
+    /**
+     * 过期时间
+     */
+    private Long expireTime;
+
+    /**
+     * 用户token
+     */
+    private String token;
+
+    /**
+     * 用户sessionId;
+     */
+    private String sessionId;
 
     private static final long serialVersionUID = 1L;
 }

@@ -56,6 +56,12 @@ public class ServletUtils
         return Optional.ofNullable(clazz.isInstance(attribute) ? clazz.cast(attribute) : null);
     }
 
+    public static <T> Optional<T> getAttributeFromSession(String key, Class<T> clazz, HttpSession session)
+    {
+        Object attribute = session.getAttribute(key);
+        return Optional.ofNullable(clazz.isInstance(attribute) ? clazz.cast(attribute) : null);
+    }
+
 
     /**
      * 获取会话中的属性，若不存在则返回 null
@@ -68,6 +74,10 @@ public class ServletUtils
     public static <T> T getAttributeFromSessionOrNull(String key, Class<T> clazz)
     {
         return getAttributeFromSession(key, clazz).orElse(null);
+    }
+    public static <T> T getAttributeFromSessionOrNull(String key, Class<T> clazz, HttpSession session)
+    {
+        return getAttributeFromSession(key, clazz, session).orElse(null);
     }
 
 
@@ -83,6 +93,11 @@ public class ServletUtils
         return getSession().getAttribute(key) != null;
     }
 
+    public static Boolean hasAttributeInSession(String key, HttpSession session)
+    {
+        return session.getAttribute(key) != null;
+    }
+
     /**
      * 设置属性到当前会话的 Session 中
      *
@@ -94,6 +109,11 @@ public class ServletUtils
         getSession().setAttribute(key, value);
     }
 
+    public static void setAttributeInSession(String key, Object value, HttpSession session)
+    {
+        session.setAttribute(key, value);
+    }
+
     /**
      * 从当前会话的 Session 中移除属性
      *
@@ -102,6 +122,11 @@ public class ServletUtils
     public static void removeAttributeInSession(String key)
     {
         getSession().removeAttribute(key);
+    }
+
+    public static void removeAttributeInSession(String key, HttpSession session)
+    {
+        session.removeAttribute(key);
     }
 
     /**
@@ -199,12 +224,22 @@ public class ServletUtils
      * 从请求头部中获取指定属性
      *
      * @param key     请求头属性的键名
-     * @param request HttpServletRequest 请求对象
      * @return 返回对应键名的请求头部属性值，如果没有找到则返回 Optional.empty()
      */
     public static Optional<String> getAttributeFromHeader(String key)
     {
         return Optional.ofNullable(getRequest().getHeader(key));
+    }
+
+    /**
+     * 从请求头部中获取指定属性
+     *
+     * @param key     请求头属性的键名
+     * @return 返回对应键名的请求头部属性值，如果没有找到则返回 Optional.empty()
+     */
+    public static Optional<String> getAttributeFromHeader(String key, HttpServletRequest request)
+    {
+        return Optional.ofNullable(request.getHeader(key));
     }
 
     /**

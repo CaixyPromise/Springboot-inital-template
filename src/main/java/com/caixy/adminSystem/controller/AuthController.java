@@ -136,15 +136,14 @@ public class AuthController
     }
 
     @GetMapping("/get/login")
-    public BaseResponse<LoginUserVO> getLoginUser(HttpServletRequest request)
+    public BaseResponse<LoginUserVO> getLoginUser()
     {
         UserVO user = authManager.getLoginUser();
         return ResultUtils.success(authManager.getLoginUserVO(user));
     }
 
     @GetMapping("/login/wx_open")
-    public BaseResponse<LoginUserVO> userLoginByWxOpen(HttpServletRequest request, HttpServletResponse response,
-                                                       @RequestParam("code") String code)
+    public BaseResponse<LoginUserVO> userLoginByWxOpen(@RequestParam("code") String code)
     {
         WxOAuth2AccessToken accessToken;
         try
@@ -158,7 +157,7 @@ public class AuthController
             {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR, "登录失败，系统错误");
             }
-            return ResultUtils.success(authManager.userLoginByMpOpen(userInfo, request));
+            return ResultUtils.success(authManager.userLoginByMpOpen(userInfo));
         }
         catch (Exception e)
         {

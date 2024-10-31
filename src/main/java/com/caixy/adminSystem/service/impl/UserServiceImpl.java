@@ -406,8 +406,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     private void setUserInfoInSession(User user, @NotNull HttpServletRequest request)
     {
-        UserVO userVO = new UserVO();
-        userConvertor.toVO(user, userVO);
-        request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, userVO);
+        request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, userConvertor.toVO(user));
     }
 }

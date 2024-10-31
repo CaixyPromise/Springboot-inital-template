@@ -47,5 +47,10 @@ public class LoginUserVO implements Serializable {
      */
     private UserRoleEnum userRole;
 
+    /**
+     * 用户token，用在token登录时
+     */
+    private String token;
+
     private static final long serialVersionUID = 1L;
 }
