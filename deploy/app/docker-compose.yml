@@ -1,0 +1,88 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "7559:7529"
+    networks:
+      - monitoring-net
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/admin_sys
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: as123456789
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PASSWORD: as123456789
+      MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED: 'true'
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: prometheus
+      MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED: 'true'
+      MANAGEMENT_ENDPOINTS_WEB_BASE_PATH: /actuator
+    restart: always  # 自动重启
+  mysql:
+    image: mysql:5.7
+    environment:
+      MYSQL_DATABASE: 'admin_sys'
+      MYSQL_ROOT_PASSWORD: 'as123456789'
+    ports:
+      - "3310:3306"
+    volumes:
+      - ./admin_sys.sql:/docker-entrypoint-initdb.d/init.sql
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+  redis:
+    image: redis
+    container_name: redis
+    command: ["redis-server", "--requirepass", "$REDIS_PASSWORD"]
+    environment:
+      REDIS_PASSWORD: as123456789
+    ports:
+      - "6389:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    network_mode: service:app  # 保证 Prometheus 仅能容器内访问
+    restart: always
+    networks:
+      - monitoring-net
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin        # 设置 Grafana 初始用户名
+      - GF_SECURITY_ADMIN_PASSWORD=admin123 # 设置 Grafana 初始密码
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana-data:/var/lib/grafana
+    network_mode: service:app  # 保证 Grafana 仅能容器内访问
+    restart: always
+    networks:
+      - monitoring-net
+
+volumes:
+  mysql-data:
+  redis-data:
+  grafana-data:
+
+networks:
+  monitoring-net:
+    internal: true
