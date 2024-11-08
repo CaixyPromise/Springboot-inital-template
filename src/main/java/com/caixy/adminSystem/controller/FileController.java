@@ -1,7 +1,7 @@
 package com.caixy.adminSystem.controller;
 
 import cn.hutool.core.io.FileUtil;
-import com.caixy.adminSystem.common.BaseResponse;
+import com.caixy.adminSystem.common.Result;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.common.ResultUtils;
 import com.caixy.adminSystem.exception.BusinessException;
@@ -52,7 +52,7 @@ public class FileController
      * @since 2024/10/19 上午1:33
      */
     @PostMapping("/upload")
-    public BaseResponse<String> uploadFile(
+    public Result<String> uploadFile(
             @RequestPart("file") MultipartFile multipartFile,
             UploadFileRequest uploadFileRequest,
             HttpServletRequest request)

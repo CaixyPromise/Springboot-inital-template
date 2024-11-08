@@ -13,9 +13,9 @@ public class ResultUtils
      * @param <T>
      * @return
      */
-    public static <T> BaseResponse<T> success(T data)
+    public static <T> Result<T> success(T data)
     {
-        return new BaseResponse<>(0, data, "ok");
+        return new Result<>(0, data, "ok");
     }
 
     /**
@@ -24,9 +24,9 @@ public class ResultUtils
      * @param errorCode
      * @return
      */
-    public static BaseResponse error(ErrorCode errorCode)
+    public static Result error(ErrorCode errorCode)
     {
-        return new BaseResponse<>(errorCode);
+        return new Result<>(errorCode);
     }
 
     /**
@@ -36,9 +36,9 @@ public class ResultUtils
      * @param message
      * @return
      */
-    public static BaseResponse error(int code, String message)
+    public static Result error(int code, String message)
     {
-        return new BaseResponse(code, null, message);
+        return new Result(code, null, message);
     }
 
     /**
@@ -47,8 +47,8 @@ public class ResultUtils
      * @param errorCode
      * @return
      */
-    public static BaseResponse error(ErrorCode errorCode, String message)
+    public static Result error(ErrorCode errorCode, String message)
     {
-        return new BaseResponse(errorCode.getCode(), null, message);
+        return new Result(errorCode.getCode(), null, message);
     }
 }

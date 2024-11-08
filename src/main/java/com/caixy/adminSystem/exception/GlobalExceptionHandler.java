@@ -1,6 +1,6 @@
 package com.caixy.adminSystem.exception;
 
-import com.caixy.adminSystem.common.BaseResponse;
+import com.caixy.adminSystem.common.Result;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.common.ResultUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +26,7 @@ public class GlobalExceptionHandler
     @ExceptionHandler(BusinessException.class)
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public BaseResponse<?> businessExceptionHandler(BusinessException e)
+    public Result<?> businessExceptionHandler(BusinessException e)
     {
         log.error("BusinessException", e);
         return ResultUtils.error(e.getCode(), e.getMessage());
@@ -35,7 +35,7 @@ public class GlobalExceptionHandler
     @ExceptionHandler(RuntimeException.class)
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public BaseResponse<?> runtimeExceptionHandler(RuntimeException e)
+    public Result<?> runtimeExceptionHandler(RuntimeException e)
     {
         log.error("RuntimeException", e);
         return ResultUtils.error(ErrorCode.SYSTEM_ERROR, "系统错误");
@@ -45,7 +45,7 @@ public class GlobalExceptionHandler
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
-    public BaseResponse<?> handleValidationExceptions(MethodArgumentNotValidException ex)
+    public Result<?> handleValidationExceptions(MethodArgumentNotValidException ex)
     {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) ->
@@ -68,7 +68,7 @@ public class GlobalExceptionHandler
     @ExceptionHandler(Throwable.class)
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public BaseResponse<?> throwableHandler(Throwable throwable)
+    public Result<?> throwableHandler(Throwable throwable)
     {
         log.error("throwable occurred.",throwable);
        return ResultUtils.error(ErrorCode.OPERATION_ERROR, "哎呀，当前网络比较拥挤，请您稍后再试~");

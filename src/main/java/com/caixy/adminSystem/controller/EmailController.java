@@ -1,6 +1,6 @@
 package com.caixy.adminSystem.controller;
 
-import com.caixy.adminSystem.common.BaseResponse;
+import com.caixy.adminSystem.common.Result;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.common.ResultUtils;
 import com.caixy.adminSystem.exception.ThrowUtils;
@@ -44,7 +44,7 @@ public class EmailController
      * @since 2024/10/10 下午5:49
      */
     @PostMapping("/send")
-    public BaseResponse<Boolean> sendEmail(@RequestBody SendEmailRequest sendEmailRequest, HttpServletRequest request)
+    public Result<Boolean> sendEmail(@RequestBody SendEmailRequest sendEmailRequest, HttpServletRequest request)
     {
         // 无需校验邮箱
         Integer scenes = sendEmailRequest.getScenes();

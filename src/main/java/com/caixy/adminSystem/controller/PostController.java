@@ -3,7 +3,7 @@ package com.caixy.adminSystem.controller;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.caixy.adminSystem.annotation.AuthCheck;
-import com.caixy.adminSystem.common.BaseResponse;
+import com.caixy.adminSystem.common.Result;
 import com.caixy.adminSystem.common.DeleteRequest;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.common.ResultUtils;
@@ -52,7 +52,7 @@ public class PostController
      * @return
      */
     @PostMapping("/add")
-    public BaseResponse<Long> addPost(@RequestBody PostAddRequest postAddRequest, HttpServletRequest request)
+    public Result<Long> addPost(@RequestBody PostAddRequest postAddRequest, HttpServletRequest request)
     {
         if (postAddRequest == null)
         {
@@ -84,7 +84,7 @@ public class PostController
      * @return
      */
     @PostMapping("/delete")
-    public BaseResponse<Boolean> deletePost(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request)
+    public Result<Boolean> deletePost(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request)
     {
         if (deleteRequest == null || deleteRequest.getId() <= 0)
         {
@@ -112,7 +112,7 @@ public class PostController
      */
     @PostMapping("/update")
     @AuthCheck(mustRole = UserRoleEnum.ADMIN)
-    public BaseResponse<Boolean> updatePost(@RequestBody PostUpdateRequest postUpdateRequest)
+    public Result<Boolean> updatePost(@RequestBody PostUpdateRequest postUpdateRequest)
     {
         if (postUpdateRequest == null || postUpdateRequest.getId() <= 0)
         {
@@ -142,7 +142,7 @@ public class PostController
      * @return
      */
     @GetMapping("/get/vo")
-    public BaseResponse<PostVO> getPostVOById(long id, HttpServletRequest request)
+    public Result<PostVO> getPostVOById(long id, HttpServletRequest request)
     {
         if (id <= 0)
         {
@@ -164,7 +164,7 @@ public class PostController
      */
     @PostMapping("/list/page")
     @AuthCheck(mustRole = UserRoleEnum.ADMIN)
-    public BaseResponse<Page<Post>> listPostByPage(@RequestBody PostQueryRequest postQueryRequest)
+    public Result<Page<Post>> listPostByPage(@RequestBody PostQueryRequest postQueryRequest)
     {
         long current = postQueryRequest.getCurrent();
         long size = postQueryRequest.getPageSize();
@@ -181,8 +181,8 @@ public class PostController
      * @return
      */
     @PostMapping("/list/page/vo")
-    public BaseResponse<Page<PostVO>> listPostVOByPage(@RequestBody PostQueryRequest postQueryRequest,
-                                                       HttpServletRequest request)
+    public Result<Page<PostVO>> listPostVOByPage(@RequestBody PostQueryRequest postQueryRequest,
+                                                 HttpServletRequest request)
     {
         long current = postQueryRequest.getCurrent();
         long size = postQueryRequest.getPageSize();
@@ -201,8 +201,8 @@ public class PostController
      * @return
      */
     @PostMapping("/my/list/page/vo")
-    public BaseResponse<Page<PostVO>> listMyPostVOByPage(@RequestBody PostQueryRequest postQueryRequest,
-                                                         HttpServletRequest request)
+    public Result<Page<PostVO>> listMyPostVOByPage(@RequestBody PostQueryRequest postQueryRequest,
+                                                   HttpServletRequest request)
     {
         if (postQueryRequest == null)
         {
@@ -229,8 +229,8 @@ public class PostController
      * @return
      */
     @PostMapping("/search/page/vo")
-    public BaseResponse<Page<PostVO>> searchPostVOByPage(@RequestBody PostQueryRequest postQueryRequest,
-                                                         HttpServletRequest request)
+    public Result<Page<PostVO>> searchPostVOByPage(@RequestBody PostQueryRequest postQueryRequest,
+                                                   HttpServletRequest request)
     {
         long size = postQueryRequest.getPageSize();
         // 限制爬虫
@@ -247,7 +247,7 @@ public class PostController
      * @return
      */
     @PostMapping("/edit")
-    public BaseResponse<Boolean> editPost(@RequestBody PostEditRequest postEditRequest, HttpServletRequest request)
+    public Result<Boolean> editPost(@RequestBody PostEditRequest postEditRequest, HttpServletRequest request)
     {
         if (postEditRequest == null || postEditRequest.getId() <= 0)
         {

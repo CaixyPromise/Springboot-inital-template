@@ -1,7 +1,7 @@
 package com.caixy.adminSystem.controller;
 
 import com.caixy.adminSystem.manager.Limiter.annotation.RateLimitFlow;
-import com.caixy.adminSystem.common.BaseResponse;
+import com.caixy.adminSystem.common.Result;
 import com.caixy.adminSystem.common.ResultUtils;
 import com.caixy.adminSystem.model.enums.RedisLimiterEnum;
 import com.caixy.adminSystem.model.vo.captcha.CaptchaVO;
@@ -31,7 +31,7 @@ public class CaptchaController
 
     @GetMapping("/get")
     @RateLimitFlow(key = RedisLimiterEnum.CAPTCHA, args = "#request.getSession().getId()")
-    public BaseResponse<CaptchaVO> getCaptcha(HttpServletRequest request)
+    public Result<CaptchaVO> getCaptcha(HttpServletRequest request)
     {
         return ResultUtils.success(captchaService.getAnyCaptcha(request));
     }

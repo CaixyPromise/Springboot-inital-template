@@ -2,7 +2,7 @@ package com.caixy.adminSystem.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.caixy.adminSystem.annotation.AuthCheck;
-import com.caixy.adminSystem.common.BaseResponse;
+import com.caixy.adminSystem.common.Result;
 import com.caixy.adminSystem.common.DeleteRequest;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.common.ResultUtils;
@@ -53,7 +53,7 @@ public class UserController
      * @return
      */
     @PostMapping("/register")
-    public BaseResponse<Boolean> userRegister(@RequestBody UserRegisterRequest userRegisterRequest)
+    public Result<Boolean> userRegister(@RequestBody UserRegisterRequest userRegisterRequest)
     {
         if (userRegisterRequest == null)
         {
@@ -89,7 +89,7 @@ public class UserController
      */
     @PostMapping("/add")
     @AuthCheck(mustRole = UserRoleEnum.ADMIN)
-    public BaseResponse<AddUserVO> addUser(@RequestBody UserAddRequest userAddRequest, HttpServletRequest request)
+    public Result<AddUserVO> addUser(@RequestBody UserAddRequest userAddRequest, HttpServletRequest request)
     {
         // 检查请求信息
         if (userAddRequest == null)
@@ -134,7 +134,7 @@ public class UserController
      */
     @PostMapping("/delete")
     @AuthCheck(mustRole = UserRoleEnum.ADMIN)
-    public BaseResponse<Boolean> deleteUser(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request)
+    public Result<Boolean> deleteUser(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request)
     {
         if (deleteRequest == null || deleteRequest.getId() <= 0)
         {
@@ -153,8 +153,8 @@ public class UserController
      */
     @PostMapping("/update")
     @AuthCheck(mustRole = UserRoleEnum.ADMIN)
-    public BaseResponse<Boolean> updateUser(@RequestBody UserUpdateRequest userUpdateRequest,
-                                            HttpServletRequest request)
+    public Result<Boolean> updateUser(@RequestBody UserUpdateRequest userUpdateRequest,
+                                      HttpServletRequest request)
     {
         if (userUpdateRequest == null || userUpdateRequest.getId() == null)
         {
@@ -177,7 +177,7 @@ public class UserController
      */
     @GetMapping("/get")
     @AuthCheck(mustRole = UserRoleEnum.ADMIN)
-    public BaseResponse<User> getUserById(long id, HttpServletRequest request)
+    public Result<User> getUserById(long id, HttpServletRequest request)
     {
         if (id <= 0)
         {
@@ -198,9 +198,9 @@ public class UserController
      * @return
      */
     @GetMapping("/get/vo")
-    public BaseResponse<UserVO> getUserVOById(long id, HttpServletRequest request)
+    public Result<UserVO> getUserVOById(long id, HttpServletRequest request)
     {
-        BaseResponse<User> response = getUserById(id, request);
+        Result<User> response = getUserById(id, request);
         User user = response.getData();
         return ResultUtils.success(userService.getUserVO(user));
     }
@@ -214,9 +214,9 @@ public class UserController
      */
     @PostMapping("/list/page")
     @AuthCheck(mustRole = UserRoleEnum.ADMIN)
-    public BaseResponse<Page<User>> listUserByPage(@RequestBody
+    public Result<Page<User>> listUserByPage(@RequestBody
                                                    UserQueryRequest userQueryRequest,
-                                                   HttpServletRequest request)
+                                             HttpServletRequest request)
     {
         long current = userQueryRequest.getCurrent();
         long size = userQueryRequest.getPageSize();
@@ -233,9 +233,9 @@ public class UserController
      * @return
      */
     @PostMapping("/list/page/vo")
-    public BaseResponse<Page<UserVO>> listUserVOByPage(@RequestBody
+    public Result<Page<UserVO>> listUserVOByPage(@RequestBody
                                                        UserQueryRequest userQueryRequest,
-                                                       HttpServletRequest request)
+                                                 HttpServletRequest request)
     {
         if (userQueryRequest == null)
         {
@@ -257,7 +257,7 @@ public class UserController
 
 
     @GetMapping("/get/me")
-    public BaseResponse<AboutMeVO> getMe(HttpServletRequest request)
+    public Result<AboutMeVO> getMe(HttpServletRequest request)
     {
         UserVO loginUser = authManager.getLoginUser();
         User currentUser = userService.getById(loginUser.getId());
@@ -266,9 +266,9 @@ public class UserController
     }
 
     @PostMapping("/modify/password")
-    public BaseResponse<Boolean> modifyPassword(@RequestBody
+    public Result<Boolean> modifyPassword(@RequestBody
                                                 UserModifyPasswordRequest userModifyPasswordRequest,
-                                                HttpServletRequest request)
+                                          HttpServletRequest request)
     {
         if (userModifyPasswordRequest == null)
         {
@@ -293,9 +293,9 @@ public class UserController
      * @return
      */
     @PostMapping("/update/me")
-    public BaseResponse<Boolean> updateMeProfile(@RequestBody
+    public Result<Boolean> updateMeProfile(@RequestBody
                                                      UserUpdateProfileRequest userUpdateProfileRequest,
-                                          HttpServletRequest request)
+                                           HttpServletRequest request)
     {
         if (userUpdateProfileRequest == null)
         {
@@ -312,7 +312,7 @@ public class UserController
     }
 
     @PostMapping("/reset/email")
-    public BaseResponse<Boolean> resetEmail(@RequestBody @Valid UserResetEmailRequest userResetEmailRequest, HttpServletRequest request)
+    public Result<Boolean> resetEmail(@RequestBody @Valid UserResetEmailRequest userResetEmailRequest, HttpServletRequest request)
     {
         if (userResetEmailRequest == null ||
             StringUtils.isAnyBlank(userResetEmailRequest.getPassword(), userResetEmailRequest.getCode()))
@@ -331,7 +331,7 @@ public class UserController
      * @since 2024/10/14 下午10:16
      */
     @GetMapping("/get/encrypt/info")
-    public BaseResponse<EncryptAccountVO> getEncryptEmailInfo(HttpServletRequest request) {
+    public Result<EncryptAccountVO> getEncryptEmailInfo(HttpServletRequest request) {
         UserVO loginUser = authManager.getLoginUser();
         String encryptedEmail = RegexUtils.encryptText(loginUser.getUserEmail(), RegexPatternConstants.EMAIL_ENCRYPT_REGEX,
                 "$1****$2");

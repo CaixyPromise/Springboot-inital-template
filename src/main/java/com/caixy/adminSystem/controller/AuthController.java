@@ -1,6 +1,6 @@
 package com.caixy.adminSystem.controller;
 
-import com.caixy.adminSystem.common.BaseResponse;
+import com.caixy.adminSystem.common.Result;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.common.ResultUtils;
 import com.caixy.adminSystem.config.WxOpenConfig;
@@ -47,7 +47,7 @@ public class AuthController
     private final OAuthFactory oAuthFactory;
 
     @GetMapping("/oauth2/{provider}/login")
-    public BaseResponse<String> initOAuthLogin(
+    public Result<String> initOAuthLogin(
             @PathVariable String provider,
             @ModelAttribute GithubGetAuthorizationUrlRequest authorizationUrlRequest,
             HttpServletRequest request)
@@ -103,7 +103,7 @@ public class AuthController
      * @return
      */
     @PostMapping("/logout")
-    public BaseResponse<Boolean> userLogout()
+    public Result<Boolean> userLogout()
     {
         boolean result = authManager.userLogout();
         return ResultUtils.success(result);
@@ -119,8 +119,8 @@ public class AuthController
      * @return
      */
     @PostMapping("/login")
-    public BaseResponse<LoginUserVO> userLogin(@RequestBody UserLoginRequest userLoginRequest,
-                                               HttpServletRequest request)
+    public Result<LoginUserVO> userLogin(@RequestBody UserLoginRequest userLoginRequest,
+                                         HttpServletRequest request)
     {
         if (userLoginRequest == null)
         {
@@ -136,14 +136,14 @@ public class AuthController
     }
 
     @GetMapping("/get/login")
-    public BaseResponse<LoginUserVO> getLoginUser()
+    public Result<LoginUserVO> getLoginUser()
     {
         UserVO user = authManager.getLoginUser();
         return ResultUtils.success(authManager.getLoginUserVO(user));
     }
 
     @GetMapping("/login/wx_open")
-    public BaseResponse<LoginUserVO> userLoginByWxOpen(@RequestParam("code") String code)
+    public Result<LoginUserVO> userLoginByWxOpen(@RequestParam("code") String code)
     {
         WxOAuth2AccessToken accessToken;
         try

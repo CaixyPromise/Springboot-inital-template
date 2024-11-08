@@ -2,7 +2,7 @@ package com.caixy.adminSystem.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.caixy.adminSystem.annotation.AuthCheck;
-import com.caixy.adminSystem.common.BaseResponse;
+import com.caixy.adminSystem.common.Result;
 import com.caixy.adminSystem.common.ResultUtils;
 import com.caixy.adminSystem.manager.Authorization.AuthManager;
 import com.caixy.adminSystem.model.enums.UserRoleEnum;
@@ -31,7 +31,7 @@ public class AdminController
      */
     @GetMapping("/onlineUsers")
     @AuthCheck(mustRole = UserRoleEnum.ADMIN)
-    public BaseResponse<Page<UserVO>> getOnlineUsers(
+    public Result<Page<UserVO>> getOnlineUsers(
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "10") int size)
     {
@@ -44,7 +44,7 @@ public class AdminController
      */
     @PostMapping("/forceLogout")
     @AuthCheck(mustRole = UserRoleEnum.ADMIN)
-    public BaseResponse<Boolean> forceLogout(@RequestParam("userId") Long userId)
+    public Result<Boolean> forceLogout(@RequestParam("userId") Long userId)
     {
         authManager.forceLogout(userId);
         return ResultUtils.success(true);

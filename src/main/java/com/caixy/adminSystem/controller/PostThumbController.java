@@ -1,6 +1,6 @@
 package com.caixy.adminSystem.controller;
 
-import com.caixy.adminSystem.common.BaseResponse;
+import com.caixy.adminSystem.common.Result;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.common.ResultUtils;
 import com.caixy.adminSystem.exception.BusinessException;
@@ -41,8 +41,8 @@ public class PostThumbController
      * @return resultNum 本次点赞变化数
      */
     @PostMapping("/")
-    public BaseResponse<Integer> doThumb(@RequestBody PostThumbAddRequest postThumbAddRequest,
-                                         HttpServletRequest request)
+    public Result<Integer> doThumb(@RequestBody PostThumbAddRequest postThumbAddRequest,
+                                   HttpServletRequest request)
     {
         if (postThumbAddRequest == null || postThumbAddRequest.getPostId() <= 0)
         {

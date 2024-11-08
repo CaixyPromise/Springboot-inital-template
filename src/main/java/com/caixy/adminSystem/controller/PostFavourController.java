@@ -1,7 +1,7 @@
 package com.caixy.adminSystem.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.caixy.adminSystem.common.BaseResponse;
+import com.caixy.adminSystem.common.Result;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.common.ResultUtils;
 import com.caixy.adminSystem.exception.BusinessException;
@@ -50,8 +50,8 @@ public class PostFavourController
      * @return resultNum 收藏变化数
      */
     @PostMapping("/")
-    public BaseResponse<Integer> doPostFavour(@RequestBody PostFavourAddRequest postFavourAddRequest,
-                                              HttpServletRequest request)
+    public Result<Integer> doPostFavour(@RequestBody PostFavourAddRequest postFavourAddRequest,
+                                        HttpServletRequest request)
     {
         if (postFavourAddRequest == null || postFavourAddRequest.getPostId() <= 0)
         {
@@ -71,8 +71,8 @@ public class PostFavourController
      * @param request
      */
     @PostMapping("/my/list/page")
-    public BaseResponse<Page<PostVO>> listMyFavourPostByPage(@RequestBody PostQueryRequest postQueryRequest,
-                                                             HttpServletRequest request)
+    public Result<Page<PostVO>> listMyFavourPostByPage(@RequestBody PostQueryRequest postQueryRequest,
+                                                       HttpServletRequest request)
     {
         if (postQueryRequest == null)
         {
@@ -95,8 +95,8 @@ public class PostFavourController
      * @param request
      */
     @PostMapping("/list/page")
-    public BaseResponse<Page<PostVO>> listFavourPostByPage(@RequestBody PostFavourQueryRequest postFavourQueryRequest,
-                                                           HttpServletRequest request)
+    public Result<Page<PostVO>> listFavourPostByPage(@RequestBody PostFavourQueryRequest postFavourQueryRequest,
+                                                     HttpServletRequest request)
     {
         if (postFavourQueryRequest == null)
         {

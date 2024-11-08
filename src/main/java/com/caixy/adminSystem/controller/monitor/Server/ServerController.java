@@ -1,6 +1,6 @@
 package com.caixy.adminSystem.controller.monitor.Server;
 
-import com.caixy.adminSystem.common.BaseResponse;
+import com.caixy.adminSystem.common.Result;
 import com.caixy.adminSystem.common.ResultUtils;
 import com.caixy.adminSystem.manager.ServerManager.ServerMonitorManager;
 import com.caixy.adminSystem.manager.ServerManager.domain.ServerInfo;
@@ -25,7 +25,7 @@ public class ServerController
     private ServerMonitorManager serverMonitorManager;
 
     @GetMapping("/")
-    public BaseResponse<ServerInfo> getMonitorInfo()
+    public Result<ServerInfo> getMonitorInfo()
     {
         return ResultUtils.success(serverMonitorManager.getServerInfo());
     }
