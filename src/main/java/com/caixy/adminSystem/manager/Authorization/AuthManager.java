@@ -265,15 +265,13 @@ public class AuthManager
                 () -> new BusinessException(ErrorCode.PARAMS_ERROR, "密码为空"));
         String captchaCode = Optional.ofNullable(userLoginRequest.getCaptcha()).orElseThrow(
                 () -> new BusinessException(ErrorCode.PARAMS_ERROR, "验证码为空"));
-        String captchaId = Optional.ofNullable(userLoginRequest.getCaptchaId()).orElseThrow(
-                () -> new BusinessException(ErrorCode.PARAMS_ERROR, "验证码信息为空"));
         // 1. 校验
         if (userAccount.length() < 4)
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号错误");
         }
         // 1.2 校验验证码
-        ThrowUtils.throwIf(captchaService.verifyCaptcha(captchaCode, captchaId), ErrorCode.PARAMS_ERROR,
+        ThrowUtils.throwIf(!captchaService.verifyCaptcha(captchaCode), ErrorCode.PARAMS_ERROR,
                 "验证码错误");
         // 2. 根据账号查询用户是否存在
         // 查询用户是否存在

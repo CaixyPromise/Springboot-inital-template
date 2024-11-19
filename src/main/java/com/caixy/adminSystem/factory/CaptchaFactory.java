@@ -61,35 +61,28 @@ public class CaptchaFactory
         return RandomUtil.randomEle(registeredStrategies);
     }
 
-    public boolean verifyCaptcha(String captchaCode, String captchaId)
+    public boolean verifyCaptcha(String captchaCode)
     {
-        // 获取SessionId
         String sessionId = ServletUtils.getSessionId();
-        String sessionUuid = Optional.ofNullable(ServletUtils.getAttributeFromSessionOrNull(CommonConstant.CAPTCHA_SIGN, String.class))
-                                     .orElseThrow(()->{
-                                         log.error("验证码校验失败，session中不存在验证码标识，sessionId:{}", sessionId);
-                                         return new BusinessException(ErrorCode.OPERATION_ERROR, "验证码校验失败");
-                                     });
-        // 1.2 校验验证码
-        Map<String, String> result = redisUtils.getHashMap(
-                RedisKeyEnum.CAPTCHA_CODE,
-                String.class,
-                String.class,
-                sessionId);
-        if (sessionUuid == null || result == null || result.isEmpty())
-        {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "验证码错误");
+
+        // 获取存储在 Redis 中的验证码
+        Map<String, String> result = redisUtils.getHashMap(RedisKeyEnum.CAPTCHA_CODE, String.class, String.class, sessionId);
+        if (result == null || result.isEmpty()) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "验证码错误或已过期");
         }
+
         String redisCode = result.get("code").trim();
-        String redisUuid = result.get("uuid").trim();
-        // 移除session缓存的uuid
-        ServletUtils.removeAttributeInSession(CommonConstant.CAPTCHA_SIGN);
-        boolean removeByCache = redisUtils.delete(RedisKeyEnum.CAPTCHA_CODE, sessionId);
-        if (!removeByCache)
+
+        // 校验验证码（不区分大小写），同时删除 Redis 中的验证码，确保验证码的单次有效性
+        boolean isVerified = redisCode.equalsIgnoreCase(captchaCode.trim());
+        if (isVerified)
         {
-            log.warn("验证码校验失败，移除缓存失败，sessionId:{}", sessionId);
+            redisUtils.delete(RedisKeyEnum.CAPTCHA_CODE, sessionId);
         }
-        // 验证码不区分大小写，同时校验前后的session内的uuid是否一致。
-        return !redisCode.equalsIgnoreCase(captchaCode.trim()) && sessionUuid.equals(captchaId) && captchaId.equals(redisUuid);
+        else {
+            log.warn("验证码校验失败，sessionId: {}", sessionId);
+        }
+
+        return isVerified;
     }
 }

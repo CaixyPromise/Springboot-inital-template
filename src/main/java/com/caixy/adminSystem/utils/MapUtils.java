@@ -12,7 +12,7 @@ import java.util.function.Predicate;
  * @name com.caixy.adminSystem.utils.MapUtils
  * @since 2024/10/8 下午11:41
  */
-public final class MapUtils
+public class MapUtils
 {
 
     /**

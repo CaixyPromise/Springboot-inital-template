@@ -17,6 +17,9 @@ import java.util.Date;
  */
 public class DateUtils extends org.apache.commons.lang3.time.DateUtils
 {
+    // 设置默认时区为东八区
+    public static final ZoneId DEFAULT_ZONE = ZoneId.of("Asia/Shanghai");
+
     public static String YYYY = "yyyy";
 
     public static String YYYY_MM = "yyyy-MM";
@@ -146,7 +149,7 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils
     /**
      * 计算时间差
      *
-     * @param endDate 最后时间
+     * @param endDate   最后时间
      * @param startTime 开始时间
      * @return 时间差（天/小时/分钟）
      */
@@ -169,13 +172,29 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils
         return day + "天" + hour + "小时" + min + "分钟";
     }
 
-    /**
-     * 增加 LocalDateTime ==> Date
-     */
-    public static Date toDate(LocalDateTime temporalAccessor)
+    public static Date startTime(Date endDate, Date startTime)
     {
-        ZonedDateTime zdt = temporalAccessor.atZone(ZoneId.systemDefault());
-        return Date.from(zdt.toInstant());
+        if (endDate == null || startTime == null)
+        {
+            throw new IllegalArgumentException("Dates cannot be null");
+        }
+
+        // 计算时间差（毫秒）
+        long diffInMillis = Math.abs(endDate.getTime() - startTime.getTime());
+
+        // 将时间差转换为一个 Date 对象
+        return new Date(diffInMillis);
+    }
+
+    /**
+     * 将 LocalDateTime 转换为 Date
+     *
+     * @param localDateTime 要转换的 LocalDateTime
+     * @return 转换后的 Date
+     */
+    public static Date toDate(LocalDateTime localDateTime)
+    {
+        return toDate(localDateTime, DEFAULT_ZONE);
     }
 
     /**
@@ -185,5 +204,139 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils
     {
         LocalDateTime localDateTime = LocalDateTime.of(temporalAccessor, LocalTime.of(0, 0, 0));
         return toDate(localDateTime);
+    }
+
+
+    /**
+     * 判断目标时间是否早于参考时间
+     *
+     * @param targetDate    目标时间
+     * @param referenceDate 参考时间
+     * @return 如果目标时间早于参考时间，返回 true；否则返回 false
+     */
+    public static boolean isBefore(Date targetDate, Date referenceDate)
+    {
+        if (targetDate == null || referenceDate == null)
+        {
+            throw new IllegalArgumentException("Dates cannot be null");
+        }
+        return targetDate.before(referenceDate);
+    }
+
+    /**
+     * 判断目标时间是否晚于参考时间
+     *
+     * @param targetDate    目标时间
+     * @param referenceDate 参考时间
+     * @return 如果目标时间晚于参考时间，返回 true；否则返回 false
+     */
+    public static boolean isAfter(Date targetDate, Date referenceDate)
+    {
+        if (targetDate == null || referenceDate == null)
+        {
+            throw new IllegalArgumentException("Dates cannot be null");
+        }
+        return targetDate.after(referenceDate);
+    }
+
+    /**
+     * 判断目标时间是否晚于当前时间
+     *
+     * @param targetDate 目标时间
+     * @return 如果目标时间晚于当前时间，返回 true；否则返回 false
+     */
+    public static boolean isAfterNow(Date targetDate)
+    {
+        if (targetDate == null)
+        {
+            throw new IllegalArgumentException("Target date cannot be null");
+        }
+        Date now = new Date();
+        return targetDate.after(now);
+    }
+
+    /**
+     * 判断目标时间是否早于当前时间
+     *
+     * @param targetDate 目标时间
+     * @return 如果目标时间早于当前时间，返回 true；否则返回 false
+     */
+    public static boolean isBeforeNow(Date targetDate)
+    {
+        if (targetDate == null)
+        {
+            throw new IllegalArgumentException("Target date cannot be null");
+        }
+        Date now = new Date();
+        return targetDate.before(now);
+    }
+
+    /**
+     * 判断目标时间是否处于指定时间区间内（包含边界）
+     *
+     * @param targetDate 目标时间
+     * @param startDate  区间开始时间
+     * @param endDate    区间结束时间
+     * @return 如果目标时间处于区间内，返回 true；否则返回 false
+     */
+    public static boolean isWithinRange(Date targetDate, Date startDate, Date endDate)
+    {
+        if (targetDate == null || startDate == null || endDate == null)
+        {
+            throw new IllegalArgumentException("Dates cannot be null");
+        }
+        return !targetDate.before(startDate) && !targetDate.after(endDate);
+    }
+
+
+    /**
+     * 将 LocalDateTime 转换为 Date，允许外部传入时区
+     *
+     * @param localDateTime 要转换的 LocalDateTime
+     * @param zoneId        时区
+     * @return 转换后的 Date
+     */
+    public static Date toDate(LocalDateTime localDateTime, ZoneId zoneId)
+    {
+        if (localDateTime == null)
+        {
+            throw new IllegalArgumentException("LocalDateTime cannot be null");
+        }
+        if (zoneId == null)
+        {
+            throw new IllegalArgumentException("ZoneId cannot be null");
+        }
+        return Date.from(localDateTime.atZone(zoneId).toInstant());
+    }
+
+    /**
+     * 将 Date 转换为 LocalDateTime
+     *
+     * @param date 要转换的 Date
+     * @return 转换后的 LocalDateTime
+     */
+    public static LocalDateTime toLocalDateTime(Date date)
+    {
+        return toLocalDateTime(date, DEFAULT_ZONE);
+    }
+
+    /**
+     * 将 Date 转换为 LocalDateTime，允许外部传入时区
+     *
+     * @param date   要转换的 Date
+     * @param zoneId 时区
+     * @return 转换后的 LocalDateTime
+     */
+    public static LocalDateTime toLocalDateTime(Date date, ZoneId zoneId)
+    {
+        if (date == null)
+        {
+            throw new IllegalArgumentException("Date cannot be null");
+        }
+        if (zoneId == null)
+        {
+            throw new IllegalArgumentException("ZoneId cannot be null");
+        }
+        return date.toInstant().atZone(zoneId).toLocalDateTime();
     }
 }

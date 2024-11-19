@@ -1,5 +1,6 @@
 package com.caixy.adminSystem.utils;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.caixy.adminSystem.utils.StringUtils;
 
 /**

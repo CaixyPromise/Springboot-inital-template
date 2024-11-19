@@ -7,6 +7,7 @@ import com.caixy.adminSystem.exception.BusinessException;
 import com.caixy.adminSystem.model.enums.RedisKeyEnum;
 import com.caixy.adminSystem.model.vo.captcha.CaptchaVO;
 import com.caixy.adminSystem.utils.RedisUtils;
+import com.caixy.adminSystem.utils.ServletUtils;
 import com.google.code.kaptcha.Producer;
 import org.springframework.util.FastByteArrayOutputStream;
 
@@ -46,7 +47,6 @@ public abstract class CaptchaGenerationStrategy
     protected CaptchaVO saveResult(String code, BufferedImage image, HttpServletRequest request)
     {
         HashMap<String, String> resultMap = new HashMap<>();
-        String uuid = UUID.randomUUID().toString();
 
         FastByteArrayOutputStream outputStream = new FastByteArrayOutputStream();
         try
@@ -57,29 +57,22 @@ public abstract class CaptchaGenerationStrategy
         {
             throw new BusinessException(ErrorCode.OPERATION_ERROR);
         }
-        resultMap.put("uuid", uuid);
         resultMap.put("code", code);
         // 写入redis
         // 以uuid作为凭证，
         // 并设置过期时间: 5分钟
         redisUtils.setHashMap(RedisKeyEnum.CAPTCHA_CODE,
                 resultMap,
-                request.getRequestedSessionId());
+                ServletUtils.getSession().getId());
         // 过期时间5分钟
         // 返回Base64的验证码图片信息
         CaptchaVO captchaVO = new CaptchaVO();
         captchaVO.setCodeImage(Base64.encode(outputStream.toByteArray()));
-        captchaVO.setUuid(uuid);
-        request.getSession().setAttribute(CommonConstant.CAPTCHA_SIGN, uuid);
         return captchaVO;
     }
 
     protected void tryRemoveLastCaptcha(HttpServletRequest request)
     {
-        Object lastUuid = request.getSession().getAttribute(CommonConstant.CAPTCHA_SIGN);
-        if (lastUuid != null)
-        {
-            redisUtils.delete(RedisKeyEnum.CAPTCHA_CODE, request.getRequestedSessionId());
-        }
+        redisUtils.delete(RedisKeyEnum.CAPTCHA_CODE, ServletUtils.getSession().getId());
     }
 }
