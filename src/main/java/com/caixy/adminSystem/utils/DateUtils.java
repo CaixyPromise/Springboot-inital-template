@@ -172,7 +172,7 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils
         return day + "天" + hour + "小时" + min + "分钟";
     }
 
-    public static Date startTime(Date endDate, Date startTime)
+    public static Date calcTimeDistance(Date endDate, Date startTime)
     {
         if (endDate == null || startTime == null)
         {
