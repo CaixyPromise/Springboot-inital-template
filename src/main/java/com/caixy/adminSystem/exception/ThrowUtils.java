@@ -2,9 +2,10 @@ package com.caixy.adminSystem.exception;
 
 import com.caixy.adminSystem.common.ErrorCode;
 
+import java.util.function.Supplier;
+
 /**
- * 抛异常工具类
- *
+ * 抛业务异常工具类
  */
 public class ThrowUtils
 {
@@ -46,5 +47,27 @@ public class ThrowUtils
     public static void throwIf(boolean condition, ErrorCode errorCode, String message)
     {
         throwIf(condition, new BusinessException(errorCode, message));
+    }
+
+    /**
+     * 传入lambda表达式，条件成立则抛异常
+     *
+     * @author CAIXYPROMISE
+     * @version 1.0
+     * @version 2024/11/23 15:44
+     */
+    public static void throwIf(Supplier<Boolean> condition, ErrorCode errorCode, String message) {
+        throwIf(condition.get(), errorCode, message);
+    }
+
+    /**
+     * 传入lambda表达式，条件成立则抛异常
+     *
+     * @author CAIXYPROMISE
+     * @version 1.0
+     * @version 2024/11/23 15:44
+     */
+    public static void throwIf(Supplier<Boolean> condition, ErrorCode errorCode) {
+        throwIf(condition.get(), errorCode);
     }
 }
