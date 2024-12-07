@@ -1,8 +1,8 @@
-package com.caixy.adminSystem.manager.OAuth;
+package com.caixy.adminSystem.manager.Authorization.oAuth;
 
 import cn.hutool.core.util.RandomUtil;
-import com.caixy.adminSystem.manager.OAuth.annotation.InjectOAuthConfig;
-import com.caixy.adminSystem.manager.OAuth.annotation.OAuthTypeTarget;
+import com.caixy.adminSystem.manager.Authorization.oAuth.annotation.InjectOAuthConfig;
+import com.caixy.adminSystem.manager.Authorization.oAuth.annotation.OAuthTypeTarget;
 import com.caixy.adminSystem.common.ErrorCode;
 import com.caixy.adminSystem.config.properties.OAuth2ClientProperties;
 import com.caixy.adminSystem.exception.BusinessException;

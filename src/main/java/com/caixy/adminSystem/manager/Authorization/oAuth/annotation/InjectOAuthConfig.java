@@ -1,4 +1,4 @@
-package com.caixy.adminSystem.manager.OAuth.annotation;
+package com.caixy.adminSystem.manager.Authorization.oAuth.annotation;
 
 import com.caixy.adminSystem.model.enums.OAuthProviderEnum;
 
