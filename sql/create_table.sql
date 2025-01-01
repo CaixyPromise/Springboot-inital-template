@@ -3,7 +3,7 @@ create table user
 (
     id             bigint auto_increment comment 'id'
         primary key,
-    userAccount    varchar(20) collate utf8mb4_bin        not null comment '用户账号，关注大小写',
+    userAccount    varchar(20) collate utf8mb4_bin        not null,
     userPassword   varchar(60)                            null comment '密码',
     unionId        varchar(256)                           null comment '微信开放平台id',
     githubId       bigint                                 null comment 'github用户Id',
@@ -18,7 +18,7 @@ create table user
     userRole       varchar(256) default 'user'            not null comment '用户角色：user/admin/ban',
     createTime     datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
     updateTime     datetime     default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
-    isDelete       tinyint      default 0                 not null comment '是否删除',
+    isDeleted       tinyint      default 0                 not null comment '是否删除',
     constraint user_pk
         unique (userAccount),
     constraint user_pk_2

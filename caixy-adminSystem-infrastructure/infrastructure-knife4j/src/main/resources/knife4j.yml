@@ -1,0 +1,15 @@
+knife4j:
+  enable: true
+  openapi:
+    title: "${spring.application.name}-接口文档"
+    version: 1.0
+    group:
+      default:
+        api-rule: package
+        api-rule-resources:
+          - com.caixy.adminSystem.business
+          - com.caixy.adminSystem.authorization.api.controller
+    concat: ${info.author.email}
+    description: "${info.app.description}"
+    license: ${info.app.license}
+    email: ${info.author.email}

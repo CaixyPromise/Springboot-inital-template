@@ -1,0 +1,23 @@
+caixy:
+  adminSystem:
+    config:
+      redis:
+        host: 127.0.0.1
+        port: 6379
+      mysql:
+        url: jdbc:mysql://localhost:3306/admin_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+        username: root
+        password: as123456789
+      elasticsearch:
+        enable: false
+        url: 127.0.0.1:9200
+        username: elastic
+        password: 123456
+
+xss:
+  # 过滤开关
+  enabled: true
+  # 排除链接（多个用逗号分隔）
+  excludes: /auth/**,/captcha/**,/swagger-resources/**,/v2/api-docs,${storage.staticPath}/**
+  # 匹配链接
+  urlPatterns: /monitor/*,

@@ -1,0 +1,44 @@
+server:
+  port: 7529
+  servlet:
+    context-path: /api
+    session:
+      cookie:
+        max-age: 2592000
+  address: 0.0.0.0
+
+spring:
+  application:
+    name: caixy-adminSystem
+  config:
+    import:
+      - classpath:base.yml
+      - classpath:cache.yml
+      - classpath:datasource.yml
+      - classpath:file.yml
+      - classpath:email.yml
+      - classpath:knife4j.yml
+      - classpath:auth.yml
+      - classpath:wx.yml
+  mvc:
+    path-match:
+      matching-strategy: ant_path_matcher
+  session:
+    store-type: redis
+    # 30 天过期
+    timeout: 2592000
+
+
+info:
+  app:
+    name: ${spring.application.name}
+    description: @application.description@
+    version: @project.version@
+    license: @license.name@
+    startup-time: ${app.startup-time}
+    serverAddress: ${app.serverHost}:${server.port}${server.servlet.context-path}
+    api-document: ${info.app.serverAddress}/doc.html
+  author:
+    name: CAIXYPROMISE
+    email: caixypromised@gmail.com
+    github: https://github.com/CaixyPromise

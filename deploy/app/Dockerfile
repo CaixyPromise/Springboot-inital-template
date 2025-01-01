@@ -9,7 +9,7 @@ COPY src ./src
 COPY application-prod.yml .
 
 # 将构建的 JAR 文件复制到容器中
-COPY caixy-admin-system-0.0.1-SNAPSHOT.jar .
+COPY caixy-admin-system-${project.version}.jar .
 
 # 在容器启动时运行 Java 应用程序，并设置Xms、Xmx和内存不足时生成堆转储文件参数
 CMD ["java",
@@ -18,5 +18,5 @@ CMD ["java",
         "-XX:+HeapDumpOnOutOfMemoryError",
         "-XX:HeapDumpPath=/app/dumps",
         "-jar",
-        "/app/caixy-admin-system-0.0.1-SNAPSHOT.jar",
+        "/app/caixy-admin-system-${project.version}.jar",
         "--spring.profiles.active=prod"]

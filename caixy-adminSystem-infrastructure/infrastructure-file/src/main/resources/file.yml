@@ -1,0 +1,12 @@
+# 文件存储
+storage:
+  location: uploads
+  forceCreated: true
+  staticPath: /static
+
+cos:
+  client:
+    access-key: YOUR_ACCESS_KEY
+    secret-key: YOUR_SECRET_KEY
+    region: YOUR_REGION
+    bucket: YOUR_BUCKET_NAME

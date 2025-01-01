@@ -1,0 +1,6 @@
+spring:
+  config:
+    import: |
+      classpath:base.yml
+      classpath:datasource.yml
+      classpath:cache.yml

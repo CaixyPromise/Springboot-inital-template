@@ -1,0 +1,31 @@
+management:
+  metrics:
+    web:
+      server:
+        request:
+          autotime:
+            enabled: true
+    enable:
+      logback: true
+  endpoints:
+    web:
+      base-path: "/actuator"
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: "always"
+    info:
+      enabled: true
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+    httptrace:
+      enabled: true
+  info:
+    env:
+      enabled: true
+  health:
+    elasticsearch:
+      enabled: false

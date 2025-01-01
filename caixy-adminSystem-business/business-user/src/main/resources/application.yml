@@ -1,0 +1,5 @@
+spring:
+  config:
+    import:
+      - classpath:base.yml
+      - classpath:datasource.yml

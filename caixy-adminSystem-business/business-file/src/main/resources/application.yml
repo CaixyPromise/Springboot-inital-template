@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: @application.name@
+  config:
+    import:
+      - classpath:file.yml

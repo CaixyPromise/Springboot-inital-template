@@ -1,0 +1,58 @@
+   ██████      ██     ██ ██     ██ ██    ██ ███████  ███████     ███████   ████     ████ ██  ████████ ████████
+  ██░░░░██    ████   ░██░░██   ██ ░░██  ██ ░██░░░░██░██░░░░██   ██░░░░░██ ░██░██   ██░██░██ ██░░░░░░ ░██░░░░░
+ ██    ░░    ██░░██  ░██ ░░██ ██   ░░████  ░██   ░██░██   ░██  ██     ░░██░██░░██ ██ ░██░██░██       ░██
+░██         ██  ░░██ ░██  ░░███     ░░██   ░███████ ░███████  ░██      ░██░██ ░░███  ░██░██░█████████░███████
+░██        ██████████░██   ██░██     ░██   ░██░░░░  ░██░░░██  ░██      ░██░██  ░░█   ░██░██░░░░░░░░██░██░░░░
+░░██    ██░██░░░░░░██░██  ██ ░░██    ░██   ░██      ░██  ░░██ ░░██     ██ ░██   ░    ░██░██       ░██░██
+ ░░██████ ░██     ░██░██ ██   ░░██   ░██   ░██      ░██   ░░██ ░░███████  ░██        ░██░██ ████████ ░████████
+  ░░░░░░  ░░      ░░ ░░ ░░     ░░    ░░    ░░       ░░     ░░   ░░░░░░░   ░░         ░░ ░░ ░░░░░░░░  ░░░░░░░░
+👇👇👇 Scan below QR code to visit the Github homepage of author 👇👇👇
+                █▀▀▀▀▀▀▀█▀████▀▀▀▀▀▀▀▀█▀▀▀▀▀▀▀█
+                █ █▀▀▀█ █▀ ▀▄█ ▀██▄▀█▀█ █▀▀▀█ █
+                █ █   █ █   ▄▀  ▀██▄▀ █ █   █ █
+                █ ▀▀▀▀▀ █ █ █▀█ ▄▀▄▀█ █ ▀▀▀▀▀ █
+                ███▀▀▀▀▀▀█▄▀▄█▀ ▄ ▀ █▄▀█▀▀▀▀█▀█
+                █   █  ▀▄▄▀ ▀▀▀▄▄▄▀   █▄▄ ▀▄▄▄█
+                █▀ ▄▀▄ ▀█ ▀▄▄▀▄▄▄▀█ ▀▄ ▀▄▄▄▀▄██
+                █▀███▄ ▀▄▀██▀█  ▄▀██▀█  ▄▀█ █ █
+                █ ▄▀ █ ▀▀ ▄█▀  █▀ ▀█▀▄█ ▀▄▄   █
+                ██▄ ██ ▀ ▄██▀ █▄▀▀█▄ ▀█▄▄▀▀▄▄▀█
+                █ ▄ ▀▄█▀ █ ▄▄█▄█ ▀▀▀ ▀▀▀▀ ▀▄█▄█
+                █▀▀▀▀▀▀▀█▀▀▄ ▀ █ █▀█  █▀█  ██▀█
+                █ █▀▀▀█ █  ▄ ▄ ▄ ▄ ▄  ▀▀▀ ▄▄█▀█
+                █ █   █ █ ▄ ▄█▄ ██▄ █ █ ▀▀█▀  █
+                █ ▀▀▀▀▀ ██▄█▀█▄  █▀▄ ▄▄█  █▄▀██
+                ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+==========================================================================================================
+🤩 Application Information: 💖
+-----------------------------------------
+Spring Boot Version:     ${spring-boot.version}
+Java Version:            ${java.version}
+Startup Time:            ${app.startup-time}
+API Document Path:       ${info.app.api-document}
+Server Address:          ${info.app.serverAddress}
+Running on Port:         ${server.port}
+
+📌NOTE:
++++++++++++++++++++++++++++++++++++++++++
+- The API Document Path and Server Address are for reference only.
+- It is based on your internal IP address. Refer to "com.caixy.adminSystem.utils.NetUtils.getServerHost()".
+- 📍If you can't visit it, please check or replace it with "localhost". And then replace the values with constants in the configuration (banner) file accordingly.
+
+😍 Starter Information: 💖
+-----------------------------------------
+Starter Name:           ${spring.application.name}
+Starter Version:        ${info.app.version}
+Description:            ${info.app.description}
+License:                ${info.app.license}
+
+😎 Author Information: 💖
+-----------------------------------------
+Author:                 ${info.author.name} 😎
+Email:                  ${info.author.email}
+GitHub:                 ${info.author.github}
+
+==========================================================================================================
+😎The best wish for you😊and enjoy it! 🤩
+🎉Have a good day!💖
+==========================================================================================================

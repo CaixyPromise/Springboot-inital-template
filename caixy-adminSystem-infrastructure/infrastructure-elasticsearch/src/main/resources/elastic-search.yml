@@ -1,0 +1,6 @@
+spring:
+  elasticsearch:
+    enable: ${caixy.caixy.adminSystem.config.elasticsearch.enable}
+    uris: http://${caixy.caixy.adminSystem.config.elasticsearch.url}
+    username: ${caixy.caixy.adminSystem.config.elasticsearch.username}
+    password: ${caixy.caixy.adminSystem.config.elasticsearch.password}

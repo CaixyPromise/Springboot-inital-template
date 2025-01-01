@@ -1,0 +1,34 @@
+package com.caixy.adminSystem.infrastructure.file.services;
+
+
+import com.caixy.adminSystem.infrastructure.file.domain.dto.UploadFileDTO;
+import com.caixy.adminSystem.infrastructure.file.domain.dto.UploadFileRequest;
+import com.caixy.adminSystem.infrastructure.file.domain.enums.FileActionBizEnum;
+import com.caixy.adminSystem.infrastructure.file.domain.enums.SaveFileMethodEnum;
+import com.caixy.adminSystem.infrastructure.file.strategy.FileActionStrategy;
+
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.nio.file.Path;
+
+/**
+ * @name: com.caixy.adminSystem.service.UploadFileService
+ * @description: 文件上传下载服务
+ * @author: CAIXYPROMISE
+ * @date: 2024-05-21 21:52
+ **/
+public interface UploadFileService
+{
+    org.springframework.core.io.Resource getFile(FileActionBizEnum fileActionBizEnum, Path filePath) throws IOException;
+
+    void deleteFile(FileActionBizEnum fileActionBizEnum, Path filePath);
+
+    void deleteFile(FileActionBizEnum fileActionBizEnum, Long userId, String filename);
+
+    Path saveFile(UploadFileDTO uploadFileDTO) throws IOException;
+
+    FileActionStrategy getFileActionService(FileActionBizEnum fileActionBizEnum);
+
+    String handleUpload(UploadFileRequest uploadFileRequest, FileActionBizEnum uploadBizEnum,
+                        SaveFileMethodEnum saveFileMethod, UploadFileDTO uploadFileDTO, HttpServletRequest request);
+}
