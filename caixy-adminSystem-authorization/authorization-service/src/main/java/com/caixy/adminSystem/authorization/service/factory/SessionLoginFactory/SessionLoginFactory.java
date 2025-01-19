@@ -163,10 +163,8 @@ public class SessionLoginFactory implements AuthorizationFactory
     {
         HttpSession session = request.getSession();
         return ServletUtils.getAttributeFromSession(UserConstant.USER_LOGIN_STATE, UserVO.class, session)
-                           .filter(user ->
-                           {
-                               if (UserRoleEnum.BAN.equals(user.getUserRole()))
-                               {
+                           .filter(user -> {
+                               if (UserRoleEnum.BAN.equals(user.getUserRole())) {
                                    doLogout();
                                    throw new BusinessException(ErrorCode.FORBIDDEN_ERROR, "账号已被封禁");
                                }

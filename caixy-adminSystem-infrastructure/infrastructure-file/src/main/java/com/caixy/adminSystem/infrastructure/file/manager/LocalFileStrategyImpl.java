@@ -38,9 +38,9 @@ public class LocalFileStrategyImpl implements UploadFileMethodStrategy
 
     public Path saveFile(MultipartFile multipartFile, UploadFileDTO fileConfig)
     {
-        UploadFileDTO.FileInfo fileInfo = fileConfig.getFileInfo();
-        String filename = fileInfo.getFileInnerName(); // 文件名
-        Path filePath = fileInfo.getFilePath();
+        UploadFileDTO.FileMetaInfo fileMetaInfo = fileConfig.getFileMetaInfo();
+        String filename = fileMetaInfo.getFileInnerName(); // 文件名
+        Path filePath = fileMetaInfo.getFilePath();
         FileActionBizEnum fileActionBizEnum = fileConfig.getFileActionBizEnum();
         Long userId = fileConfig.getUserId();
 

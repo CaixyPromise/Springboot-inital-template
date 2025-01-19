@@ -3,6 +3,7 @@ package com.caixy.adminSystem.infrastructure.file.domain.dto;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.crypto.digest.DigestUtil;
 import com.caixy.adminSystem.infrastructure.file.domain.enums.FileActionBizEnum;
+import com.caixy.adminSystem.infrastructure.file.manager.utils.FileUtils;
 import com.caixy.adminSystem.infrastructure.file.strategy.UploadFileMethodStrategy;
 import lombok.Builder;
 import lombok.Data;
@@ -42,22 +43,22 @@ public class UploadFileDTO
     /**
      * 文件描述信息
      */
-    private FileInfo fileInfo;
+    private FileMetaInfo fileMetaInfo;
 
-    /**
-     * 文件MD5值
-     */
-    private String sha256;
-
-    /**
-     * 文件大小限制，单位：字节
-     */
-    private Long fileSize;
 
     @Data
     @Builder
-    public static class FileInfo
+    public static class FileMetaInfo
     {
+        /**
+         * 文件MD5值
+         */
+        private String sha256;
+
+        /**
+         * 文件大小限制，单位：字节
+         */
+        private Long fileSize;
         /**
          * 文件唯一标识
          */
@@ -99,7 +100,7 @@ public class UploadFileDTO
      *
      * @return 构建的 FileInfo 对象
      */
-    public FileInfo convertFileInfo()
+    public FileMetaInfo convertFileInfo()
     {
         String uuid = UUID.randomUUID().toString();
         String originalFilename = multipartFile.getOriginalFilename();
@@ -112,13 +113,15 @@ public class UploadFileDTO
         Path fileAbsoluteName = fileActionBizEnum.buildFileAbsolutePathAndName(userId, filename);
         Path filePath = fileActionBizEnum.buildFilePath(userId);
 
-        return FileInfo.builder()
-                .uuid(uuid)
-                .fileRealName(originalFilename)
-                .fileInnerName(filename)
-                .fileAbsolutePathAndName(fileAbsoluteName)
-                .filePath(filePath)
-                .fileSuffix(fileSuffix)
-                .build();
+        return FileMetaInfo.builder()
+                           .uuid(uuid)
+                           .fileRealName(originalFilename)
+                           .fileInnerName(filename)
+                           .fileAbsolutePathAndName(fileAbsoluteName)
+                           .filePath(filePath)
+                           .fileSuffix(fileSuffix)
+                           .sha256(FileUtils.getMultiPartFileSha256(multipartFile))
+                           .fileSize(multipartFile.getSize())
+                           .build();
     }
 }

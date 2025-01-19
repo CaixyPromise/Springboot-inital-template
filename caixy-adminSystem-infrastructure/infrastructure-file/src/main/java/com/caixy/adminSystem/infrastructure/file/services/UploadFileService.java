@@ -6,6 +6,7 @@ import com.caixy.adminSystem.infrastructure.file.domain.dto.UploadFileRequest;
 import com.caixy.adminSystem.infrastructure.file.domain.enums.FileActionBizEnum;
 import com.caixy.adminSystem.infrastructure.file.domain.enums.SaveFileMethodEnum;
 import com.caixy.adminSystem.infrastructure.file.strategy.FileActionStrategy;
+import org.springframework.core.io.Resource;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -19,7 +20,7 @@ import java.nio.file.Path;
  **/
 public interface UploadFileService
 {
-    org.springframework.core.io.Resource getFile(FileActionBizEnum fileActionBizEnum, Path filePath) throws IOException;
+    Resource getFile(FileActionBizEnum fileActionBizEnum, Path filePath) throws IOException;
 
     void deleteFile(FileActionBizEnum fileActionBizEnum, Path filePath);
 

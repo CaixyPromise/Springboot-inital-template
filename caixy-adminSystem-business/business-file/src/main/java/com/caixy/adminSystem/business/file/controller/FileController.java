@@ -12,16 +12,16 @@ import com.caixy.adminSystem.infrastructure.file.domain.dto.UploadFileDTO;
 import com.caixy.adminSystem.infrastructure.file.domain.dto.UploadFileRequest;
 import com.caixy.adminSystem.infrastructure.file.domain.enums.FileActionBizEnum;
 import com.caixy.adminSystem.infrastructure.file.domain.enums.SaveFileMethodEnum;
-import com.caixy.adminSystem.infrastructure.file.manager.utils.FileUtils;
 import com.caixy.adminSystem.infrastructure.file.services.UploadFileService;
 import com.caixy.adminSystem.infrastructure.file.strategy.FileActionStrategy;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -35,13 +35,12 @@ import java.util.Set;
 @RestController
 @RequestMapping("/file")
 @Slf4j
+@RequiredArgsConstructor
 public class FileController
 {
-    @Resource
-    private AuthManager authManager;
+    private final AuthManager authManager;
 
-    @Resource
-    private UploadFileService uploadFileService;
+    private final UploadFileService uploadFileService;
 
 
     /**
@@ -95,7 +94,7 @@ public class FileController
             }
             else
             {
-                org.springframework.core.io.Resource fileResource = uploadFileService.getFile(fileActionBizEnum, fileKey);
+                Resource fileResource = uploadFileService.getFile(fileActionBizEnum, fileKey);
                 if (fileResource == null)
                 {
                     throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "文件不存在");
@@ -103,7 +102,11 @@ public class FileController
                 else
                 {
                     // 设置响应头
-                    buildDownloadResponse(downloadFileDTO, response);
+                    String fileName = downloadFileDTO.getFileRealName();
+                    response.setContentType("application/octet-stream;charset=UTF-8;filename=" + fileName);
+                    response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+                    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
+                    response.setHeader("Content-Disposition", "attachment; filename=" + fileName);
 
                     // 将文件写入响应输出流
                     StreamUtils.copy(fileResource.getInputStream(), response.getOutputStream());
@@ -116,6 +119,7 @@ public class FileController
                         log.error("文件下载操作后处理失败: userId: {}, 下载文件信息：{}", loginUser.getId(), downloadFileDTO);
                         throw new BusinessException(ErrorCode.SYSTEM_ERROR, "文件下载操作失败");
                     }
+                    log.info("文件下载成功: userId: {}, 下载文件信息：{}", loginUser.getId(), downloadFileDTO);
                 }
             }
         }
@@ -173,23 +177,8 @@ public class FileController
         uploadFileDTO.setFileActionBizEnum(fileActionBizEnum);
         uploadFileDTO.setMultipartFile(multipartFile);
         uploadFileDTO.setUserId(loginUser.getId());
-        uploadFileDTO.setSha256(FileUtils.getMultiPartFileSha256(multipartFile));
-        uploadFileDTO.setFileSize(multipartFile.getSize());
-        UploadFileDTO.FileInfo fileInfo = uploadFileDTO.convertFileInfo();
-        uploadFileDTO.setFileInfo(fileInfo);
+        UploadFileDTO.FileMetaInfo fileMetaInfo = uploadFileDTO.convertFileInfo();
+        uploadFileDTO.setFileMetaInfo(fileMetaInfo);
         return uploadFileDTO;
     }
-
-    private void buildDownloadResponse(DownloadFileDTO downloadFileDTO, HttpServletResponse response)
-    {
-        String fileName = downloadFileDTO.getFileRealName();
-        response.setContentType("application/octet-stream;charset=UTF-8;filename=" + fileName);
-        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
-        response.setHeader("Content-Disposition", "attachment; filename=" + fileName);
-    }
-
-
-
-
 }

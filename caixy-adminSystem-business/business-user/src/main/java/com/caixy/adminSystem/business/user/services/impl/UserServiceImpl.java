@@ -281,7 +281,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         // 更新用户头像
         String oldUserAvatar = user.getUserAvatar();
-        user.setUserAvatar(uploadFileDTO.getFileInfo().getFileURL());
+        user.setUserAvatar(uploadFileDTO.getFileMetaInfo().getFileURL());
         UploadFileMethodStrategy uploadManager = uploadFileDTO.getUploadManager();
         boolean updated = this.updateById(user);
         if (updated)

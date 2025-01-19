@@ -14,12 +14,13 @@ import com.caixy.adminSystem.infrastructure.file.manager.annotation.UploadMethod
 import com.caixy.adminSystem.infrastructure.file.services.UploadFileService;
 import com.caixy.adminSystem.infrastructure.file.strategy.FileActionStrategy;
 import com.caixy.adminSystem.infrastructure.file.strategy.UploadFileMethodStrategy;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -36,14 +37,14 @@ import java.util.concurrent.ConcurrentHashMap;
  **/
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class UploadFileServiceImpl implements UploadFileService
 {
-    @Resource
-    private List<UploadFileMethodStrategy> uploadFileMethodStrategies;
+    private final List<UploadFileMethodStrategy> uploadFileMethodStrategies;
 
     private Map<SaveFileMethodEnum, UploadFileMethodStrategy> uploadFileMethodMap;
-    @Resource
-    private List<FileActionStrategy> fileActionStrategy;
+
+    private final List<FileActionStrategy> fileActionStrategy;
 
     private ConcurrentHashMap<FileActionBizEnum, FileActionStrategy> serviceCache;
 
@@ -58,7 +59,7 @@ public class UploadFileServiceImpl implements UploadFileService
 
 
     @Override
-    public org.springframework.core.io.Resource getFile(FileActionBizEnum fileActionBizEnum, Path filePath) throws IOException
+    public Resource getFile(FileActionBizEnum fileActionBizEnum, Path filePath) throws IOException
     {
         UploadFileMethodStrategy uploadFileMethodStrategy = safetyGetUploadFileMethod(fileActionBizEnum.getSaveFileMethod());
         return uploadFileMethodStrategy.getFile(filePath);
@@ -103,7 +104,7 @@ public class UploadFileServiceImpl implements UploadFileService
         UploadFileMethodStrategy uploadFileMethodStrategy = safetyGetUploadFileMethod(fileActionBizEnum.getSaveFileMethod());
         // 把上传服务处理类暴露给 后处理操作 ，例如需要删除前置文件信息等
         uploadFileDTO.setUploadManager(uploadFileMethodStrategy);
-        uploadFileDTO.getFileInfo().setFileURL(uploadFileMethodStrategy.buildFileURL(uploadFileDTO.getUserId(), uploadFileDTO.getFileInfo().getFileInnerName()));
+        uploadFileDTO.getFileMetaInfo().setFileURL(uploadFileMethodStrategy.buildFileURL(uploadFileDTO.getUserId(), uploadFileDTO.getFileMetaInfo().getFileInnerName()));
         return uploadFileMethodStrategy.saveFile(uploadFileDTO);
     }
 
@@ -149,7 +150,7 @@ public class UploadFileServiceImpl implements UploadFileService
             if (!doVerifyFileToken)
             {
                 log.error("{}-验证token：文件上传失败，文件信息：{}, 上传用户Id: {}", saveFileMethod.getDesc(),
-                        uploadFileDTO.getFileInfo(),
+                        uploadFileDTO.getFileMetaInfo(),
                         uploadFileDTO.getUserId());
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR, "文件上传失败");
             }
@@ -165,7 +166,7 @@ public class UploadFileServiceImpl implements UploadFileService
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR, "文件上传成功，但后续处理失败");
             }
             log.info("{}：文件上传成功，文件路径：{}", saveFileMethod.getDesc(), savePath);
-            return uploadFileDTO.getFileInfo().getFileURL();
+            return uploadFileDTO.getFileMetaInfo().getFileURL();
         }
         catch (FileUploadActionException | BusinessException | IOException e)
         {

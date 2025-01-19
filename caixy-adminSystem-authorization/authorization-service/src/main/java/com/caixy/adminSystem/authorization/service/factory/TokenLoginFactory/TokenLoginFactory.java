@@ -2,6 +2,7 @@ package com.caixy.adminSystem.authorization.service.factory.TokenLoginFactory;
 
 
 import com.caixy.adminSystem.authorization.service.factory.AuthorizationFactory;
+import com.caixy.adminSystem.authorization.service.factory.TokenLoginFactory.properties.TokenProperties;
 import com.caixy.adminSystem.common.api.user.vo.LoginUserVO;
 import com.caixy.adminSystem.common.api.user.vo.UserVO;
 import com.caixy.adminSystem.common.base.constant.UserRoleEnum;
@@ -20,8 +21,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletRequest;
+import java.security.Key;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -37,47 +41,40 @@ import java.util.stream.Collectors;
 @Slf4j
 public class TokenLoginFactory implements AuthorizationFactory
 {
-    private final RedisManager redisManager;
-
-    public TokenLoginFactory(RedisManager redisManager)
-    {
-        this.redisManager = redisManager;
-    }
-
+    private final boolean singleLogin;
+    private final String headerKey;
+    private final String secret;
+    private final long expireTime;
+    private final TimeUnit expireTimeUnit;
+    private final long refreshTime;
+    private final TimeUnit refreshTimeUnit;
     private static final String TOKEN_CACHE_KEY = "token:login:";
     private static final String TOKEN_CLAIMS_ID_KEY = "tokenId";
     private static final String TOKEN_CLAIMS_USER_ID_KEY = "userId";
     private static final Pattern pattern = Pattern.compile("^(?:Bearer\\s)?(.+)$");
-
     // Redis中存储所有活跃tokenId的集合key
     private static final String TOKEN_ACTIVE_SET = "token:activeTokens";
 
     // Redis中存储用户与tokenId映射的key前缀
     private static final String TOKEN_USER_KEY_PREFIX = "token:user:";
 
-    // 是否限制单点登录
-    @Value("${login.singleLogin:false}")
-    private boolean singleLogin;
+    private final RedisManager redisManager;
 
-    // 令牌自定义标识
-    @Value("${login.token.header:Authorization}")
-    private String headerKey;
+    public TokenLoginFactory(TokenProperties tokenProperties, RedisManager redisManager)
+    {
+        this.singleLogin = tokenProperties.isSingleLogin();
+        this.headerKey = tokenProperties.getHeader();
+        this.secret = tokenProperties.getSecret();
+        this.expireTime = tokenProperties.getExpireTime();
+        this.expireTimeUnit = tokenProperties.getExpireTimeUnit();
+        this.refreshTime = tokenProperties.getRefreshTime();
+        this.refreshTimeUnit = tokenProperties.getRefreshTimeUnit();
+        Key key = new SecretKeySpec(secret.getBytes(), SignatureAlgorithm.HS256.getJcaName());
+        this.redisManager = redisManager;
+    }
 
-    // 令牌秘钥
-    @Value("${login.token.secret:CAIXYPROMISE}")
-    private String secret;
 
-    /**
-     * token过期时间（默认60分钟）
-     */
-    @Value("${login.token.expireTime:60}")
-    private Long expireTime;
 
-    /**
-     * 刷新token时间（默认20分钟）
-     */
-    @Value("${login.token.autoRefreshTime:20}")
-    private Long autoRefreshTime;
 
     @Override
     public String getName()
@@ -143,7 +140,7 @@ public class TokenLoginFactory implements AuthorizationFactory
         }
 
         // 存储token到Redis
-        redisManager.setObject(getTokenCacheKey(tokenId), userVO, expireTime * 60);
+        redisManager.setObject(getTokenCacheKey(tokenId), userVO, expireTime, expireTimeUnit);
 
         // 将tokenId添加到活跃token集合
         redisManager.addToSet(TOKEN_ACTIVE_SET, tokenId);
@@ -316,7 +313,7 @@ public class TokenLoginFactory implements AuthorizationFactory
         userVO.setLoginTime(System.currentTimeMillis());
         userVO.setExpireTime(userVO.getLoginTime() + expireTime * 60 * 1000);
 
-        redisManager.setObject(getTokenCacheKey(tokenId), userVO, expireTime * 60); // 转换为秒
+        redisManager.setObject(getTokenCacheKey(tokenId), userVO, expireTime, expireTimeUnit); // 转换为秒
     }
 
 
@@ -337,8 +334,8 @@ public class TokenLoginFactory implements AuthorizationFactory
                 {
                     Long expire = redisManager.getExpire(getTokenCacheKey(tokenId));
 
-                    if (expire != null && expire < autoRefreshTime * 60)
-                    {
+                    long refreshThreshold = refreshTimeUnit.toSeconds(refreshTime);
+                    if (expire != null && expire < refreshThreshold) {
                         refreshToken(userVO, tokenId);
                         log.info("Token即将过期，已自动刷新");
                     }
@@ -348,7 +345,7 @@ public class TokenLoginFactory implements AuthorizationFactory
         catch (Exception e)
         {
             log.error("Error in checkExpireTime: {}", e.getMessage(), e);
-            // 根据需要处理异常，例如：抛出异常或返回特定结果
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "登录过期");
         }
     }
 

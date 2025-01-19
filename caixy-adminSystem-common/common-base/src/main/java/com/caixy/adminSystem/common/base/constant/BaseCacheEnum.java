@@ -3,6 +3,7 @@ package com.caixy.adminSystem.common.base.constant;
 import com.caixy.adminSystem.common.base.utils.StringUtils;
 
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -16,6 +17,11 @@ public interface BaseCacheEnum
 {
     String getKey();
     Long getExpire();
+    TimeUnit getTimeUnit();
+
+    default Long getExpireSeconds() {
+        return getExpire() == null ? 0 : getTimeUnit().toSeconds(getExpire());
+    }
 
     default String generateKey(Object... items)
     {

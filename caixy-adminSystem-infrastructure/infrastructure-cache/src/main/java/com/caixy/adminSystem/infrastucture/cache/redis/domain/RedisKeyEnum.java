@@ -3,6 +3,8 @@ package com.caixy.adminSystem.infrastucture.cache.redis.domain;
 import com.caixy.adminSystem.common.base.constant.BaseCacheEnum;
 import lombok.Getter;
 
+import java.util.concurrent.TimeUnit;
+
 @Getter
 public enum RedisKeyEnum implements BaseCacheEnum
 {
@@ -26,6 +28,7 @@ public enum RedisKeyEnum implements BaseCacheEnum
 
     private final String key;
     private final Long expire;
+    private final TimeUnit timeUnit = TimeUnit.SECONDS;
 
     RedisKeyEnum(String key, Long expire)
     {

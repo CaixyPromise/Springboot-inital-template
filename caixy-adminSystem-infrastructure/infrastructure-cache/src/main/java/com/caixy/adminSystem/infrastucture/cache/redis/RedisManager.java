@@ -5,7 +5,6 @@ import com.caixy.adminSystem.common.base.utils.JsonUtils;
 import com.caixy.adminSystem.common.base.utils.StringUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
@@ -25,8 +24,8 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class RedisManager
 {
-    // 调用接口排名信息的最大容量
-    private static final Long REDIS_INVOKE_RANK_MAX_SIZE = 10L;
+    // 排名信息的最大容量
+    private static final Long REDIS_RANK_MAX_SIZE = 10L;
 
     private final StringRedisTemplate stringRedisTemplate;
 
@@ -96,7 +95,7 @@ public class RedisManager
      */
     public void settingExpire(BaseCacheEnum Enum, long expire, Object... items)
     {
-        stringRedisTemplate.expire(Enum.generateKey(items), expire, TimeUnit.SECONDS);
+        stringRedisTemplate.expire(Enum.generateKey(items), expire, Enum.getTimeUnit());
     }
 
     /**
@@ -106,9 +105,9 @@ public class RedisManager
      * @version 1.0
      * @since 2023/1220 20:18
      */
-    public void settingExpire(String key, long expire)
+    public void settingExpire(String key, long expire, TimeUnit timeUnit)
     {
-        stringRedisTemplate.expire(key, expire, TimeUnit.SECONDS);
+        stringRedisTemplate.expire(key, expire, timeUnit);
     }
 
     /**
@@ -167,12 +166,24 @@ public class RedisManager
     public void setObject(BaseCacheEnum keyEnum, Object value, Object... items)
     {
         String key = keyEnum.generateKey(items);
-        setObject(key, value, keyEnum.getExpire());
+        setObject(key, value, keyEnum.getExpire(), keyEnum.getTimeUnit());
     }
 
-    public void setObject(String key, Object value, Long expire)
+    public void setObject(BaseCacheEnum keyEnum, Object value, Long expire, Object... items)
     {
-        setString(key, JsonUtils.toJsonString(value), expire);
+        String key = keyEnum.generateKey(items);
+        if (expire != null && expire > 0)
+        {
+            setObject(key, value, expire, keyEnum.getTimeUnit());
+            return;
+        }
+        // 如果过期时间为null和-1，则直接走默认时间配置（redis要求，过期时间必须大于0，如果需要永久只需要设置为null就行）
+        setObject(keyEnum, value, items);
+    }
+
+    public void setObject(String key, Object value, Long expire, TimeUnit timeUnit)
+    {
+        setString(key, JsonUtils.toJsonString(value), expire, timeUnit);
     }
 
     /**
@@ -249,7 +260,7 @@ public class RedisManager
     {
         Long expire = Enum.getExpire();
         String fullKey = Enum.generateKey(item);
-        setHashMap(fullKey, data, expire);
+        setHashMap(fullKey, data, expire, Enum.getTimeUnit());
     }
 
     /**
@@ -262,12 +273,12 @@ public class RedisManager
      * @version 1.0
      * @since 2023/12/20 2:16
      */
-    public <Key, Value> void setHashMap(String key, Map<Key, Value> data, Long expire)
+    public <Key, Value> void setHashMap(String key, Map<Key, Value> data, Long expire, TimeUnit timeUnit)
     {
         stringRedisTemplate.opsForHash().putAll(key, data);
         if (expire != null)
         {
-            settingExpire(key, expire);
+            settingExpire(key, expire, timeUnit);
         }
     }
 
@@ -280,12 +291,21 @@ public class RedisManager
      */
     public void setString(BaseCacheEnum Enum, String value, Object... items)
     {
-        setString(Enum.generateKey(items), value, Enum.getExpire());
+        setString(Enum.generateKey(items), value, Enum.getExpire(), Enum.getTimeUnit());
     }
 
-    public void setString(String key, String value, Long expire)
+    public void setString(String key, String value, Long expire, TimeUnit timeUnit)
     {
-        stringRedisTemplate.opsForValue().set(key, value, expire, TimeUnit.SECONDS);
+        if (expire > 0)
+        {
+            // 设置带过期时间的键值
+            stringRedisTemplate.opsForValue().set(key, value, expire, timeUnit);
+        }
+        else
+        {
+            // 设置永久有效的键值
+            stringRedisTemplate.opsForValue().set(key, value);
+        }
     }
 
 
@@ -318,6 +338,13 @@ public class RedisManager
     {
         return stringRedisTemplate.getExpire(key, TimeUnit.SECONDS);
     }
+    /**
+     * 获取过期时间
+     */
+    public Long getExpire(String key, TimeUnit timeUnit)
+    {
+        return stringRedisTemplate.getExpire(key, timeUnit);
+    }
 
     public Long getExpire(BaseCacheEnum keyEnum, Object... keyItem)
     {
@@ -325,7 +352,36 @@ public class RedisManager
         return getExpire(key);
     }
 
+    /**
+     * 尝试在 Redis 中设置键值对（仅当键不存在时），并设置过期时间。
+     *
+     * @param key      键
+     * @param value    值
+     * @return 如果成功设置（键之前不存在），返回 true；否则返回 false
+     */
+    public Boolean setIfAbsent(BaseCacheEnum key, String value, Object... keyItem) {
+        if (key.getExpireSeconds() > 0) {
+            // 尝试设置键值并指定过期时间
+            return Boolean.TRUE.equals(
+                    stringRedisTemplate.opsForValue().setIfAbsent(key.generateKey(keyItem), value, key.getExpire(), key.getTimeUnit())
+            );
+        }
+        // 尝试设置键值但不指定过期时间
+        return Boolean.TRUE.equals(stringRedisTemplate.opsForValue().setIfAbsent(key.generateKey(keyItem), value));
+    }
+
     // region 集合操作
+
+    /**
+     * 向 Redis Set 中添加元素
+     *
+     * @param key    Redis 键
+     * @param values 要添加的值
+     */
+    public Long addToSet(BaseCacheEnum key, String values, Object... keyItem)
+    {
+        return stringRedisTemplate.opsForSet().add(key.generateKey(keyItem), values);
+    }
 
     /**
      * 向 Redis Set 中添加元素
@@ -349,11 +405,17 @@ public class RedisManager
         stringRedisTemplate.opsForSet().remove(key, (Object[]) values);
     }
 
-    public void removeFromSet(BaseCacheEnum keyEnum, List<String> values, Object... keyItem)
+    /**
+     * 从 Redis Set 中移除元素
+     *
+     * @param key    Redis 键
+     * @param values 要移除的值
+     */
+    public void removeFromSet(BaseCacheEnum key, Object[] values, Object... keyItems)
     {
-        String key = keyEnum.generateKey(keyItem);
-        removeFromSet(key, values.toArray(new String[0]));
+        stringRedisTemplate.opsForSet().remove(key.generateKey(keyItems), values);
     }
+
 
     /**
      * 获取 Redis Set 中的所有元素
@@ -365,11 +427,15 @@ public class RedisManager
     {
         return stringRedisTemplate.opsForSet().members(key);
     }
-
-    public Set<String> getMembersFromSet(BaseCacheEnum keyEnum, Object... keyItem)
+    /**
+     * 获取 Redis Set 中的所有元素
+     *
+     * @param key Redis 键
+     * @return Set 集合
+     */
+    public Set<String> getMembersFromSet(BaseCacheEnum key, Object... keyItem)
     {
-        String key = keyEnum.generateKey(keyItem);
-        return getMembersFromSet(key);
+        return stringRedisTemplate.opsForSet().members(key.generateKey(keyItem));
     }
 
     /**
@@ -465,7 +531,7 @@ public class RedisManager
     private void manageRankSize(String key)
     {
         Long size = zGetSize(key);
-        if (size != null && size >= REDIS_INVOKE_RANK_MAX_SIZE)
+        if (size != null && size >= REDIS_RANK_MAX_SIZE)
         {
             // 移除最低分数的记录
             Set<ZSetOperations.TypedTuple<String>> lowestScoreSet =

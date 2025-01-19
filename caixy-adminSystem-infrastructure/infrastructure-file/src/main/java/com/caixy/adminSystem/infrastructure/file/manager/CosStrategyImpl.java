@@ -89,8 +89,8 @@ public class CosStrategyImpl implements UploadFileMethodStrategy
     public Path doSave(UploadFileDTO uploadFileDTO)
     {
         MultipartFile multipartFile = uploadFileDTO.getMultipartFile();
-        UploadFileDTO.FileInfo fileInfo = uploadFileDTO.getFileInfo();
-        Path filepath = fileInfo.getFileAbsolutePathAndName();
+        UploadFileDTO.FileMetaInfo fileMetaInfo = uploadFileDTO.getFileMetaInfo();
+        Path filepath = fileMetaInfo.getFileAbsolutePathAndName();
         File file = null;
         try
         {
