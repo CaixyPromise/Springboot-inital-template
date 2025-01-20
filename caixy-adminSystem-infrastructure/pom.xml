@@ -19,6 +19,7 @@
         <module>infrastructure-lock</module>
         <module>infrastructure-dashboard</module>
         <module>infrastructure-knife4j</module>
+        <module>infrastructure-mq-rabbit</module>
     </modules>
 
     <artifactId>caixy-adminSystem-infrastructure</artifactId>

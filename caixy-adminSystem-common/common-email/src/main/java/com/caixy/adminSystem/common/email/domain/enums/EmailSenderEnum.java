@@ -68,20 +68,6 @@ public enum EmailSenderEnum implements BaseCacheEnum
     private final String templateName;
     private final Boolean requireLogin;
     private final Boolean requireToEmail;
-    private final TimeUnit timeUnit;
-
-    EmailSenderEnum(String key, Long expire, Integer code, String name, String templateName, Boolean requireLogin,
-                    Boolean requireToEmail)
-    {
-        this.key = key;
-        this.expire = expire;
-        this.code = code;
-        this.name = name;
-        this.templateName = templateName;
-        this.requireLogin = requireLogin;
-        this.requireToEmail = requireToEmail;
-        this.timeUnit = TimeUnit.SECONDS;
-    }
 
 
     public static EmailSenderEnum getByCode(Integer code)

@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -31,10 +32,7 @@ public class XssFilter implements Filter
         if (StringUtils.isNotEmpty(tempExcludes))
         {
             String[] url = tempExcludes.split(",");
-            for (int i = 0; url != null && i < url.length; i++)
-            {
-                excludes.add(url[i]);
-            }
+            Collections.addAll(excludes, url);
         }
     }
 

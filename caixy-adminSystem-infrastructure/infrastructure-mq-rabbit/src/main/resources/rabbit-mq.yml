@@ -1,0 +1,29 @@
+spring:
+  rabbit-mq:
+    host: 127.0.0.1
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      direct:
+        acknowledge-mode: manual
+
+# 脚手架配置读取: 自动创建消息队列、自动根据消息队列名称注入消费框架。
+rabbitmq:
+  config:
+    # 死信队列重试次数
+    retryOnDeadLetter: 3
+  exchanges:
+    - name: YOUR_Exchange
+      type: direct
+      durable: true
+      autoDelete: false
+      bindings:
+        - queue: YOUR_QUEUE_NAME
+          routingKey: YOUR.ROUTING.KEY
+          deadLetterRoutingKey: dl.YOUR.ROUTING.KEY
+          deadLetterQueue: X-DeadLetter-YOUR-DEAD-Queue
+          durable: true
+          autoDelete: false
+          exclusive: false
+    # - and so on...

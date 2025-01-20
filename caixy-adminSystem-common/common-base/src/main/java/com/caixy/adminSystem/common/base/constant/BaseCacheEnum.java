@@ -17,7 +17,11 @@ public interface BaseCacheEnum
 {
     String getKey();
     Long getExpire();
-    TimeUnit getTimeUnit();
+
+    default TimeUnit getTimeUnit() {
+        return TimeUnit.SECONDS;
+    }
+
 
     default Long getExpireSeconds() {
         return getExpire() == null ? 0 : getTimeUnit().toSeconds(getExpire());

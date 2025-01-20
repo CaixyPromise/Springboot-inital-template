@@ -28,7 +28,6 @@ public enum RedisKeyEnum implements BaseCacheEnum
 
     private final String key;
     private final Long expire;
-    private final TimeUnit timeUnit = TimeUnit.SECONDS;
 
     RedisKeyEnum(String key, Long expire)
     {
