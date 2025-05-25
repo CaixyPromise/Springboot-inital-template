@@ -6,6 +6,7 @@ import java.lang.management.ManagementFactory;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.*;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 
 /**
@@ -55,7 +56,7 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils
         return dateTimeNow(YYYY_MM_DD);
     }
 
-    public static final String getTime()
+    public static String getDateTime()
     {
         return dateTimeNow(YYYY_MM_DD_HH_MM_SS);
     }
@@ -144,6 +145,11 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils
     public static int differentDaysByMillisecond(Date date1, Date date2)
     {
         return Math.abs((int) ((date2.getTime() - date1.getTime()) / (1000 * 3600 * 24)));
+    }
+
+    public static String millisecondToSecond(long millisecond) {
+        double durationSecs = millisecond / 1000.0;
+        return String.format("%.3f", durationSecs);
     }
 
     /**
@@ -338,5 +344,37 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils
             throw new IllegalArgumentException("ZoneId cannot be null");
         }
         return date.toInstant().atZone(zoneId).toLocalDateTime();
+    }
+
+
+    /**
+     * 获取简短的时间字符串：10秒前返回刚刚，多少秒前，几小时前，超过一周返回年月日时分秒
+     * @param date
+     * @return
+     */
+    public static String getShortTime(Date date) {
+        if (date == null) {
+            return null;
+        }
+        LocalDateTime localDateTime = toLocalDateTime(date);
+        // 当前时间
+        LocalDateTime now = LocalDateTime.now();
+        // 时间差，单位为秒
+        long secondsBetween = ChronoUnit.SECONDS.between(localDateTime, now);
+
+        if (secondsBetween <= 10) {
+            return "刚刚";
+        } else if (secondsBetween < 60) {
+            return secondsBetween + "秒前";
+        } else if (secondsBetween < 60 * 60) {
+            return secondsBetween / 60 + "分钟前";
+        } else if (secondsBetween < 86400) {
+            return secondsBetween / 3600 + "小时前";
+        } else if (secondsBetween < 604800) {
+            return secondsBetween / 86400 + "天前";
+        } else {
+            // 超过一周，显示完整日期时间
+            return parseDateToStr(YYYY_MM_DD_HH_MM_SS, date);
+        }
     }
 }

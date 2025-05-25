@@ -20,6 +20,7 @@
         <module>common-captcha</module>
         <module>common-validation</module>
         <module>common-job</module>
+        <module>common-websocket</module>
     </modules>
 
     <properties>
