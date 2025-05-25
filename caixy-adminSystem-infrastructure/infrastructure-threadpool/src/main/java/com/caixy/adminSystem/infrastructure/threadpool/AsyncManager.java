@@ -49,6 +49,16 @@ public class AsyncManager
         executor.schedule(task, OPERATE_DELAY_TIME, TimeUnit.MILLISECONDS);
     }
 
+    public void execute(Runnable task) {
+        execute(new TimerTask() {
+            @Override
+            public void run() {
+                task.run();
+            }
+        });
+    }
+
+
     /**
      * 停止任务线程池
      */
