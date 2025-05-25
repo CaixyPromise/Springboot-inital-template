@@ -24,7 +24,7 @@
     </modules>
     <properties>
         <application.name>caixy-admin-system</application.name>
-        <application.description>This is a fast starter of Spring Boot of application.</application.description>
+        <application.description>This is a fast starter of Spring Boot application.</application.description>
         <project.version>1.0.0-SNAPSHOT</project.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
