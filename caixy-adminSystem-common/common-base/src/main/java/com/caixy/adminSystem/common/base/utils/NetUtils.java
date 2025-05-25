@@ -148,7 +148,7 @@ public class NetUtils
         {
             HashMap<String, String> params = new HashMap<>();
             params.put("ip", ip);
-            HttpResponse response = HttpUtils.doGet(IP_HOST, IP_PATH, params);
+            HttpResponse response = HttpUtils.doGet(IP_HOST + IP_PATH, params);
             String rspStr = EntityUtils.toString(response.getEntity());
             if (StringUtils.isEmpty(rspStr))
             {

@@ -1,14 +1,14 @@
 package com.caixy.adminSystem.common.base.utils.http;
 
-import com.caixy.adminSystem.common.base.utils.StringUtils;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.*;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -18,370 +18,422 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 用于发起Http请求工具方法
- *
- * @author CAIXYPROMISE
- * @version 1.0
- * @since 2024/8/2 上午1:04
+ * Http请求工具类
  */
-
 public class HttpUtils
 {
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    // region GET方法
     /**
-     * 发起get请求
-     *
-     * @author CAIXYPROMISE
-     * @version 1.0
-     * @since 2024/10/28 上午2:29
+     * 发送 GET 请求
      */
-    public static HttpResponse doGet(String host, String path,  Map<String, String> params) throws IOException
+    public static HttpResponse doGet(String url) throws IOException
     {
-        HttpClient httpClient = wrapClient(host);
-        HttpGet request = new HttpGet(buildUrl(host, path, params));
-        return httpClient.execute(request);
+        return doGet(url, null, null);
     }
 
     /**
-     * get
-     *
-     * @param host
-     * @param path
-     * @param method
-     * @param headers
-     * @param querys
-     * @return
-     * @throws Exception
+     * 发送 GET 请求（可带查询参数，但无请求头）
      */
-    public static HttpResponse doGet(String host, String path,
-                                     Map<String, String> headers,
-                                     Map<String, String> querys)
-            throws Exception
+    public static HttpResponse doGet(String url, Map<String, String> queryParams) throws IOException
     {
-        HttpClient httpClient = wrapClient(host);
-
-        HttpGet request = new HttpGet(buildUrl(host, path, querys));
-        for (Map.Entry<String, String> e : headers.entrySet())
-        {
-            request.addHeader(e.getKey(), e.getValue());
-        }
-
-        return httpClient.execute(request);
+        return doGet(url, queryParams, null);
     }
 
     /**
-     * get 请求，不需要传入 path 参数
-     *
-     * @param host    完整的请求URL
-     * @param headers 请求头部信息
-     * @param querys  请求的查询参数
-     * @return HttpResponse 响应对象
-     * @throws Exception 发生的异常
+     * 发送 GET 请求（可带查询参数、请求头）
      */
-    public static HttpResponse doGet(String host, Map<String, String> headers, Map<String, String> querys) throws
-                                                                                                           IOException
-    {
-        HttpClient httpClient = wrapClient(host);
-        HttpGet request = new HttpGet(buildUrl(host, "", querys));
-        for (Map.Entry<String, String> e : headers.entrySet())
-        {
-            request.addHeader(e.getKey(), e.getValue());
-        }
-        return httpClient.execute(request);
-    }
+    public static HttpResponse doGet(String url,
+                                     Map<String, String> queryParams,
+                                     Map<String, String> headers)
+            throws IOException {
+        String realUrl = buildUrl(url, queryParams);
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpGet request = new HttpGet(realUrl);
 
+        setHeaders(request, headers);
+        return client.execute(request);
+    }
+    // endregion
+
+    // region POST方法
 
     /**
-     * post form
-     *
-     * @param host
-     * @param path
-     * @param headers
-     * @param querys
-     * @param bodys
-     * @return
-     * @throws Exception
+     * 发送 POST 请求（表单：application/x-www-form-urlencoded）
      */
-    public static HttpResponse doPost(String host,
-                                      String path,
+    public static HttpResponse doPost(String url,
+                                      Map<String, String> queryParams,
                                       Map<String, String> headers,
-                                      Map<String, String> querys,
-                                      Map<String, String> bodys)
-            throws Exception
+                                      Map<String, String> formData)
+            throws IOException
     {
-        HttpClient httpClient = wrapClient(host);
+        String realUrl = buildUrl(url, queryParams);
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpPost request = new HttpPost(realUrl);
 
-        HttpPost request = new HttpPost(buildUrl(host, path, querys));
-        for (Map.Entry<String, String> e : headers.entrySet())
+        if (headers != null)
         {
-            request.addHeader(e.getKey(), e.getValue());
+            for (Map.Entry<String, String> e : headers.entrySet())
+            {
+                request.setHeader(e.getKey(), e.getValue());
+            }
         }
 
-        if (bodys != null)
+        if (formData != null && !formData.isEmpty())
         {
-            List<NameValuePair> nameValuePairList = new ArrayList<NameValuePair>();
-
-            for (String key : bodys.keySet())
+            List<NameValuePair> nameValuePairs = new ArrayList<>();
+            for (Map.Entry<String, String> entry : formData.entrySet())
             {
-                nameValuePairList.add(new BasicNameValuePair(key, bodys.get(key)));
+                nameValuePairs.add(new BasicNameValuePair(entry.getKey(), entry.getValue()));
             }
-            UrlEncodedFormEntity formEntity = new UrlEncodedFormEntity(nameValuePairList, "utf-8");
-            formEntity.setContentType("application/x-www-form-urlencoded; charset=UTF-8");
+            UrlEncodedFormEntity formEntity = new UrlEncodedFormEntity(nameValuePairs, "UTF-8");
             request.setEntity(formEntity);
         }
 
-        return httpClient.execute(request);
+        return client.execute(request);
     }
 
     /**
-     * post form 请求，不需要传入 path 参数
-     *
-     * @param host    完整的请求URL
-     * @param headers 请求头部信息
-     * @param querys  请求的查询参数
-     * @param bodys   请求的表单数据
-     * @return HttpResponse 响应对象
-     * @throws Exception 发生的异常
+     * 发送 POST 请求（纯文本字符串，如 JSON、XML 等）
      */
-    public static HttpResponse doPost(String host,
+    public static HttpResponse doPost(String url,
+                                      Map<String, String> queryParams,
                                       Map<String, String> headers,
-                                      Map<String, String> querys,
-                                      Map<String, String> bodys) throws IOException
-    {
-        HttpClient httpClient = wrapClient(host);
-        HttpPost request = new HttpPost(buildUrl(host, "", querys));
-        for (Map.Entry<String, String> e : headers.entrySet())
-        {
-            request.addHeader(e.getKey(), e.getValue());
-        }
-
-        if (bodys != null)
-        {
-            List<NameValuePair> nameValuePairList = new ArrayList<>();
-            for (String key : bodys.keySet())
-            {
-                nameValuePairList.add(new BasicNameValuePair(key, bodys.get(key)));
-            }
-            UrlEncodedFormEntity formEntity = new UrlEncodedFormEntity(nameValuePairList, "utf-8");
-            formEntity.setContentType("application/x-www-form-urlencoded; charset=UTF-8");
-            request.setEntity(formEntity);
-        }
-
-        return httpClient.execute(request);
-    }
-
-
-    /**
-     * Post String
-     *
-     * @param host
-     * @param path
-     * @param method
-     * @param headers
-     * @param querys
-     * @param body
-     * @return
-     * @throws Exception
-     */
-    public static HttpResponse doPost(String host, String path, String method,
-                                      Map<String, String> headers,
-                                      Map<String, String> querys,
                                       String body)
-            throws Exception
+            throws IOException
     {
-        HttpClient httpClient = wrapClient(host);
+        String realUrl = buildUrl(url, queryParams);
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpPost request = new HttpPost(realUrl);
 
-        HttpPost request = new HttpPost(buildUrl(host, path, querys));
-        for (Map.Entry<String, String> e : headers.entrySet())
+        if (headers != null)
         {
-            request.addHeader(e.getKey(), e.getValue());
+            for (Map.Entry<String, String> e : headers.entrySet())
+            {
+                request.setHeader(e.getKey(), e.getValue());
+            }
         }
 
         if (StringUtils.isNotBlank(body))
         {
-            request.setEntity(new StringEntity(body, "utf-8"));
+            StringEntity entity = new StringEntity(body, "UTF-8");
+            // 若是json字符串，可显式设置
+            // request.setHeader("Content-Type", "application/json");
+            request.setEntity(entity);
         }
 
-        return httpClient.execute(request);
+        return client.execute(request);
     }
 
     /**
-     * Post stream
-     *
-     * @param host
-     * @param path
-     * @param method
-     * @param headers
-     * @param querys
-     * @param body
-     * @return
-     * @throws Exception
+     * 发送 POST 请求（字节流，如文件上传、二进制数据）
      */
-    public static HttpResponse doPost(String host, String path, String method,
+    public static HttpResponse doPost(String url,
+                                      Map<String, String> queryParams,
                                       Map<String, String> headers,
-                                      Map<String, String> querys,
-                                      byte[] body)
-            throws Exception
+                                      byte[] data)
+            throws IOException
     {
-        HttpClient httpClient = wrapClient(host);
+        String realUrl = buildUrl(url, queryParams);
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpPost request = new HttpPost(realUrl);
 
-        HttpPost request = new HttpPost(buildUrl(host, path, querys));
-        for (Map.Entry<String, String> e : headers.entrySet())
+        if (headers != null)
         {
-            request.addHeader(e.getKey(), e.getValue());
+            for (Map.Entry<String, String> e : headers.entrySet())
+            {
+                request.setHeader(e.getKey(), e.getValue());
+            }
         }
 
-        if (body != null)
+        if (data != null && data.length > 0)
         {
-            request.setEntity(new ByteArrayEntity(body));
+            ByteArrayEntity entity = new ByteArrayEntity(data);
+            request.setEntity(entity);
         }
 
-        return httpClient.execute(request);
+        return client.execute(request);
     }
 
     /**
-     * Put String
-     *
-     * @param host
-     * @param path
-     * @param method
-     * @param headers
-     * @param queryParams
-     * @param body
-     * @return
-     * @throws Exception
+     * 发送 POST 请求（对象序列化为 JSON 作为请求体）
      */
-    public static HttpResponse doPut(String host, String path, String method,
-                                     Map<String, String> headers,
+    public static HttpResponse doPost(String url,
+                                      Map<String, String> queryParams,
+                                      Map<String, String> headers,
+                                      Object bodyObject)
+            throws IOException
+    {
+        String jsonBody = objectMapper.writeValueAsString(bodyObject);
+
+        if (headers == null)
+        {
+            headers = new HashMap<>();
+        }
+        if (!headers.containsKey(HttpHeaders.CONTENT_TYPE))
+        {
+            headers.put(HttpHeaders.CONTENT_TYPE, "application/json");
+        }
+
+        return doPost(url, queryParams, headers, jsonBody);
+    }
+
+    /**
+     * POST 表单请求，无 queryParams
+     */
+    public static HttpResponse doPost(String url,
+                                      Map<String, String> headers,
+                                      Map<String, String> formData) throws IOException
+    {
+        return doPost(url, null, headers, formData);
+    }
+
+    /**
+     * POST 字符串请求体，无 queryParams
+     */
+    public static HttpResponse doPost(String url,
+                                      Map<String, String> headers,
+                                      String body) throws IOException
+    {
+        return doPost(url, null, headers, body);
+    }
+
+    /**
+     * POST 对象 JSON 请求体，无 queryParams
+     */
+    public static HttpResponse doPost(String url,
+                                      Map<String, String> headers,
+                                      Object bodyObject) throws IOException
+    {
+        return doPost(url, null, headers, bodyObject);
+    }
+
+    /**
+     * POST 字节流体，无 queryParams
+     */
+    public static HttpResponse doPost(String url,
+                                      Map<String, String> headers,
+                                      byte[] data) throws IOException
+    {
+        return doPost(url, null, headers, data);
+    }
+    // endregion
+
+    // region PUT 请求
+    /**
+     * 发送 PUT 请求（纯文本字符串）
+     */
+    public static HttpResponse doPut(String url,
                                      Map<String, String> queryParams,
+                                     Map<String, String> headers,
                                      String body)
-            throws Exception
-    {
-        HttpClient httpClient = wrapClient(host);
+            throws IOException {
+        String realUrl = buildUrl(url, queryParams);
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpPut request = new HttpPut(realUrl);
 
-        HttpPut request = new HttpPut(buildUrl(host, path, queryParams));
-        for (Map.Entry<String, String> e : headers.entrySet())
-        {
-            request.addHeader(e.getKey(), e.getValue());
+        setHeaders(request, headers);
+
+        if (StringUtils.isNotBlank(body)) {
+            StringEntity entity = new StringEntity(body, "UTF-8");
+            request.setEntity(entity);
         }
 
-        if (StringUtils.isNotBlank(body))
-        {
-            request.setEntity(new StringEntity(body, "utf-8"));
-        }
-
-        return httpClient.execute(request);
+        return client.execute(request);
     }
 
     /**
-     * Put stream
-     *
-     * @param host
-     * @param path
-     * @param method
-     * @param headers
-     * @param queryParams
-     * @param body
-     * @return
-     * @throws Exception
+     * 发送 PUT 请求（对象序列化为 JSON）
      */
-    public static HttpResponse doPut(String host, String path, String method,
-                                     Map<String, String> headers,
+    public static HttpResponse doPut(String url,
                                      Map<String, String> queryParams,
-                                     byte[] body)
-            throws Exception
+                                     Map<String, String> headers,
+                                     Object bodyObject) throws IOException
     {
-        HttpClient httpClient = wrapClient(host);
+        String realUrl = buildUrl(url, queryParams);
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpPut request = new HttpPut(realUrl);
 
-        HttpPut request = new HttpPut(buildUrl(host, path, queryParams));
-        for (Map.Entry<String, String> e : headers.entrySet())
-        {
-            request.addHeader(e.getKey(), e.getValue());
+        if (headers == null) {
+            headers = new HashMap<>();
+        }
+        if (!headers.containsKey(HttpHeaders.CONTENT_TYPE)) {
+            headers.put(HttpHeaders.CONTENT_TYPE, "application/json");
         }
 
-        if (body != null)
-        {
-            request.setEntity(new ByteArrayEntity(body));
+        setHeaders(request, headers);
+
+        if (bodyObject != null) {
+            String jsonBody = objectMapper.writeValueAsString(bodyObject);
+            StringEntity entity = new StringEntity(jsonBody, "UTF-8");
+            request.setEntity(entity);
         }
 
-        return httpClient.execute(request);
+        return client.execute(request);
     }
 
     /**
-     * Delete
-     *
-     * @param host
-     * @param path
-     * @param method
-     * @param headers
-     * @param queryParams
-     * @return
-     * @throws Exception
+     * PUT 字符串体，无 queryParams
      */
-    public static HttpResponse doDelete(String host, String path, String method,
-                                        Map<String, String> headers,
-                                        Map<String, String> queryParams)
-            throws Exception
+    public static HttpResponse doPut(String url,
+                                     Map<String, String> headers,
+                                     String body) throws IOException
     {
-        HttpClient httpClient = wrapClient(host);
-
-        HttpDelete request = new HttpDelete(buildUrl(host, path, queryParams));
-        for (Map.Entry<String, String> e : headers.entrySet())
-        {
-            request.addHeader(e.getKey(), e.getValue());
-        }
-
-        return httpClient.execute(request);
+        return doPut(url, null, headers, body);
     }
 
-    private static String buildUrl(String host,
-                                   String path,
-                                   Map<String, String> queryParams)
-            throws UnsupportedEncodingException
+    /**
+     * PUT 对象体（序列化为 JSON），无 queryParams
+     */
+    public static HttpResponse doPut(String url,
+                                     Map<String, String> headers,
+                                     Object bodyObject) throws IOException
     {
-        StringBuilder sbUrl = new StringBuilder();
-        sbUrl.append(host);
-        if (!StringUtils.isBlank(path))
-        {
-            sbUrl.append(path);
+        return doPut(url, null, headers, bodyObject);
+    }
+    // endregion
+
+    // region DELETE
+
+    /**
+     * 发送 DELETE 请求（无请求体）
+     */
+    public static HttpResponse doDelete(String url,
+                                        Map<String, String> queryParams,
+                                        Map<String, String> headers)
+            throws IOException
+    {
+        String realUrl = buildUrl(url, queryParams);
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpDelete request = new HttpDelete(realUrl);
+        setHeaders(request, headers);
+        return client.execute(request);
+    }
+
+    public static HttpResponse doDelete(String url,
+                                        Map<String, String> headers) throws IOException
+    {
+        return doDelete(url, null, headers);
+    }
+    // endregion
+
+
+    // region 工具方法
+
+    /**
+     * 从 HttpResponse 中解析出 JSON 并映射为指定类型（Class<T>）。
+     * 适合常规 POJO 类（如 User、Order 等）。
+     *
+     * @param response  HttpResponse 对象
+     * @param clazz     目标映射的 Class 类型 (例如 User.class)
+     * @param <T>       泛型，表示返回值类型
+     * @return 反序列化后的对象实例，若响应体为空则返回 null
+     * @throws IOException           流读取异常
+     * @throws IllegalStateException 若 response 为 null
+     * @throws RuntimeException      若 HTTP 状态码不是 2xx
+     */
+    public static <T> T parseJsonResponse(HttpResponse response, Class<T> clazz) throws IOException {
+        if (response == null) {
+            throw new IllegalStateException("HttpResponse is null, cannot parse.");
         }
-        if (queryParams != null)
-        {
-            StringBuilder sbQuery = new StringBuilder();
-            for (Map.Entry<String, String> query : queryParams.entrySet())
-            {
-                if (0 < sbQuery.length())
-                {
-                    sbQuery.append("&");
-                }
-                if (StringUtils.isBlank(query.getKey()) && !StringUtils.isBlank(query.getValue()))
-                {
-                    sbQuery.append(query.getValue());
-                }
-                if (!StringUtils.isBlank(query.getKey()))
-                {
-                    sbQuery.append(query.getKey());
-                    if (!StringUtils.isBlank(query.getValue()))
-                    {
-                        sbQuery.append("=");
-                        sbQuery.append(URLEncoder.encode(query.getValue(), "utf-8"));
-                    }
-                }
+
+        int statusCode = response.getStatusLine().getStatusCode();
+        if (statusCode < 200 || statusCode >= 300) {
+            throw new RuntimeException("Request failed with status: " + statusCode);
+        }
+
+        org.apache.http.HttpEntity entity = response.getEntity();
+        if (entity == null) {
+            return null;
+        }
+
+        try (java.io.InputStream in = entity.getContent()) {
+            return objectMapper.readValue(in, clazz);
+        }
+    }
+
+
+    /**
+     * 从 HttpResponse 中解析出 JSON，并映射为复杂泛型类型 (TypeReference<T>)。
+     * 适合像 List<User>、Map<String, Order> 这类嵌套的泛型。
+     *
+     * @param response  HttpResponse 对象
+     * @param typeRef   Jackson的 TypeReference，用于表示复杂泛型
+     * @param <T>       泛型，表示返回值类型
+     * @return 反序列化后的对象，若响应体为空则返回 null
+     * @throws IOException           流读取异常
+     * @throws IllegalStateException 若 response 为 null
+     * @throws RuntimeException      若 HTTP 状态码不是 2xx
+     */
+    public static <T> T parseJsonResponse(HttpResponse response, TypeReference<T> typeRef) throws IOException
+    {
+        if (response == null) {
+            throw new IllegalStateException("HttpResponse is null, cannot parse.");
+        }
+
+        int statusCode = response.getStatusLine().getStatusCode();
+        if (statusCode < 200 || statusCode >= 300) {
+            throw new RuntimeException("Request failed with status: " + statusCode);
+        }
+
+        org.apache.http.HttpEntity entity = response.getEntity();
+        if (entity == null) {
+            return null;
+        }
+
+        try (java.io.InputStream in = entity.getContent()) {
+            return objectMapper.readValue(in, typeRef);
+        }
+    }
+
+
+    private static String buildUrl(String url, Map<String, String> queryParams) throws UnsupportedEncodingException {
+        if (queryParams == null || queryParams.isEmpty()) {
+            return url;
+        }
+
+        boolean hasQuestionMark = url.contains("?");
+        StringBuilder sb = new StringBuilder(url);
+
+        // 如果url中不存在 '?'
+        if (!hasQuestionMark) {
+            sb.append("?");
+        }
+        else {
+            // 如果已存在 '?', 则需要加 '&'
+            if (!url.endsWith("?") && !url.endsWith("&")) {
+                sb.append("&");
             }
-            if (0 < sbQuery.length())
-            {
-                sbUrl.append("?").append(sbQuery);
-            }
         }
 
-        return sbUrl.toString();
+        int index = 0;
+        for (Map.Entry<String, String> entry : queryParams.entrySet()) {
+            if (index > 0) {
+                sb.append("&");
+            }
+            String encodedKey = URLEncoder.encode(entry.getKey(), "UTF-8");
+            String encodedValue = URLEncoder.encode(entry.getValue(), "UTF-8");
+            sb.append(encodedKey).append("=").append(encodedValue);
+            index++;
+        }
+        return sb.toString();
     }
 
-    private static HttpClient wrapClient(String host)
-    {
-        return HttpClientBuilder.create().build();
+    private static void setHeaders(HttpUriRequest request, Map<String, String> headers) {
+        if (headers == null) {
+            return;
+        }
+        for (Map.Entry<String, String> e : headers.entrySet()) {
+            request.setHeader(e.getKey(), e.getValue());
+        }
     }
+
+    // endregion
+
 }
