@@ -5,8 +5,11 @@ import com.caixy.adminSystem.common.base.utils.JsonUtils;
 import com.caixy.adminSystem.common.base.utils.StringUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -24,10 +27,37 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class RedisManager
 {
-    // 排名信息的最大容量
+    // 调用接口排名信息的最大容量
     private static final Long REDIS_RANK_MAX_SIZE = 10L;
 
     private final StringRedisTemplate stringRedisTemplate;
+    private final RedisTemplate<String, Object> objectRedisTemplate;
+    private static final String LUA_GET_DEL_SRC =
+            "local v = redis.call('GET', KEYS[1]); " +
+                    "if v ~= false then redis.call('DEL', KEYS[1]); end; " +
+                    "return v;";
+
+    private static final String LUA_HGETALL_DEL_SRC =
+            "local e = redis.call('HGETALL', KEYS[1]); " +
+                    "if next(e) ~= nil then redis.call('DEL', KEYS[1]); end; " +
+                    "return e;";
+
+    /** ------------ 预编译脚本对象 ------------ */
+    private static final RedisScript<String> LUA_GET_DEL_SCRIPT;
+    private static final RedisScript<List> LUA_HGETALL_DEL_SCRIPT;
+
+    static {
+        DefaultRedisScript<String> getDel = new DefaultRedisScript<>();
+        getDel.setScriptText(LUA_GET_DEL_SRC);
+        getDel.setResultType(String.class);
+        LUA_GET_DEL_SCRIPT = getDel;
+
+        DefaultRedisScript<List> hgetallDel = new DefaultRedisScript<>();
+        hgetallDel.setScriptText(LUA_HGETALL_DEL_SRC);
+        hgetallDel.setResultType(List.class);
+        LUA_HGETALL_DEL_SCRIPT = hgetallDel;
+    }
+
     /**
      * 删除Key的数据
      *
@@ -93,6 +123,9 @@ public class RedisManager
     {
         return stringRedisTemplate.opsForValue().get(Enum.generateKey(items));
     }
+    public String getStringThenRemove(BaseCacheEnum keyEnum, Object... items) {
+        return getStringThenRemove(keyEnum.generateKey(items));
+    }
 
     /**
      * 获取字符串数据
@@ -106,6 +139,14 @@ public class RedisManager
         return stringRedisTemplate.opsForValue().get(key);
     }
 
+    public String getStringThenRemove(String key) {
+        return stringRedisTemplate.execute(
+                LUA_GET_DEL_SCRIPT,
+                Collections.singletonList(key)
+        );
+    }
+
+
     public <JsonType> List<JsonType> getJsonList(BaseCacheEnum keyEnum, Object... items)
     {
         String cacheData = stringRedisTemplate.opsForValue().get(keyEnum.generateKey(items));
@@ -117,6 +158,10 @@ public class RedisManager
         // 直接返回空指针，不返回空列表
         return null;
     }
+    public <T> List<T> getJsonListThenRemove(BaseCacheEnum keyEnum, Object... items) {
+        String json = getStringThenRemove(keyEnum.generateKey(items));
+        return StringUtils.isNotBlank(json) ? JsonUtils.jsonToList(json) : null;
+    }
 
     public <JsonType> JsonType getJson(BaseCacheEnum keyEnum, Class<JsonType> returnType, Object... items)
     {
@@ -126,6 +171,11 @@ public class RedisManager
             return JsonUtils.jsonToObject(cacheData, returnType);
         }
         return null;
+    }
+
+    public <T> T getJsonThenRemove(BaseCacheEnum keyEnum, Class<T> type, Object... items) {
+        String json = getStringThenRemove(keyEnum.generateKey(items));
+        return StringUtils.isNotBlank(json) ? JsonUtils.jsonToObject(json, type) : null;
     }
 
     /**
@@ -170,6 +220,11 @@ public class RedisManager
         return getObject(keyEnum.generateKey(items), type);
     }
 
+    public <T> Optional<T> getObjectThenRemove(BaseCacheEnum keyEnum,
+                                               Class<T> type, Object... items) {
+        return getObjectThenRemove(keyEnum.generateKey(items), type);
+    }
+
     public <T> Optional<T> getObject(String key, Class<T> type)
     {
         String result = getString(key);
@@ -180,6 +235,12 @@ public class RedisManager
         return Optional.empty();
     }
 
+    public <T> Optional<T> getObjectThenRemove(String key, Class<T> type) {
+        String json = getStringThenRemove(key);
+        return StringUtils.isNotBlank(json)
+                ? Optional.of(JsonUtils.jsonToObject(json, type))
+                : Optional.empty();
+    }
     /**
      * 获取哈希数据：接受来自常量的配置
      *
@@ -189,30 +250,49 @@ public class RedisManager
      */
     public HashMap<String, Object> getHashMap(BaseCacheEnum Enum, Object... items)
     {
-        return getHashMap(Enum, String.class, Object.class, items);
+        Map<Object, Object> rawMap = objectRedisTemplate.opsForHash().entries(Enum.generateKey(items));
+        HashMap<String, Object> resultMap = new HashMap<>();
+        for (Map.Entry<Object, Object> entry : rawMap.entrySet()) {
+            resultMap.put(entry.getKey().toString(), entry.getValue());
+        }
+        return resultMap;
+    }
+
+    public HashMap<String,Object> getHashMapThenRemove(BaseCacheEnum keyEnum, Object... items) {
+        String key = keyEnum.generateKey(items);
+
+        List<Object> raw = stringRedisTemplate.execute(
+                LUA_HGETALL_DEL_SCRIPT,
+                Collections.singletonList(key)
+        );
+
+        HashMap<String, Object> map = new HashMap<>();
+        if (raw != null) {
+            for (int i = 0; i + 1 < raw.size(); i += 2) {
+                map.put(raw.get(i).toString(), raw.get(i + 1));
+            }
+        }
+        return map;
     }
 
     /**
-     * 获取hash数据，接受常量配置，并且根据类型回传对应类型的HashMap
+     * 放入hash类型的数据 - Hash<String, Object>
      *
-     * @param enumKey   key常量
-     * @param items     key名称
-     * @param keyType   key类型
-     * @param valueType value类型
+     * @param key    redis-key
+     * @param data   数据
+     * @param expire 过期时间, 单位: 秒
      * @author CAIXYPROMISE
      * @version 1.0
-     * @since 2024/2/24 00:16
+     * @since 2023/12/20 2:16
      */
-    public <K, V> HashMap<K, V> getHashMap(BaseCacheEnum enumKey, Class<K> keyType, Class<V> valueType, Object... items)
-    {
-        Map<Object, Object> rawMap = stringRedisTemplate.opsForHash().entries(enumKey.generateKey(items));
-        HashMap<K, V> typedMap = new HashMap<>();
-        rawMap.forEach((rawKey, rawValue) -> {
-            K key = keyType.cast(rawKey);
-            V value = valueType.cast(rawValue);
-            typedMap.put(key, value);
-        });
-        return typedMap;
+    public <Key, Value> void setHashMap(String key, Map<Key, Value> data, Long expire, TimeUnit timeUnit) {
+        // 直接存储原始对象，不进行任何序列化
+        objectRedisTemplate.opsForHash().putAll(key, data);
+
+        // 设置过期时间
+        if (expire != null && expire > 0) {
+            settingExpire(key, expire, timeUnit);
+        }
     }
 
     /**
@@ -228,25 +308,6 @@ public class RedisManager
         Long expire = Enum.getExpire();
         String fullKey = Enum.generateKey(item);
         setHashMap(fullKey, data, expire, Enum.getTimeUnit());
-    }
-
-    /**
-     * 放入hash类型的数据 - Hash<String, Object>
-     *
-     * @param key    redis-key
-     * @param data   数据
-     * @param expire 过期时间, 单位: 秒
-     * @author CAIXYPROMISE
-     * @version 1.0
-     * @since 2023/12/20 2:16
-     */
-    public <Key, Value> void setHashMap(String key, Map<Key, Value> data, Long expire, TimeUnit timeUnit)
-    {
-        stringRedisTemplate.opsForHash().putAll(key, data);
-        if (expire != null)
-        {
-            settingExpire(key, expire, timeUnit);
-        }
     }
 
     /**
@@ -595,5 +656,30 @@ public class RedisManager
         stringRedisTemplate.opsForZSet().remove(key, value.toString());
     }
 
+
     // endregion
+
+    /**
+     * 防重放验证：检查nonce是否已被使用，如果未使用则标记为已使用
+     * 使用原子操作确保并发安全
+     *
+     * @param nonce 防重放标识
+     * @param expire 过期时间
+     * @param timeUnit 时间单位
+     * @return true表示nonce有效且未被使用，false表示已被使用
+     */
+    public boolean checkAndSetNonce(String nonce, long expire, TimeUnit timeUnit) {
+        String key = "nonce:" + nonce;
+        return Boolean.TRUE.equals(stringRedisTemplate.opsForValue().setIfAbsent(key, "1", expire, timeUnit));
+    }
+
+    /**
+     * 防重放验证：使用默认过期时间（5分钟）
+     *
+     * @param nonce 防重放标识
+     * @return true表示nonce有效且未被使用，false表示已被使用
+     */
+    public boolean checkAndSetNonce(String nonce) {
+        return checkAndSetNonce(nonce, 5, TimeUnit.MINUTES);
+    }
 }
