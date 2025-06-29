@@ -28,34 +28,6 @@ public class RedisManager
     private static final Long REDIS_RANK_MAX_SIZE = 10L;
 
     private final StringRedisTemplate stringRedisTemplate;
-
-    /**
-     * 根据枚举获取Key，并且根据字段值生成完整的Key值，自动拼接冒号
-     *
-     * @author CAIXYPROMISE
-     * @version 2.0
-     * @since 2024/2/16 21:02
-     */
-    private String getFullKey(BaseCacheEnum keyEnum, Object itemName)
-    {
-        // 使用StringBuilder来构建完整的Key
-        StringBuilder fullKey = new StringBuilder(keyEnum.getKey());
-
-        // 确保Key以冒号结尾
-        if (fullKey.charAt(fullKey.length() - 1) != ':')
-        {
-            fullKey.append(':');
-        }
-
-        // 如果itemName不为空，追加到Key后面
-        if (itemName != null)
-        {
-            fullKey.append(itemName);
-        }
-
-        return fullKey.toString();
-    }
-
     /**
      * 删除Key的数据
      *
@@ -231,16 +203,11 @@ public class RedisManager
      * @version 1.0
      * @since 2024/2/24 00:16
      */
-    public <K, V> HashMap<K, V> getHashMap(BaseCacheEnum enumKey,
-                                           Class<K> keyType,
-                                           Class<V> valueType,
-                                           Object... items
-    )
+    public <K, V> HashMap<K, V> getHashMap(BaseCacheEnum enumKey, Class<K> keyType, Class<V> valueType, Object... items)
     {
         Map<Object, Object> rawMap = stringRedisTemplate.opsForHash().entries(enumKey.generateKey(items));
         HashMap<K, V> typedMap = new HashMap<>();
-        rawMap.forEach((rawKey, rawValue) ->
-        {
+        rawMap.forEach((rawKey, rawValue) -> {
             K key = keyType.cast(rawKey);
             V value = valueType.cast(rawValue);
             typedMap.put(key, value);
@@ -338,6 +305,7 @@ public class RedisManager
     {
         return stringRedisTemplate.getExpire(key, TimeUnit.SECONDS);
     }
+
     /**
      * 获取过期时间
      */
@@ -355,19 +323,25 @@ public class RedisManager
     /**
      * 尝试在 Redis 中设置键值对（仅当键不存在时），并设置过期时间。
      *
-     * @param key      键
-     * @param value    值
+     * @param key   键
+     * @param value 值
      * @return 如果成功设置（键之前不存在），返回 true；否则返回 false
      */
-    public Boolean setIfAbsent(BaseCacheEnum key, String value, Object... keyItem) {
-        if (key.getExpireSeconds() > 0) {
+    public Boolean setIfAbsent(BaseCacheEnum key, String value, Object... keyItem)
+    {
+        String keyStr = "IF_PRESENT:" + key.generateKey(keyItem);
+        return setIfAbsent(keyStr, value, key.getExpire(), key.getTimeUnit());
+    }
+
+    public Boolean setIfAbsent(String key, String value, Long expire, TimeUnit timeUnit)
+    {
+        if (expire > 0)
+        {
             // 尝试设置键值并指定过期时间
-            return Boolean.TRUE.equals(
-                    stringRedisTemplate.opsForValue().setIfAbsent(key.generateKey(keyItem), value, key.getExpire(), key.getTimeUnit())
-            );
+            return Boolean.TRUE.equals(stringRedisTemplate.opsForValue().setIfAbsent(key, value, expire, timeUnit));
         }
         // 尝试设置键值但不指定过期时间
-        return Boolean.TRUE.equals(stringRedisTemplate.opsForValue().setIfAbsent(key.generateKey(keyItem), value));
+        return Boolean.TRUE.equals(stringRedisTemplate.opsForValue().setIfAbsent(key, value));
     }
 
     // region 集合操作
@@ -427,6 +401,7 @@ public class RedisManager
     {
         return stringRedisTemplate.opsForSet().members(key);
     }
+
     /**
      * 获取 Redis Set 中的所有元素
      *
@@ -534,8 +509,7 @@ public class RedisManager
         if (size != null && size >= REDIS_RANK_MAX_SIZE)
         {
             // 移除最低分数的记录
-            Set<ZSetOperations.TypedTuple<String>> lowestScoreSet =
-                    stringRedisTemplate.opsForZSet().rangeWithScores(key, 0, 0);
+            Set<ZSetOperations.TypedTuple<String>> lowestScoreSet = stringRedisTemplate.opsForZSet().rangeWithScores(key, 0, 0);
             if (lowestScoreSet != null && !lowestScoreSet.isEmpty())
             {
                 Double lowestScore = lowestScoreSet.iterator().next().getScore();
@@ -620,7 +594,6 @@ public class RedisManager
     {
         stringRedisTemplate.opsForZSet().remove(key, value.toString());
     }
-
 
     // endregion
 }

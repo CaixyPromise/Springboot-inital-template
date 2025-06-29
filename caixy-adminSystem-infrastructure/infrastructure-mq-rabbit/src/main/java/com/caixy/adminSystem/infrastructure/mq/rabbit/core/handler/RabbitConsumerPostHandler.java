@@ -1,5 +1,6 @@
 package com.caixy.adminSystem.infrastructure.mq.rabbit.core.handler;
 
+
 import com.caixy.adminSystem.common.base.exception.BusinessException;
 import com.caixy.adminSystem.common.base.utils.JsonUtils;
 import com.caixy.adminSystem.infrastructure.mq.rabbit.core.annotation.RabbitConsumer;
@@ -8,7 +9,6 @@ import com.caixy.adminSystem.infrastructure.mq.rabbit.core.enums.RabbitMQQueueEn
 import com.rabbitmq.client.Channel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.core.AcknowledgeMode;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.ParameterizedType;
@@ -28,6 +29,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 自定义注解处理器，用于扫描标注了 @CustomRabbitListener 的消费者 Bean，并创建消息监听容器。
@@ -40,73 +42,42 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class RabbitConsumerPostHandler implements BeanPostProcessor, ApplicationContextAware
 {
-
-    private ApplicationContext applicationContext;
     private final MessageQueueIdempotentHandler idempotentHandler;
     @Value("${rabbitmq.config.retryOnDeadLetter}")
     private Integer retryOnDeadLetter;
 
+    /** 缓存 <beanName, listener> 供 Registrar 使用 */
+    private final Map<String, ChannelAwareMessageListener> listenerCache = new ConcurrentHashMap<>();
+
+    public ChannelAwareMessageListener getListener(String beanName) {
+        return listenerCache.get(beanName);
+    }
     @Override
-    public void setApplicationContext(ApplicationContext context) throws BeansException
-    {
-        this.applicationContext = context;
+    public void setApplicationContext(@NonNull ApplicationContext applicationContext) {
     }
 
     @Override
-    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException
-    {
-        // 1. 判断这个 Bean 的类上是否有 @CustomRabbitListener 注解
-        Class<?> beanClass = AopUtils.getTargetClass(bean);
-        RabbitConsumer annotation = beanClass.getAnnotation(RabbitConsumer.class);
-        if (annotation != null)
-        {
-            // 2. 拿到注解上的 queue, deadLetterQueue
-            RabbitMQQueueEnum queueEnum = annotation.value();
-            String queueName = queueEnum.getQueueName();
-            String deadLetterQueue = queueEnum.getDeadLetterQueue();
-            boolean manualAck = queueEnum.getManualAck();
+    public Object postProcessAfterInitialization(@NonNull Object bean,@NonNull String beanName) {
+        Class<?> clazz = AopUtils.getTargetClass(bean);
+        RabbitConsumer ann = clazz.getAnnotation(RabbitConsumer.class);
+        if (ann == null)
+            return bean;
 
-            // 3. 创建对应的监听容器并启动
-            SimpleMessageListenerContainer container =
-                    createMessageListenerContainer(queueName, deadLetterQueue, bean, manualAck);
-            container.start();
-        }
+        RabbitMQQueueEnum qEnum = ann.value();
+        listenerCache.put(beanName, buildListener(bean, qEnum));   // ★ 缓存
         return bean;
     }
 
-    /**
-     * 创建 SimpleMessageListenerContainer
-     *
-     * @param queueName       主队列名称
-     * @param deadLetterQueue 死信队列名称
-     * @param consumerBean    消费者 Bean
-     * @param manualAck       是否手动确认
-     * @return 配置好的 SimpleMessageListenerContainer
-     */
-    private SimpleMessageListenerContainer createMessageListenerContainer(
-            String queueName,
-            String deadLetterQueue,
-            Object consumerBean,
-            boolean manualAck
-    )
-    {
-        ConnectionFactory connectionFactory = applicationContext.getBean(ConnectionFactory.class);
+    /** 核心：把原来 container.setMessageListener(...) 里的代码抽为一个对象返回 */
+    private ChannelAwareMessageListener buildListener(Object consumerBean, RabbitMQQueueEnum qEnum) {
+        Class<?> dtoClass = resolveMessageDtoClass(consumerBean);
+        String queueName  = qEnum.getQueueName();
+        String dlq        = qEnum.getDeadLetterQueue();
 
-        SimpleMessageListenerContainer container = new SimpleMessageListenerContainer(connectionFactory);
-        container.setQueueNames(queueName);
-        container.setAcknowledgeMode(manualAck ? AcknowledgeMode.MANUAL : AcknowledgeMode.AUTO);
-
-        // 解析当前消费者所携带的泛型类型 T
-        Class<?> messageDtoClass = resolveMessageDtoClass(consumerBean);
-
-        // 设置消息监听器
-        container.setMessageListener((ChannelAwareMessageListener) (message, channel) ->
-        {
-            handleMessageFlow(message, channel, consumerBean, messageDtoClass, queueName, deadLetterQueue);
-        });
-
-        return container;
+        return (message, channel) -> handleMessageFlow(
+                message, channel, consumerBean, dtoClass, queueName, dlq);
     }
+
 
     /**
      * 核心处理逻辑：从消息中解析数据、做幂等检查、区分死信与正常消息、捕获异常并做相应处理。
@@ -279,8 +250,7 @@ public class RabbitConsumerPostHandler implements BeanPostProcessor, Application
                                        boolean isDeadLetter,
                                        String deadLetterQueue) throws Exception
     {
-        @SuppressWarnings("unchecked")
-        RabbitMQMessageHandler<Object> handler = (RabbitMQMessageHandler<Object>) consumerBean;
+        @SuppressWarnings("unchecked") RabbitMQMessageHandler<Object> handler = (RabbitMQMessageHandler<Object>) consumerBean;
         if (isDeadLetter && !StringUtils.isBlank(deadLetterQueue))
         {
             handler.handleDeadLetterMessage(messageDto, channel, message, messageId);

@@ -23,46 +23,35 @@ public abstract class GenericRabbitMQProducer<T> implements RabbitMQProducerHand
 
     protected final RabbitMQQueueEnum queueEnum;
 
-    protected GenericRabbitMQProducer()
-    {
-        if (this.getClass().isAnnotationPresent(RabbitProducer.class))
-        {
-            RabbitProducer rabbitProducer = this.getClass().getAnnotation(RabbitProducer.class);
-            queueEnum = rabbitProducer.value();
-        }
-        else
-        {
+    protected GenericRabbitMQProducer() {
+        if (!getClass().isAnnotationPresent(RabbitProducer.class)) {
             throw new RuntimeException("Rabbit生产者初始化失败：RabbitProducer注解未找到");
         }
+        queueEnum = getClass().getAnnotation(RabbitProducer.class).value();
     }
 
-    // 默认的发送消息方法可以在这里实现，子类可以覆盖这个方法
+    /** 普通发送（非延迟） */
     @Override
-    public void sendMessage(T message)
-    {
-        if (!queueEnum.getIsDelay())
-        {
-            rabbitMQUtils.sendMessage(queueEnum, message);
-            log.info("发送消息成功，队列：{}，消息：{}", queueEnum.getQueueName(), message);
-        }
-        else
-        {
+    public void sendMessage(T message) {
+        if (queueEnum.isDelay()) {
+            // 延迟队列 → 走 sendDelayMessage
+            log.debug("队列 [{}] 为延迟模式，自动切换到 sendDelayMessage()", queueEnum.getQueueName());
             sendDelayMessage(message);
-            log.warn("{}: 使用发送普通消息方法{}，消息：{}", queueEnum.getQueueName(), queueEnum.getQueueName(), message);
+            return;
         }
+        rabbitMQUtils.sendMessage(queueEnum, message);
+        log.info("发送普通消息成功，队列：{}，消息：{}", queueEnum.getQueueName(), message);
     }
 
-
+    /** 延迟发送（PLUGIN 或 TTL） */
     @Override
-    public void sendDelayMessage(T message)
-    {
-        if (!queueEnum.getIsDelay()) {
-            log.warn("队列: {} 不是延时队列，不能发送延时消息; 已发送普通消息", queueEnum.getQueueName());
+    public void sendDelayMessage(T message) {
+        if (!queueEnum.isDelay()) {
+            log.warn("队列 [{}] 不是延迟队列，已改用 sendMessage()", queueEnum.getQueueName());
             rabbitMQUtils.sendMessage(queueEnum, message);
             return;
         }
         rabbitMQUtils.sendDelayedMessage(queueEnum, message);
-
-        log.info("发送延时消息成功，队列：" + queueEnum.getQueueName() + "，消息：" + message);
+        log.info("发送延迟消息成功，队列：{}，消息：{}", queueEnum.getQueueName(), message);
     }
 }

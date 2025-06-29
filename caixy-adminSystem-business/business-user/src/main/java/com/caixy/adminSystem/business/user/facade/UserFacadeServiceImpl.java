@@ -71,7 +71,7 @@ public class UserFacadeServiceImpl implements UserFacadeService
     }
 
     @Override
-    public LoginUserVO doRegister(UserLoginRequest userLoginRequest)
+    public UserVO doLoginWithValidUser(UserLoginRequest userLoginRequest)
     {
         LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(User::getUserAccount, userLoginRequest.getUserAccount());
@@ -95,7 +95,7 @@ public class UserFacadeServiceImpl implements UserFacadeService
             log.info("user login failed, userAccount is ban: {}", userLoginRequest.getUserAccount());
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户已被封号");
         }
-        return userConvertor.toLoginVO(user);
+        return userConvertor.toVO(user);
     }
 
     @Override

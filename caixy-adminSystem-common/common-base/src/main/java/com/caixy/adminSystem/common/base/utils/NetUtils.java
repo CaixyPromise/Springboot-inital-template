@@ -1,6 +1,7 @@
 package com.caixy.adminSystem.common.base.utils;
 
 import com.caixy.adminSystem.common.base.utils.http.HttpUtils;
+import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpResponse;
 import org.apache.http.util.EntityUtils;
@@ -155,7 +156,7 @@ public class NetUtils
                 log.error("获取地理位置异常 {}", ip);
                 return "UNKNOWN";
             }
-            Map<String, String> obj = JsonUtils.jsonToObject(rspStr, Map.class);
+            Map<String, String> obj = JsonUtils.jsonToObject(rspStr, new TypeReference<Map<String, String>>() {});
             String region = obj.get("pro");
             String city = obj.get("city");
             return String.format("%s %s", region, city);

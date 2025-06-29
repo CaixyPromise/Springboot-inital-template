@@ -1,13 +1,10 @@
 package com.caixy.adminSystem.common.email.utils;
 
+
 import com.caixy.adminSystem.common.base.constant.EmailConstant;
-import com.caixy.adminSystem.common.email.config.EmailConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 
-import javax.mail.MessagingException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,7 +14,7 @@ import java.text.MessageFormat;
 /**
  * 邮件工具集
  *
- * @name: com.caixy.adminSystem.utils.EmailUtils
+ * @name: com.caixy.shortlink.utils.EmailUtils
  * @author: CAIXYPROMISE
  * @since: 2024-01-10 19:05
  **/
@@ -139,29 +136,5 @@ public class EmailTemplateUtil
                                     EmailConstant.PLATFORM_RESPONSIBLE_PERSON,
                                     EmailConstant.PATH_ADDRESS,
                                     EmailConstant.EMAIL_TITLE);
-    }
-
-    /**
-     * 发送支付成功电子邮件
-     *
-     * @param emailAccount 电子邮件帐户
-     * @param mailSender   邮件发件人
-     * @param emailConfig  电子邮件配置
-     * @param orderName    订单名称
-     * @param orderTotal   订单总额
-     * @throws MessagingException 消息传递异常
-     */
-    public void sendPaySuccessEmail(String emailAccount, JavaMailSender mailSender, EmailConfig emailConfig, String orderName, String orderTotal)
-            throws MessagingException
-    {
-
-        SimpleMailMessage message = new SimpleMailMessage();
-        // 邮箱发送内容组成
-//        MimeMessageHelper helper = new MimeMessageHelper(message, true);
-        message.setSubject("【" + EmailConstant.EMAIL_TITLE + "】感谢您的购买，请查收您的订单");
-        message.setText(buildPaySuccessEmailContent(EmailConstant.EMAIL_HTML_PAY_SUCCESS_PATH, orderName, orderTotal));
-        message.setTo(emailAccount);
-        message.setFrom(EmailConstant.EMAIL_TITLE + '<' + emailConfig.getUsername() + '>');
-        mailSender.send(message);
     }
 }

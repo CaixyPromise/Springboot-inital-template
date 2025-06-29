@@ -1,27 +1,25 @@
 package com.caixy.adminSystem.common.email.service.impl;
 
 
-import cn.hutool.core.util.RandomUtil;
-import com.caixy.adminSystem.authorization.service.manager.AuthManager;
-import com.caixy.adminSystem.common.api.user.vo.UserVO;
 import com.caixy.adminSystem.common.base.response.ErrorCode;
 import com.caixy.adminSystem.common.base.exception.BusinessException;
 import com.caixy.adminSystem.common.base.exception.ThrowUtils;
+import com.caixy.adminSystem.common.base.utils.RegexUtils;
 import com.caixy.adminSystem.common.email.EmailSenderManager;
-import com.caixy.adminSystem.common.email.domain.dto.EmailSenderDTO;
-import com.caixy.adminSystem.common.email.domain.enums.EmailSenderEnum;
-import com.caixy.adminSystem.common.email.domain.dto.SendEmailRequest;
-import com.caixy.adminSystem.common.email.domain.models.captcha.EmailCaptchaConstant;
+import com.caixy.adminSystem.common.email.domain.common.BaseEmailCaptchaDTO;
+import com.caixy.adminSystem.common.email.domain.common.BaseEmailContentDTO;
+import com.caixy.adminSystem.common.email.domain.enums.BaseEmailSenderEnum;
+import com.caixy.adminSystem.common.email.domain.enums.EmailCaptchaBizEnum;
 import com.caixy.adminSystem.common.email.service.EmailService;
 
-import com.caixy.adminSystem.common.base.utils.ServletUtils;
 import com.caixy.adminSystem.common.base.utils.StringUtils;
 import com.caixy.adminSystem.infrastucture.cache.redis.RedisManager;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
+import javax.validation.constraints.NotNull;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 邮箱服务类实现
@@ -37,58 +35,63 @@ public class EmailServiceImpl implements EmailService
 {
     private final EmailSenderManager emailSenderManager;
     private final RedisManager redisManager;
-    private final AuthManager authManager;
+    private final static String BASE_KEY_FORMATTED = "%s_%s_%s:"; // 格式化key：key类型-邮件模板名称-邮箱
+    private final static String SENT_KEY = "EMAIL_SENT";
+    private final static String CAPTCHA_CODE_KEY = "EMAIL_CAPTCHA_CODE";
 
     /**
-     * 发送邮件
+     * 发送普通邮件
      */
     @Override
-    public Boolean doSend(SendEmailRequest sendEmailRequest)
+    public void sendEmail(String toEmail, BaseEmailContentDTO emailContentDTO, BaseEmailSenderEnum senderEnum)
     {
-        // 无需校验邮箱
-        Integer scenes = sendEmailRequest.getScenes();
-        EmailSenderEnum senderEnum = EmailSenderEnum.getByCode(scenes);
-        ThrowUtils.throwIf(senderEnum == null, ErrorCode.PARAMS_ERROR);
-        UserVO userInfo = null;
-        if (senderEnum.getRequireLogin())
-        {
-            userInfo = authManager.getLoginUser();
+        if (StringUtils.isBlank(toEmail) || !RegexUtils.isEmail(toEmail)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "邮箱格式错误");
         }
-        if (senderEnum.getRequireToEmail())
-        {
-            ThrowUtils.throwIf(StringUtils.isBlank(sendEmailRequest.getToEmail()), ErrorCode.PARAMS_ERROR);
+        //检查是否发送
+        checkSent(toEmail, senderEnum);
+        if (senderEnum instanceof EmailCaptchaBizEnum) {
+            // 如果是验证码，则调用验证码发送方法
+            if (emailContentDTO instanceof BaseEmailCaptchaDTO) {
+                BaseEmailCaptchaDTO captchaDTO = (BaseEmailCaptchaDTO) emailContentDTO;
+                EmailCaptchaBizEnum captchaBizEnum = (EmailCaptchaBizEnum) senderEnum;
+                doSendCaptcha(toEmail, captchaBizEnum, captchaDTO);
+            } else {
+                log.error("emailContentDTO is not instanceof BaseEmailCaptchaDTO");
+                return; //  不符合规范，直接不发送
+            }
         }
-        return sendEmailHolder(sendEmailRequest, senderEnum, userInfo);
+        emailSenderManager.doSendBySync(senderEnum, toEmail, emailContentDTO);
     }
 
-
-    private Boolean sendEmailHolder(SendEmailRequest sendEmailRequest,
-                                    EmailSenderEnum senderEnum,
-                                    UserVO userInfo)
+    /**
+     * 校验验证码
+     *
+     * @author CAIXYPROMISE
+     * @version 1.0
+     * @version 2025/1/30 2:32
+     */
+    @Override
+    public void verifyCaptcha(EmailCaptchaBizEnum emailSenderEnum, String toEmail, String code)
     {
-        HashMap<String, Object> paramsMap = new HashMap<>();
-        log.info("senderEnum: {}", senderEnum);
-        // 根据发送类型进行不同的处理
-        switch (senderEnum)
+        if (StringUtils.isAnyBlank(toEmail, code) || !RegexUtils.isEmail(toEmail))
         {
-            case RESET_PASSWORD:
-                // 重置密码直接设置为当前用户的，不相信前端的值
-                sendEmailRequest.setToEmail(userInfo.getUserEmail());
-                log.info("重置密码，发送给用户：{}", userInfo.getUserEmail());
-                break;
-            case RESET_EMAIL:
-                // 检查新旧邮箱是否一致
-                if (userInfo.getUserEmail() != null && sendEmailRequest.getToEmail().equals(userInfo.getUserEmail()))
-                {
-                    throw new BusinessException(ErrorCode.PARAMS_ERROR, "新旧邮箱一致，无需修改哦");
-                }
-                break;
-            case REGISTER:
-                break;
-            default:
-                throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "邮箱或验证码为空");
         }
-        return doSendCaptcha(sendEmailRequest, senderEnum, paramsMap);
+        // 从Redis中获取验证码
+        String cachedCode = redisManager.getString(getRedisKey(CAPTCHA_CODE_KEY, toEmail, emailSenderEnum));
+        if (cachedCode == null || cachedCode.isEmpty())
+        {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "验证码已过期，请重新获取");
+        }
+        // 验证码校验
+        if (!cachedCode.equals(code))
+        {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "验证码错误");
+        }
+        // 验证码正确，删除缓存中的验证码
+        redisManager.delete(getRedisKey(CAPTCHA_CODE_KEY, toEmail, emailSenderEnum));
+
     }
 
     /**
@@ -98,30 +101,16 @@ public class EmailServiceImpl implements EmailService
      * @version 1.0
      * @since 2024/10/10 下午7:11
      */
-    private Boolean doSendCaptcha(SendEmailRequest sendEmailRequest, EmailSenderEnum senderEnum,
-                                  HashMap<String, Object> paramsMap)
+    private void doSendCaptcha(String toEmail, EmailCaptchaBizEnum senderEnum, @NotNull BaseEmailCaptchaDTO captchaContentDTO)
     {
-        // 获取目标邮箱
-        String toEmail = sendEmailRequest.getToEmail();
         // 检查目标邮箱是否为空
         ThrowUtils.throwIf(StringUtils.isBlank(toEmail), ErrorCode.PARAMS_ERROR);
-        //检查是否发送
-        checkHasSend(toEmail, senderEnum);
-        // 检查session是否发过同类型邮件
-        Boolean hasAttributeInSession = ServletUtils.hasAttributeInSession(senderEnum.getKey());
-        boolean hasSendKey = redisManager.hasKey(senderEnum, toEmail);
-        ThrowUtils.throwIf(hasSendKey && hasAttributeInSession, ErrorCode.PARAMS_ERROR, "邮件已发送，请到邮箱内查收。");
         // 生成验证码
-        String code = RandomUtil.randomNumbers(6);
+        String code = senderEnum.generateCaptchaCode();
         // 设置redis缓存信息，验证码，邮箱信息
-        paramsMap.put(EmailCaptchaConstant.CACHE_KEY_CODE, code);
-        // 将需要发送的邮箱账号写入redis和session，key为业务枚举值，后续不再相信前端上传的关于该邮箱的任何值，防止中间攻击。
-        ServletUtils.setAttributeInSession(senderEnum.getKey(), toEmail);
+        captchaContentDTO.setCaptcha(code);
         // 将验证码存入Redis，设置过期时间为5分钟
-        redisManager.setHashMap(senderEnum, paramsMap, toEmail);
-        // 异步发送邮件时，上层调用不关心发送是否成功，已配置默认线程池失败策略为丢弃消息
-        emailSenderManager.doSendBySync(senderEnum, new EmailSenderDTO(toEmail), paramsMap);
-        return true;
+        redisManager.setString(getRedisKey(CAPTCHA_CODE_KEY, toEmail, senderEnum), code, senderEnum.getExpire(), senderEnum.getTimeUnit());
     }
 
 
@@ -132,15 +121,19 @@ public class EmailServiceImpl implements EmailService
      * @version 1.0
      * @since 2024/10/10 下午7:12
      */
-    private void checkHasSend(String toEmail, EmailSenderEnum senderEnum)
+    private void checkSent(String toEmail, BaseEmailSenderEnum senderEnum)
     {
         // 检查目标邮箱
         ThrowUtils.throwIf(StringUtils.isBlank(toEmail), ErrorCode.PARAMS_ERROR, "邮箱不得为空");
-        // 检查是否重复发送
-        boolean hasSend = redisManager.hasKey(senderEnum, toEmail);
-        if (hasSend)
+        // 检查1分钟之内是否重复发送
+        boolean hasSend = redisManager.setIfAbsent(getRedisKey(SENT_KEY, toEmail, senderEnum),  "1", 60L, TimeUnit.SECONDS);
+        if (!hasSend)
         {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "邮件已发送，请到邮箱内查收。");
         }
+    }
+
+    private String getRedisKey(String formatted, String toEmail, BaseEmailSenderEnum senderEnum) {
+        return String.format(BASE_KEY_FORMATTED, formatted, senderEnum.getName(), toEmail);
     }
 }

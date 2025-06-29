@@ -1,11 +1,10 @@
 package com.caixy.adminSystem.common.email.service;
 
-import com.caixy.adminSystem.common.api.user.vo.UserVO;
-import com.caixy.adminSystem.common.email.domain.enums.EmailSenderEnum;
+import com.caixy.adminSystem.common.email.domain.common.BaseEmailContentDTO;
 import com.caixy.adminSystem.common.email.domain.dto.SendEmailRequest;
+import com.caixy.adminSystem.common.email.domain.enums.BaseEmailSenderEnum;
+import com.caixy.adminSystem.common.email.domain.enums.EmailCaptchaBizEnum;
 import org.springframework.web.bind.annotation.RequestBody;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @Name: com.caixy.adminSystem.service.EmailService
@@ -15,5 +14,7 @@ import javax.servlet.http.HttpServletRequest;
  **/
 public interface EmailService
 {
-    Boolean doSend(@RequestBody SendEmailRequest sendEmailRequest);
+    void sendEmail(String toEmail, BaseEmailContentDTO emailContentDTO, BaseEmailSenderEnum senderEnum);
+
+    void verifyCaptcha(EmailCaptchaBizEnum emailSenderEnum, String toEmail, String code);
 }

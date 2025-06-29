@@ -207,13 +207,13 @@ public class AuthManager
                 .ofNullable(userLoginRequest.getCaptcha())
                 .orElseThrow(() -> new BusinessException(ErrorCode.PARAMS_ERROR, "验证码为空"));
         // 1. 校验
-        if (userAccount.length() < 4)
-        {
+        if (StringUtils.isAnyBlank(userAccount, userPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号错误");
         }
         // 1.2 校验验证码
         ThrowUtils.throwIf(!captchaService.verifyCaptcha(captchaCode), ErrorCode.PARAMS_ERROR,
                 "验证码错误");
-        return userFacadeService.doRegister(userLoginRequest);
+        UserVO userVO = userFacadeService.doLoginWithValidUser(userLoginRequest);
+        return authorizationFactory.doLogin(userVO, ServletUtils.getRequest());
     }
 }

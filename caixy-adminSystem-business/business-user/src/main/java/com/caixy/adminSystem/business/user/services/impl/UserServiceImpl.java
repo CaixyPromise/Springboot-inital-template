@@ -20,7 +20,7 @@ import com.caixy.adminSystem.common.base.exception.BusinessException;
 import com.caixy.adminSystem.common.base.exception.ThrowUtils;
 import com.caixy.adminSystem.common.base.response.ErrorCode;
 import com.caixy.adminSystem.common.base.utils.*;
-import com.caixy.adminSystem.common.email.domain.enums.EmailSenderEnum;
+import com.caixy.adminSystem.common.email.domain.enums.EmailCaptchaBizEnum;
 import com.caixy.adminSystem.common.email.domain.models.captcha.EmailCaptchaConstant;
 import com.caixy.adminSystem.infrastructure.file.domain.dto.UploadFileDTO;
 import com.caixy.adminSystem.infrastructure.file.domain.dto.UploadFileRequest;
@@ -212,7 +212,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         // 校验邮箱验证码
-        verifyEmailCaptcha(userModifyPasswordRequest.getCaptchaCode(), currenUser.getUserEmail(), EmailSenderEnum.RESET_PASSWORD);
+        verifyEmailCaptcha(userModifyPasswordRequest.getCaptchaCode(), currenUser.getUserEmail(), EmailCaptchaBizEnum.RESET_PASSWORD);
 
         // 加密密码
         String encryptPassword = EncryptionUtils.encryptPassword(userPassword);
@@ -329,7 +329,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public Boolean resetEmail(Long id, UserResetEmailRequest userResetEmailRequest, HttpServletRequest request)
     {
         // 从Session内获取新的邮箱值
-        String newEmail = ServletUtils.getAttributeFromSession(EmailSenderEnum.RESET_EMAIL.getKey(), String.class)
+        String newEmail = ServletUtils.getAttributeFromSession(EmailCaptchaBizEnum.RESET_EMAIL.getKey(), String.class)
                                       .orElseThrow(() -> new BusinessException(ErrorCode.FORBIDDEN_ERROR, "无效请求"));
         // 获取用户信息
         User userInfo = getById(id);
@@ -350,24 +350,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码错误");
         }
         // 校验邮箱验证码
-        verifyEmailCaptcha(userResetEmailRequest.getCode(), newEmail, EmailSenderEnum.RESET_EMAIL);
+        verifyEmailCaptcha(userResetEmailRequest.getCode(), newEmail, EmailCaptchaBizEnum.RESET_EMAIL);
         // 更新邮箱
         userInfo.setUserEmail(newEmail);
         boolean updated = this.updateById(userInfo);
         if (updated)
         {
             // 删除缓存
-            redisManager.delete(EmailSenderEnum.RESET_EMAIL, newEmail);
+            redisManager.delete(EmailCaptchaBizEnum.RESET_EMAIL, newEmail);
             // 清除登录状态-需要重新登录
             ServletUtils.removeAttributeInSession(UserConstant.USER_LOGIN_STATE);
             // 清除验证码签名
-            ServletUtils.removeAttributeInSession(EmailSenderEnum.RESET_EMAIL.getKey());
+            ServletUtils.removeAttributeInSession(EmailCaptchaBizEnum.RESET_EMAIL.getKey());
             return true;
         }
         return false;
     }
 
-    private void verifyEmailCaptcha(String code, String newEmail, EmailSenderEnum senderEnum)
+    private void verifyEmailCaptcha(String code, String newEmail, EmailCaptchaBizEnum senderEnum)
     {
         // 从缓存获取信息
         HashMap<String, Object> captchaInCache = redisManager.getHashMap(senderEnum, newEmail);

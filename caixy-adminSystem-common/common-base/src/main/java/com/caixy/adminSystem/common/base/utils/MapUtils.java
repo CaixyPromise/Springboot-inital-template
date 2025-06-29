@@ -25,6 +25,12 @@ public class MapUtils
         return new HashMap<>();
     }
 
+    public static <K, V> Map<K, V> of(K k, V v) {
+        Map<K, V> map = newHashMap();
+        map.put(k, v);
+        return map;
+    }
+
     /**
      * 根据键列表和值列表创建一个 HashMap
      *

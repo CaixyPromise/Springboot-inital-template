@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.apache.commons.lang3.ObjectUtils;
 
+import java.util.HashMap;
+import java.util.Map;
+
 
 /**
  * @name: com.caixy.adminSystem.model.enums.RabbitMQQueueEnum
@@ -15,81 +18,73 @@ import org.apache.commons.lang3.ObjectUtils;
 @Getter
 public enum RabbitMQQueueEnum
 {
-    /**
-    * 链接统计保存队列
-    */
-    LINK_STATS("LinkStatsSaveExchange",
-            "link.stats.save",
-            "linkStatsSaveQueue",
-            "X-DeadLetter-Link-Stats-Save-Queue"
-            )
-    ;
-    /**
-     * 交换机名称
-     */
+    /*======= 示例 1：普通直连队列 =======*/
+    LINK_STATS("link.stats.exchange",       // exchange
+            "link.stats.save",           // routingKey
+            "link.stats.queue",          // queue
+            null,                        // deadLetterQueue
+            DelayMode.NONE,              // 普通
+            null, null                   // other params
+    ),
+
+    /*======= 示例 2：插件式延迟队列 =======*/
+    ORDER_DELAY("order.delay.exchange", "order.create", "order.delay.queue", null, DelayMode.PLUGIN,            // 使用 x‑delayed-message
+            "direct",                    // delayedType
+            null                         // ttl
+    ),
+
+    /*======= 示例 3：TTL + DLX 延迟重试 =======*/
+    RETRY_60S("retry.exchange", "retry.60s", "retry.queue.60s", "business.queue",            // 过期后投递到此队列
+            DelayMode.TTL, null, 60_000L                      // TTL 60s
+    );
+
     private final String exchange;
-
-    /**
-     * 路由键
-     */
     private final String routingKey;
-
-    /**
-     * 队列名称
-     */
     private final String queueName;
-
-    /**
-     * 死信队列名称
-     */
     private final String deadLetterQueue;
+    private final DelayMode delayMode;
+    private final String delayedType;   // 仅 PLUGIN 用
+    private final Long ttlMillis;     // 仅 TTL 用
 
-    /**
-     * 延迟时间
-     */
-    private final Long delayTime;
-
-    /**
-     * 是否是延迟队列
-     */
-    private final Boolean isDelay;
-
-    /**
-    * 是否手动ack
-    */
-    private final Boolean manualAck;
-
-    RabbitMQQueueEnum(String exchange, String routingKey, String queueName, String deadLetterQueue)
+    /* 统一生成 queue arguments */
+    public Map<String, Object> queueArgs()
     {
-        this.exchange = exchange;
-        this.routingKey = routingKey;
-        this.queueName = queueName;
-        this.deadLetterQueue = deadLetterQueue;
-        this.delayTime = null;
-        this.isDelay = false;
-        this.manualAck = true;
+        Map<String, Object> a = new HashMap<>();
+        switch (delayMode)
+        {
+            case PLUGIN:
+                a.put("x-delayed-type", delayedType);
+                break;
+            case TTL:
+                if (ttlMillis != null)
+                {
+                    a.put("x-message-ttl", ttlMillis);
+                }
+                if (deadLetterQueue != null)
+                {
+                    a.put("x-dead-letter-exchange", deadLetterQueue + ".dlx");
+                    a.put("x-dead-letter-routing-key", deadLetterQueue + ".dlq");
+                }
+                break;
+            default:
+                break;
+        }
+        return a;
     }
 
-
-    /**
-     * 根据 value 获取枚举
-     *
-     * @param value
-     * @return
-     */
-    public static RabbitMQQueueEnum getEnumByValue(String value)
+    public boolean isDelay()
     {
-        if (ObjectUtils.isEmpty(value))
-        {
-            return null;
-        }
-        for (RabbitMQQueueEnum anEnum : RabbitMQQueueEnum.values())
-        {
-            if (anEnum.routingKey.equals(value))
-            {
-                return anEnum;
-            }
-        }
-        return null;
+        // 只要不是 NONE，就视为“延迟队列”
+        return (delayMode != null) && (!delayMode.equals(DelayMode.NONE));
+    }
+
+    public boolean isPluginDelay()
+    {
+        return delayMode == DelayMode.PLUGIN;
+    }
+
+    public boolean isTtlDelay()
+    {
+        return delayMode == DelayMode.TTL;
     }
 }

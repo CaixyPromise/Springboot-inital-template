@@ -1,13 +1,12 @@
 package com.caixy.adminSystem.common.email.utils;
 
 import com.caixy.adminSystem.common.email.constant.EmailConstant;
-import com.caixy.adminSystem.common.email.domain.dto.BaseEmailContentDTO;
+import com.caixy.adminSystem.common.email.domain.common.BaseEmailContentDTO;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 
-import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.io.StringWriter;
 
@@ -15,7 +14,7 @@ import java.io.StringWriter;
  * FreeMark邮件模板工具类
  *
  * @Author CAIXYPROMISE
- * @name com.caixy.adminSystem.manager.Email.utils.FreeMarkEmailUtil
+ * @name com.caixy.adminSystem.common.Email.utils.FreeMarkEmailUtil
  * @since 2024/10/6 下午3:57
  */
 public class FreeMarkEmailUtil
@@ -40,7 +39,7 @@ public class FreeMarkEmailUtil
      * @param baseEmailContentDTO  数据模型，基类 {@link BaseEmailContentDTO}
      * @return 渲染后的模板内容
      */
-    public static String generateContent(@NotNull String templateName, @NotNull BaseEmailContentDTO baseEmailContentDTO)
+    public static String generateContent(String templateName, BaseEmailContentDTO baseEmailContentDTO)
     {
         try
         {

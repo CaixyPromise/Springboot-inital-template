@@ -1,6 +1,5 @@
-package com.caixy.adminSystem.common.email.domain.models.captcha;
+package com.caixy.adminSystem.common.email.domain.common;
 
-import com.caixy.adminSystem.common.email.domain.common.BaseEmailContentDTO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -8,12 +7,12 @@ import lombok.EqualsAndHashCode;
  * Email内容：验证码DTO
  *
  * @Author CAIXYPROMISE
- * @name com.caixy.adminSystem.manager.Email.models.captcha.EmailCaptchaDTO
+ * @name com.caixy.adminSystem.common.Email.models.captcha.EmailCaptchaDTO
  * @since 2024/10/7 上午12:37
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class EmailCaptchaDTO extends BaseEmailContentDTO
+public class BaseEmailCaptchaDTO extends BaseEmailContentDTO
 {
     /**
      * 验证码

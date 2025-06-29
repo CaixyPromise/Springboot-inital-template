@@ -34,9 +34,11 @@ public interface UserFacadeService
     List<UserVO> findUserByIds(Collection<Long> userIds);
 
     /**
-    * 密码登录
-    */
-    LoginUserVO doRegister(UserLoginRequest userLoginRequest);
+     * 密码登录
+     *
+     * @return
+     */
+    UserVO doLoginWithValidUser(UserLoginRequest userLoginRequest);
 
     /**
     * 第三方登录

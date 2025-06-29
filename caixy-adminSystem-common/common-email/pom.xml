@@ -43,5 +43,9 @@
             <groupId>com.caixy</groupId>
             <artifactId>common-api</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.caixy</groupId>
+            <artifactId>infrastructure-threadpool</artifactId>
+        </dependency>
     </dependencies>
 </project>

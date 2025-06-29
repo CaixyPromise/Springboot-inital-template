@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import static com.caixy.adminSystem.common.base.constant.UserConstant.USER_LOGIN_STATE;
+
 
 /**
  * Session登录服务类
@@ -36,7 +38,6 @@ import java.util.Set;
 @Slf4j
 public class SessionLoginFactory implements AuthorizationFactory
 {
-
     private final SessionRepository<? extends Session> sessionRepository;
     private final RedisManager redisManager;
 
@@ -65,7 +66,7 @@ public class SessionLoginFactory implements AuthorizationFactory
     @Override
     public Boolean checkLogin(HttpServletRequest request)
     {
-        return ServletUtils.getAttributeFromSessionOrNull(UserConstant.USER_LOGIN_STATE, UserVO.class, request.getSession()) != null;
+        return ServletUtils.getAttributeFromSessionOrNull(USER_LOGIN_STATE, UserVO.class, request.getSession()) != null;
     }
 
     @Override
@@ -73,7 +74,7 @@ public class SessionLoginFactory implements AuthorizationFactory
     {
         HttpServletRequest request = ServletUtils.getRequest();
         HttpSession session = request.getSession();
-        return ServletUtils.getAttributeFromSessionOrNull(UserConstant.USER_LOGIN_STATE, UserVO.class, session) != null;
+        return ServletUtils.getAttributeFromSessionOrNull(USER_LOGIN_STATE, UserVO.class, session) != null;
     }
 
     @Override
@@ -99,6 +100,7 @@ public class SessionLoginFactory implements AuthorizationFactory
         HttpSession session = request.getSession();
         String sessionId = session.getId();
 
+
         setUserLoginInfo(userVO, request);
         // 处理单点登录
         if (singleLogin)
@@ -108,7 +110,7 @@ public class SessionLoginFactory implements AuthorizationFactory
         }
 
         // 将用户信息存入Session
-        session.setAttribute(UserConstant.USER_LOGIN_STATE, userVO);
+        session.setAttribute(USER_LOGIN_STATE, userVO);
 
         // 将sessionId添加到活跃session集合
         redisManager.addToSet(SESSION_ACTIVE_SET, sessionId);
@@ -127,7 +129,7 @@ public class SessionLoginFactory implements AuthorizationFactory
         HttpServletRequest request = ServletUtils.getRequest();
         HttpSession session = request.getSession();
         String sessionId = session.getId();
-        UserVO userVO = (UserVO) session.getAttribute(UserConstant.USER_LOGIN_STATE);
+        UserVO userVO = (UserVO) session.getAttribute(USER_LOGIN_STATE);
         if (userVO != null)
         {
             Long userId = userVO.getId();
@@ -146,31 +148,35 @@ public class SessionLoginFactory implements AuthorizationFactory
     @Override
     public UserVO getLoginUser(HttpServletRequest request)
     {
-        return ServletUtils.getAttributeFromSession(UserConstant.USER_LOGIN_STATE, UserVO.class, request.getSession())
-                           .filter(user -> user.getId() != null)
-                           .filter(user -> {
-                               if (UserRoleEnum.BAN.equals(user.getUserRole())) {
-                                   doLogout();
-                                   throw new BusinessException(ErrorCode.FORBIDDEN_ERROR, "账号已被封禁");
-                               }
-                               return true;
-                           })
-                           .orElseThrow(() -> new BusinessException(ErrorCode.NOT_LOGIN_ERROR));
+        return ServletUtils.getAttributeFromSession(USER_LOGIN_STATE, UserVO.class, request.getSession())
+                .filter(user -> user.getId() != null)
+                .filter(user ->
+                {
+                    if (UserRoleEnum.BAN.equals(user.getUserRole()))
+                    {
+                        doLogout();
+                        throw new BusinessException(ErrorCode.FORBIDDEN_ERROR, "账号已被封禁");
+                    }
+                    return true;
+                })
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_LOGIN_ERROR));
     }
 
     @Override
     public UserVO getLoginUserPermitNull(HttpServletRequest request)
     {
         HttpSession session = request.getSession();
-        return ServletUtils.getAttributeFromSession(UserConstant.USER_LOGIN_STATE, UserVO.class, session)
-                           .filter(user -> {
-                               if (UserRoleEnum.BAN.equals(user.getUserRole())) {
-                                   doLogout();
-                                   throw new BusinessException(ErrorCode.FORBIDDEN_ERROR, "账号已被封禁");
-                               }
-                               return true;
-                           })
-                           .orElse(null);
+        return ServletUtils.getAttributeFromSession(USER_LOGIN_STATE, UserVO.class, session)
+                .filter(user ->
+                {
+                    if (UserRoleEnum.BAN.equals(user.getUserRole()))
+                    {
+                        doLogout();
+                        throw new BusinessException(ErrorCode.FORBIDDEN_ERROR, "账号已被封禁");
+                    }
+                    return true;
+                })
+                .orElse(null);
     }
 
     @Override
@@ -203,7 +209,7 @@ public class SessionLoginFactory implements AuthorizationFactory
                 Session session = sessionRepository.findById(sessionId);
                 if (session != null)
                 {
-                    UserVO userVO = session.getAttribute(UserConstant.USER_LOGIN_STATE);
+                    UserVO userVO = session.getAttribute(USER_LOGIN_STATE);
                     if (userVO != null)
                     {
                         userList.add(userVO);
@@ -258,5 +264,4 @@ public class SessionLoginFactory implements AuthorizationFactory
     {
         return SESSION_USER_KEY_PREFIX + userId;
     }
-
 }

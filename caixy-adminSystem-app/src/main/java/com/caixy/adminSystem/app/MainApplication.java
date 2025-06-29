@@ -31,8 +31,8 @@ public class MainApplication
         String startTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
         String serverHost = NetUtils.getHostIp();
         System.setProperty("app.startup-time", startTime);
-
-
+        System.setProperty("mainClass.basePackage", MainApplication.class.getPackage().getName());
+        System.setProperty("mainClass.className", MainApplication.class.getName());
         System.setProperty("app.serverHost", serverHost);
         SpringApplication.run(MainApplication.class, args);
     }

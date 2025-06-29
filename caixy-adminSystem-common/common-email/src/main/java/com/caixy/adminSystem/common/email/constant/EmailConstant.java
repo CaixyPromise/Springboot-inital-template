@@ -1,6 +1,5 @@
 package com.caixy.adminSystem.common.email.constant;
 
-
 import com.caixy.adminSystem.common.email.utils.FreeMarkEmailUtil;
 
 /**
@@ -8,7 +7,7 @@ import com.caixy.adminSystem.common.email.utils.FreeMarkEmailUtil;
  * 因为{@link FreeMarkEmailUtil}需要进行静态初始化，所以使用接口类配置属性，而非springboot的配置类
  *
  * @Author CAIXYPROMISE
- * @name com.caixy.adminSystem.manager.Email.constant.EmailConstant
+ * @name com.caixy.adminSystem.common.Email.constant.EmailConstant
  * @since 2024/10/6 下午5:52
  */
 public interface EmailConstant
@@ -41,4 +40,10 @@ public interface EmailConstant
      */
     String PLATFORM_CONTACT = "caixypromised@gmail.com";
 
+    /**
+     * 邮件标题
+     * */
+    String BASE_EMAIL_TITLE = "Short-Link-Platform";
+
+    String PLATFORM_PATH_URL = "http://localhost:3000";
 }

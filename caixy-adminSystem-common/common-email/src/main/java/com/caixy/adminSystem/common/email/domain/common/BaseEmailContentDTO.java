@@ -1,4 +1,4 @@
-package com.caixy.adminSystem.common.email.domain.dto;
+package com.caixy.adminSystem.common.email.domain.common;
 
 import com.caixy.adminSystem.common.email.constant.EmailConstant;
 import lombok.Getter;
@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
  * 基础Email邮件模板FreeMark基类
  *
  * @Author CAIXYPROMISE
- * @name com.caixy.adminSystem.manager.Email.core.BaseFreeMarkDTO
+ * @name com.caixy.adminSystem.common.Email.core.BaseFreeMarkDTO
  * @since 2024/10/6 下午4:01
  */
 @Getter
@@ -35,6 +35,11 @@ public class BaseEmailContentDTO implements Serializable
      * 平台英文名
      */
     private final String platformEnName = EmailConstant.PLATFORM_NAME_EN;
+
+    /**
+    * 平台地址
+    */
+    private final String pathAddress = EmailConstant.PLATFORM_PATH_URL;
 
     /**
      * 当前年份

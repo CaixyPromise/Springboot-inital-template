@@ -1,6 +1,7 @@
 package com.caixy.adminSystem.common.base.utils;
 
 import com.caixy.adminSystem.common.base.constant.CommonConstant;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 
@@ -110,6 +111,10 @@ public class JsonUtils
     public static <T> T jsonToObject(String json, Type typeOfT)
     {
         return gson.fromJson(json, typeOfT);
+    }
+
+    public static <T> T jsonToObject(String json, TypeReference<T> typeReference) {
+        return gson.fromJson(json, typeReference.getType());
     }
 
     /**
