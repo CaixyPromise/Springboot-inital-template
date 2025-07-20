@@ -18,7 +18,6 @@ import org.springframework.stereotype.Component;
  */
 @EmailSender(captcha = {                           // 分别处理以下业务的发送：
     EmailCaptchaBizEnum.RESET_PASSWORD,  // 修改密码
-    EmailCaptchaBizEnum.ACTIVE_USER,        // 注册账号
     EmailCaptchaBizEnum.RESET_EMAIL,     // 修改邮箱
 })
 @Component

@@ -21,7 +21,7 @@ import java.time.format.DateTimeFormatter;
             "com.caixy.adminSystem",
     }
 )
-@MapperScan("com.caixy.adminSystem.business.*.domain.mapper")
+@MapperScan("com.caixy.adminSystem.business.*.infrastructure.mapper")
 @EnableScheduling
 @EnableAspectJAutoProxy(proxyTargetClass = true, exposeProxy = true)
 public class MainApplication

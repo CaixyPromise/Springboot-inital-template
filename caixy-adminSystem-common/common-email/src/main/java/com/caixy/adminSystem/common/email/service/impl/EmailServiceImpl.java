@@ -1,7 +1,7 @@
 package com.caixy.adminSystem.common.email.service.impl;
 
 
-import com.caixy.adminSystem.common.base.response.ErrorCode;
+import com.caixy.adminSystem.common.base.exception.ErrorCode;
 import com.caixy.adminSystem.common.base.exception.BusinessException;
 import com.caixy.adminSystem.common.base.exception.ThrowUtils;
 import com.caixy.adminSystem.common.base.utils.RegexUtils;

@@ -1,5 +1,7 @@
 package com.caixy.adminSystem.common.base.response;
 
+import com.caixy.adminSystem.common.base.exception.ErrorCode;
+
 /**
  * 返回工具类
  */

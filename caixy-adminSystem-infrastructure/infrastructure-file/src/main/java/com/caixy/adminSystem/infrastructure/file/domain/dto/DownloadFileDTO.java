@@ -1,6 +1,6 @@
 package com.caixy.adminSystem.infrastructure.file.domain.dto;
 
-import com.caixy.adminSystem.infrastructure.file.domain.enums.FileActionBizEnum;
+import com.caixy.adminSystem.common.api.file.enums.FileActionBizEnum;
 import lombok.Data;
 
 import java.io.Serializable;

@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * MyBatis Plus 配置
  *
- * @author https://github.com/licaixy
+ * @author CAIXYPROMISE
  */
 @Configuration
 @MapperScan("com.caixy.adminSystem.infrastructure.datasource.mapper")

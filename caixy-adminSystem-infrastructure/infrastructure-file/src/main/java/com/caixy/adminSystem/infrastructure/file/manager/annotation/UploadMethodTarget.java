@@ -1,7 +1,7 @@
 package com.caixy.adminSystem.infrastructure.file.manager.annotation;
 
 
-import com.caixy.adminSystem.infrastructure.file.domain.enums.SaveFileMethodEnum;
+import com.caixy.adminSystem.common.api.file.enums.SaveFileMethodEnum;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

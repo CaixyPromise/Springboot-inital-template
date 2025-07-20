@@ -2,7 +2,7 @@ package com.caixy.adminSystem.business.user.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.caixy.adminSystem.authorization.service.manager.AuthManager;
-import com.caixy.adminSystem.business.user.domain.convertor.UserConvertor;
+import com.caixy.adminSystem.business.user.infrastructure.convertor.UserConvertor;
 import com.caixy.adminSystem.business.user.domain.entity.User;
 import com.caixy.adminSystem.business.user.services.UserService;
 import com.caixy.adminSystem.common.api.user.dto.*;
@@ -16,7 +16,7 @@ import com.caixy.adminSystem.common.base.constant.UserRoleEnum;
 import com.caixy.adminSystem.common.base.exception.BusinessException;
 import com.caixy.adminSystem.common.base.exception.ThrowUtils;
 import com.caixy.adminSystem.common.base.request.DeleteRequest;
-import com.caixy.adminSystem.common.base.response.ErrorCode;
+import com.caixy.adminSystem.common.base.exception.ErrorCode;
 import com.caixy.adminSystem.common.base.response.Result;
 import com.caixy.adminSystem.common.base.response.ResultUtils;
 import com.caixy.adminSystem.common.base.utils.RegexUtils;

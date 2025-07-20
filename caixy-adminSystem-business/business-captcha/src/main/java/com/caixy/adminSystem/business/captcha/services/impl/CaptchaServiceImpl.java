@@ -2,7 +2,7 @@ package com.caixy.adminSystem.business.captcha.services.impl;
 
 import com.caixy.adminSystem.common.captcha.domain.CaptchaVO;
 import com.caixy.adminSystem.common.captcha.service.CaptchaService;
-import com.caixy.adminSystem.common.base.response.ErrorCode;
+import com.caixy.adminSystem.common.base.exception.ErrorCode;
 import com.caixy.adminSystem.common.base.exception.BusinessException;
 import com.caixy.adminSystem.business.captcha.factory.CaptchaFactory;
 import com.caixy.adminSystem.business.captcha.strategy.CaptchaGenerationStrategy;

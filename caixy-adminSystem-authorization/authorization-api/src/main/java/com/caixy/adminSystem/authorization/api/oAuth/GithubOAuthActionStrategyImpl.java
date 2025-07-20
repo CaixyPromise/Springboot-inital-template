@@ -16,7 +16,7 @@ import com.caixy.adminSystem.common.api.user.enums.UserGenderEnum;
 import com.caixy.adminSystem.common.api.user.vo.UserVO;
 import com.caixy.adminSystem.common.base.constant.UserRoleEnum;
 import com.caixy.adminSystem.common.base.exception.BusinessException;
-import com.caixy.adminSystem.common.base.response.ErrorCode;
+import com.caixy.adminSystem.common.base.exception.ErrorCode;
 import com.caixy.adminSystem.common.base.utils.JsonUtils;
 import com.caixy.adminSystem.common.base.utils.StringUtils;
 import com.caixy.adminSystem.common.base.utils.http.HttpUtils;

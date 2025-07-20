@@ -1,9 +1,8 @@
 package com.caixy.adminSystem.infrastructure.datasource.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -14,9 +13,10 @@ import java.util.Date;
  * @Author CAIXYPROMISE
  * @since 2025/1/1 18:46
  */
-@Getter
-@Setter
-@ToString
+@Data
+@SuperBuilder(toBuilder = true)
+@NoArgsConstructor
+@AllArgsConstructor
 public class BaseEntity implements Serializable
 {
     @TableField(exist = false)

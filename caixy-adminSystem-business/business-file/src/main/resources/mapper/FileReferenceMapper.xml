@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.caixy.adminSystem.business.file.infrastructure.mapper.FileReferenceMapper">
+
+    <resultMap id="BaseResultMap" type="com.caixy.adminSystem.business.file.domain.entity.FileReference">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="fileId" column="file_id" jdbcType="BIGINT"/>
+            <result property="userId" column="user_id" jdbcType="BIGINT"/>
+            <result property="displayName" column="display_name" jdbcType="VARCHAR"/>
+            <result property="visitUrl" column="visit_url" jdbcType="VARCHAR" />
+
+            <result property="bizType" column="biz_type" jdbcType="VARCHAR"/>
+            <result property="bizId" column="biz_id" jdbcType="BIGINT"/>
+            <result property="accessLevel" column="access_level" jdbcType="TINYINT"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="isDeleted" column="is_deleted" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,file_id,user_id,visit_url,
+        display_name,biz_type,biz_id,
+        access_level,create_time,update_time,
+        is_deleted
+    </sql>
+
+    <resultMap id="ReferenceWithFileInfoMap" type="com.caixy.adminSystem.business.file.domain.dto.ReferenceWithFileInfoDTO">
+        <!-- 映射 FileReference -->
+        <association property="fileReference" javaType="com.caixy.adminSystem.business.file.domain.entity.FileReference">
+            <id column="reference_id" property="id"/>
+            <result column="user_id" property="userId"/>
+            <result column="biz_type" property="bizType"/>
+            <result column="biz_id" property="bizId"/>
+            <result column="display_name" property="displayName"/>
+            <result column="access_level" property="accessLevel"/>
+            <result column="is_deleted" property="isDeleted"/>
+            <result column="create_time_ref" property="createTime"/>
+            <result column="update_time_ref" property="updateTime"/>
+        </association>
+
+        <!-- 映射 FileInfo -->
+        <association property="fileInfo" javaType="com.caixy.adminSystem.business.file.domain.entity.FileInfo">
+            <id column="file_id" property="id"/>
+            <result column="file_inner_name" property="fileInnerName"/>
+            <result column="file_sha256" property="fileSha256"/>
+            <result column="file_size" property="fileSize"/>
+            <result column="content_type" property="contentType"/>
+            <result column="storage_type" property="storageType"/>
+            <result column="storage_path" property="storagePath"/>
+            <result column="is_deleted_file" property="isDeleted"/>
+            <result column="create_time_file" property="createTime"/>
+            <result column="update_time_file" property="updateTime"/>
+        </association>
+    </resultMap>
+
+    <select id="listReferenceWithFileInfo" resultMap="ReferenceWithFileInfoMap">
+        SELECT
+            -- FileReference 字段
+            fr.id            AS reference_id,
+            fr.user_id       AS user_id,
+            fr.biz_type      AS biz_type,
+            fr.biz_id        AS biz_id,
+            fr.display_name  AS display_name,
+            fr.access_level  AS access_level,
+            fr.is_deleted    AS is_deleted,
+            fr.create_time   AS create_time_ref,
+            fr.update_time   AS update_time_ref,
+
+            -- FileInfo 字段
+            fi.id            AS file_id,
+            fi.file_inner_name,
+            fi.file_sha256,
+            fi.file_size,
+            fi.content_type,
+            fi.storage_type,
+            fi.storage_path,
+            fi.is_deleted    AS is_deleted_file,
+            fi.create_time   AS create_time_file,
+            fi.update_time   AS update_time_file
+
+        FROM t_file_reference fr
+                 JOIN t_file_info fi ON fr.file_id = fi.id
+        WHERE fr.is_deleted = 0
+          AND fi.is_deleted = 0
+          AND fr.user_id = #{userId}
+          AND fr.biz_type = #{bizType}
+          AND fr.biz_id = #{bizId}
+    </select>
+
+
+
+
+</mapper>

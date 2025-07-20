@@ -12,7 +12,7 @@ import com.caixy.adminSystem.business.post.domain.post.entity.Post;
 import com.caixy.adminSystem.common.api.user.vo.UserVO;
 import com.caixy.adminSystem.common.base.exception.BusinessException;
 import com.caixy.adminSystem.common.base.exception.ThrowUtils;
-import com.caixy.adminSystem.common.base.response.ErrorCode;
+import com.caixy.adminSystem.common.base.exception.ErrorCode;
 import com.caixy.adminSystem.common.base.response.Result;
 import com.caixy.adminSystem.common.base.response.ResultUtils;
 import lombok.extern.slf4j.Slf4j;

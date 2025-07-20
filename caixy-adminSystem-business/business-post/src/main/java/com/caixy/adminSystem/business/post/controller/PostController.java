@@ -15,7 +15,7 @@ import com.caixy.adminSystem.common.base.constant.UserRoleEnum;
 import com.caixy.adminSystem.common.base.exception.BusinessException;
 import com.caixy.adminSystem.common.base.exception.ThrowUtils;
 import com.caixy.adminSystem.common.base.request.DeleteRequest;
-import com.caixy.adminSystem.common.base.response.ErrorCode;
+import com.caixy.adminSystem.common.base.exception.ErrorCode;
 import com.caixy.adminSystem.common.base.response.Result;
 import com.caixy.adminSystem.common.base.response.ResultUtils;
 import com.caixy.adminSystem.common.web.annotation.AuthCheck;

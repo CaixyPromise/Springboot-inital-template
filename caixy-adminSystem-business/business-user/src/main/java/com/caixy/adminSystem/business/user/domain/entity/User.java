@@ -1,17 +1,12 @@
 package com.caixy.adminSystem.business.user.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.caixy.adminSystem.infrastructure.datasource.domain.entity.BaseEntity;
 import com.github.houbb.sensitive.annotation.strategy.SensitiveStrategyEmail;
 import com.github.houbb.sensitive.annotation.strategy.SensitiveStrategyPassword;
 import com.github.houbb.sensitive.annotation.strategy.SensitiveStrategyPhone;
 import lombok.*;
-
-import java.io.Serializable;
-import java.util.Date;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 用户
@@ -21,7 +16,7 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 public class User extends BaseEntity
 {
     /**
@@ -91,5 +86,4 @@ public class User extends BaseEntity
      * 用户角色：user/admin/ban
      */
     private String userRole;
-
 }

@@ -1,9 +1,6 @@
 package com.caixy.adminSystem.infrastructure.knife4j.config;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import springfox.documentation.spring.web.plugins.Docket;
-
 /**
  * Knife4j配置类
  *

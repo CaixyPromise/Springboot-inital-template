@@ -1,15 +1,16 @@
 package com.caixy.adminSystem.infrastructure.file.domain.dto;
 
-import cn.hutool.core.io.FileUtil;
-import cn.hutool.crypto.digest.DigestUtil;
-import com.caixy.adminSystem.infrastructure.file.domain.enums.FileActionBizEnum;
-import com.caixy.adminSystem.infrastructure.file.manager.utils.FileUtils;
-import com.caixy.adminSystem.infrastructure.file.strategy.UploadFileMethodStrategy;
+
+import com.caixy.adminSystem.common.base.utils.FileUtils;
+import com.caixy.adminSystem.common.api.file.enums.FileActionBizEnum;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import org.apache.commons.lang3.RandomStringUtils;
+import lombok.NoArgsConstructor;
+import org.apache.tika.Tika;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.UUID;
 
@@ -21,9 +22,16 @@ import java.util.UUID;
  * @since 2024-05-21 21:53
  **/
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class UploadFileDTO
 {
-    private UploadFileMethodStrategy uploadManager;
+
+    /**
+     * 文件信息表信息
+     */
+//    private FileInfo fileInfo;
 
     /**
      * 上传人Id
@@ -43,85 +51,43 @@ public class UploadFileDTO
     /**
      * 文件描述信息
      */
-    private FileMetaInfo fileMetaInfo;
+    private FileSaveInfo fileSaveInfo;
 
+    /**
+     * 文件MD5值
+     */
+    private String sha256;
 
-    @Data
-    @Builder
-    public static class FileMetaInfo
-    {
-        /**
-         * 文件MD5值
-         */
-        private String sha256;
-
-        /**
-         * 文件大小限制，单位：字节
-         */
-        private Long fileSize;
-        /**
-         * 文件唯一标识
-         */
-        private String uuid;
-
-        /**
-         * 文件内部名称
-         */
-        private String fileInnerName;
-
-        /**
-         * 文件真实名称
-         */
-        private String fileRealName;
-
-        /**
-         * 文件扩展名称
-         */
-        private String fileSuffix;
-
-        /**
-         * 文件保存路径+名字
-         */
-        private Path fileAbsolutePathAndName;
-
-        /**
-         * 文件保存文件夹路径
-         */
-        private Path filePath;
-
-        /**
-         * 文件可访问路径
-         */
-        private String fileURL;
-    }
+    /**
+     * 文件大小限制，单位：字节
+     */
+    private Long fileSize;
 
     /**
      * 转换并生成文件信息
      *
      * @return 构建的 FileInfo 对象
      */
-    public FileMetaInfo convertFileInfo()
+    public FileSaveInfo extractFileInfo() throws IOException
     {
         String uuid = UUID.randomUUID().toString();
-        String originalFilename = multipartFile.getOriginalFilename();
-        String filename = uuid + "-" + DigestUtil.md5Hex(originalFilename + RandomStringUtils.randomAlphanumeric(5));
+        String originalFilename = FileUtils.sanitizeFileName(multipartFile.getOriginalFilename());
+        String filename = uuid + FileUtils.desensitizeFileName(originalFilename);
 
         // 获取文件扩展名称
-        String fileSuffix = FileUtil.getSuffix(originalFilename);
+        String fileSuffix = FileUtils.getSuffix(originalFilename);
 
         // 使用 FileActionBizEnum 枚举类中的方法生成路径和URL
-        Path fileAbsoluteName = fileActionBizEnum.buildFileAbsolutePathAndName(userId, filename);
         Path filePath = fileActionBizEnum.buildFilePath(userId);
-
-        return FileMetaInfo.builder()
+        Tika tika = new Tika();
+        String mimeType = tika.detect(multipartFile.getInputStream());
+        return FileSaveInfo.builder()
                            .uuid(uuid)
                            .fileRealName(originalFilename)
                            .fileInnerName(filename)
-                           .fileAbsolutePathAndName(fileAbsoluteName)
                            .filePath(filePath)
                            .fileSuffix(fileSuffix)
-                           .sha256(FileUtils.getMultiPartFileSha256(multipartFile))
-                           .fileSize(multipartFile.getSize())
+                           .contentType(mimeType)
                            .build();
     }
 }

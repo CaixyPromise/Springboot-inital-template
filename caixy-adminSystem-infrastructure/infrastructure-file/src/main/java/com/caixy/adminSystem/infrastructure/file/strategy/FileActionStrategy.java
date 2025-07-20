@@ -1,6 +1,10 @@
 package com.caixy.adminSystem.infrastructure.file.strategy;
 
+import com.caixy.adminSystem.common.api.file.dto.FileUploadAfterActionResult;
+import com.caixy.adminSystem.common.api.file.dto.FileUploadBeforeActionResult;
+import com.caixy.adminSystem.common.api.file.facade.FileActionHelper;
 import com.caixy.adminSystem.infrastructure.file.domain.dto.DownloadFileDTO;
+import com.caixy.adminSystem.infrastructure.file.domain.dto.UploadContext;
 import com.caixy.adminSystem.infrastructure.file.domain.dto.UploadFileDTO;
 import com.caixy.adminSystem.infrastructure.file.domain.dto.UploadFileRequest;
 
@@ -23,8 +27,12 @@ public interface FileActionStrategy
      * @version 1.0
      * @since 2024/6/10 下午11:51
      */
-    Boolean doAfterUploadAction(UploadFileDTO uploadFileDTO, Path savePath, UploadFileRequest uploadFileRequest,
-                                HttpServletRequest request) throws IOException;
+    FileUploadAfterActionResult doAfterUploadAction(
+            UploadContext uploadContext,
+            FileActionHelper fileActionHelper,
+            Path savePath,
+            UploadFileRequest uploadFileRequest,
+            HttpServletRequest request);
 
     /**
      * 文件上传前处理操作
@@ -33,10 +41,13 @@ public interface FileActionStrategy
      * @version 1.0
      * @since 2024/6/10 下午11:51
      */
-    default Boolean doBeforeUploadAction(UploadFileDTO uploadFileDTO
-            , UploadFileRequest uploadFileRequest)
+    default FileUploadBeforeActionResult doBeforeUploadAction(
+            UploadContext uploadContext,
+            FileActionHelper fileActionHelper,
+            UploadFileRequest uploadFileRequest,
+            HttpServletRequest request)
     {
-        return true;
+        return FileUploadBeforeActionResult.success();
     }
 
     /**

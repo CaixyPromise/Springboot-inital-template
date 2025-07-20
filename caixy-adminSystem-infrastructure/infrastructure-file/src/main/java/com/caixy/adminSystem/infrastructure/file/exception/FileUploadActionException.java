@@ -1,6 +1,6 @@
 package com.caixy.adminSystem.infrastructure.file.exception;
 
-import com.caixy.adminSystem.common.base.response.ErrorCode;
+import com.caixy.adminSystem.common.base.exception.ErrorCode;
 import lombok.Getter;
 
 /**

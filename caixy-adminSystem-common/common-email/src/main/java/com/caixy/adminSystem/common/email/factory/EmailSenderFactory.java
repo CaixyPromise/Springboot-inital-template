@@ -48,7 +48,12 @@ public class EmailSenderFactory
             Stream.concat(Arrays.stream(captchaBizEnums), Arrays.stream(textBizEnums))
                 .forEach((item) -> {
                     if (strategies.containsKey(item)) {
-                        log.warn("重复注册 EmailSender 策略 [{}]，已存在的策略将被覆盖", item.getName());
+                        log.warn("重复注册 EmailSender 策略 [{}]，已存在的策略将被覆盖 [{} -> {}]",
+                                 item.getName(),
+                                 strategies.get(item).getClass().getName(),
+                                 bean.getClass().getName()
+                        );
+                        throw new RuntimeException("重复注册 EmailSender 策略。");
                     }
                     strategies.put(item, (EmailContentGeneratorStrategy) bean);
                 });

@@ -5,7 +5,7 @@ import com.caixy.adminSystem.common.api.oauth.enums.OAuthResultResponse;
 import com.caixy.adminSystem.common.api.oauth.enums.OAuthProviderEnum;
 import com.caixy.adminSystem.authorization.api.oAuth.strategy.OAuth2ActionStrategy;
 import com.caixy.adminSystem.common.base.exception.BusinessException;
-import com.caixy.adminSystem.common.base.response.ErrorCode;
+import com.caixy.adminSystem.common.base.exception.ErrorCode;
 import com.caixy.adminSystem.common.base.utils.SpringContextUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

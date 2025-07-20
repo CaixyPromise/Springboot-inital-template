@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.caixy.adminSystem.business.file.infrastructure.mapper.FileInfoMapper">
+
+    <resultMap id="BaseResultMap" type="com.caixy.adminSystem.business.file.domain.entity.FileInfo">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="fileInnerName" column="file_inner_name" jdbcType="VARCHAR"/>
+            <result property="fileSize" column="file_size" jdbcType="BIGINT"/>
+            <result property="fileSha256" column="file_sha256" jdbcType="CHAR"/>
+            <result property="contentType" column="content_type" jdbcType="VARCHAR"/>
+            <result property="storageType" column="storage_type" jdbcType="TINYINT"/>
+            <result property="storagePath" column="storage_path" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="isDeleted" column="is_deleted" jdbcType="TINYINT"/>
+            <result property="deletedTime" column="deleted_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,file_inner_name,file_size,
+        file_sha256,content_type,storage_type,
+        storage_path,create_time,update_time,
+        is_deleted,deleted_time
+    </sql>
+
+    <!-- 找出一定天数内未被引用的孤立文件 -->
+    <select id="findNonReferenceFilesBetweenDays" resultMap="BaseResultMap">
+        SELECT fi.*
+        FROM t_file_info fi
+        WHERE fi.is_deleted = 0
+          AND NOT EXISTS (
+            SELECT 1
+            FROM t_file_reference fr
+            WHERE fr.file_id = fi.id
+              AND fr.is_deleted = 0
+              AND fr.update_time &gt;= DATE_SUB(NOW(), INTERVAL #{day, jdbcType=INTEGER} DAY)
+        )
+    </select>
+
+</mapper>

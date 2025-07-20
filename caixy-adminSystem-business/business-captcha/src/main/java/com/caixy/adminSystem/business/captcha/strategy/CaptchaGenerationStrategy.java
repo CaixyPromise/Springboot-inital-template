@@ -2,7 +2,7 @@ package com.caixy.adminSystem.business.captcha.strategy;
 
 import cn.hutool.core.codec.Base64;
 
-import com.caixy.adminSystem.common.base.response.ErrorCode;
+import com.caixy.adminSystem.common.base.exception.ErrorCode;
 import com.caixy.adminSystem.common.base.exception.BusinessException;
 import com.caixy.adminSystem.common.captcha.domain.CaptchaVO;
 import com.caixy.adminSystem.common.base.utils.ServletUtils;

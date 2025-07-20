@@ -2,7 +2,7 @@ package com.caixy.adminSystem.common.web.resolver;
 
 import com.caixy.adminSystem.common.api.user.vo.UserVO;
 import com.caixy.adminSystem.common.base.exception.BusinessException;
-import com.caixy.adminSystem.common.base.response.ErrorCode;
+import com.caixy.adminSystem.common.base.exception.ErrorCode;
 import com.caixy.adminSystem.common.web.constant.WebConstant;
 import com.caixy.adminSystem.common.web.resolver.annotation.LoginUser;
 import org.jetbrains.annotations.NotNull;

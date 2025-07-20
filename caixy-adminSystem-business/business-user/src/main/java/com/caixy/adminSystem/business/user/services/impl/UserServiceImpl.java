@@ -5,38 +5,41 @@ import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.caixy.adminSystem.business.user.services.UserService;
-import com.caixy.adminSystem.business.user.domain.convertor.UserConvertor;
+import com.caixy.adminSystem.business.user.infrastructure.convertor.UserConvertor;
+import com.caixy.adminSystem.common.api.file.dto.FileUploadAfterActionResult;
+import com.caixy.adminSystem.common.api.file.enums.FileAccessLevelEnum;
+import com.caixy.adminSystem.common.api.file.facade.FileActionHelper;
 import com.caixy.adminSystem.common.api.user.dto.UserModifyPasswordRequest;
 import com.caixy.adminSystem.common.api.user.dto.UserQueryRequest;
 import com.caixy.adminSystem.common.api.user.dto.UserRegisterRequest;
 import com.caixy.adminSystem.common.api.user.dto.UserResetEmailRequest;
 import com.caixy.adminSystem.business.user.domain.entity.User;
 import com.caixy.adminSystem.common.api.user.enums.UserGenderEnum;
-import com.caixy.adminSystem.business.user.domain.mapper.UserMapper;
+import com.caixy.adminSystem.business.user.infrastructure.mapper.UserMapper;
 import com.caixy.adminSystem.common.api.user.vo.UserVO;
 import com.caixy.adminSystem.common.base.constant.CommonConstant;
 import com.caixy.adminSystem.common.base.constant.UserConstant;
 import com.caixy.adminSystem.common.base.exception.BusinessException;
 import com.caixy.adminSystem.common.base.exception.ThrowUtils;
-import com.caixy.adminSystem.common.base.response.ErrorCode;
+import com.caixy.adminSystem.common.base.exception.ErrorCode;
 import com.caixy.adminSystem.common.base.utils.*;
 import com.caixy.adminSystem.common.email.domain.enums.EmailCaptchaBizEnum;
 import com.caixy.adminSystem.common.email.domain.models.captcha.EmailCaptchaConstant;
+import com.caixy.adminSystem.infrastructure.file.domain.dto.UploadContext;
 import com.caixy.adminSystem.infrastructure.file.domain.dto.UploadFileDTO;
 import com.caixy.adminSystem.infrastructure.file.domain.dto.UploadFileRequest;
-import com.caixy.adminSystem.infrastructure.file.domain.enums.FileActionBizEnum;
+import com.caixy.adminSystem.common.api.file.enums.FileActionBizEnum;
 import com.caixy.adminSystem.infrastructure.file.manager.annotation.FileUploadActionTarget;
 import com.caixy.adminSystem.infrastructure.file.strategy.FileActionStrategy;
-import com.caixy.adminSystem.infrastructure.file.strategy.UploadFileMethodStrategy;
 import com.caixy.adminSystem.infrastucture.cache.redis.RedisManager;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -270,41 +273,39 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @since 2024/6/7 下午4:31
      */
     @Override
-    public Boolean doAfterUploadAction(@NotNull UploadFileDTO uploadFileDTO, Path savePath,
-                                       UploadFileRequest uploadFileRequest, HttpServletRequest request) throws IOException
+    @Transactional(rollbackFor = Exception.class)
+    public FileUploadAfterActionResult doAfterUploadAction(UploadContext uploadContext, FileActionHelper helper,
+                                                           Path savePath, UploadFileRequest req,
+                                                           HttpServletRequest servletReq)
     {
-        Long userId = uploadFileDTO.getUserId();
+        UploadFileDTO dto = uploadContext.getUploadFileDTO();
+        Long userId = dto.getUserId();
         User user = this.getById(userId);
-        if (user == null)
-        {
-            return false;
+        ThrowUtils.throwIf(user == null, ErrorCode.NOT_FOUND_ERROR, "更新用户不存在");
+        String newUrl = dto.getFileSaveInfo().getFileURL();
+        if (StringUtils.isBlank(newUrl)) {
+            log.error("更新用户头像失败, 访问链接失败, 用户Id: {}, 新头像链接: {}, 上传", user.getId(), newUrl);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "文件上传失败");
         }
-        // 更新用户头像
-        String oldUserAvatar = user.getUserAvatar();
-        user.setUserAvatar(uploadFileDTO.getFileMetaInfo().getFileURL());
-        UploadFileMethodStrategy uploadManager = uploadFileDTO.getUploadManager();
-        boolean updated = this.updateById(user);
-        if (updated)
-        {
-            // 删除旧头像
-            if (StringUtils.isNotBlank(oldUserAvatar))
-            {
-                FileActionBizEnum uploadBizEnum = uploadFileDTO.getFileActionBizEnum();
 
-                String[] filename = oldUserAvatar.split("/");
-                if (filename.length > 0)
-                {
-                    Path filepath = uploadBizEnum.buildFileAbsolutePathAndName(userId, filename[filename.length - 1]);
-                    uploadManager.deleteFileAllowFail(filepath);
-                    setUserInfoInSession(user, request);
-                    return true;
-                }
-                return false;
-            }
-            // 可能初始化的时候没有设置头像，可以设置一个默认头像，但不允许删除默认头像
-            return true;
+        return buildAvatarUpdateResult(user, newUrl, servletReq);
+    }
+
+    private FileUploadAfterActionResult buildAvatarUpdateResult(User user, String newUrl, HttpServletRequest request)
+    {
+        // 更新用户头像信息
+        user.setUserAvatar(newUrl);
+        boolean updated = this.updateById(user);
+        if (!updated) {
+            log.error("更新用户头像链接失败, 用户Id: {}, 新头像链接: {}", user.getId(), newUrl);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "更新用户头像失败");
         }
-        return false;
+        // 更新session内的头像信息
+        setUserInfoInSession(user, request);
+        // 设置操作返回结果
+        return FileUploadAfterActionResult.successBuilder().visitUrl(newUrl).bizId(user.getId())
+                                          .accessLevelEnum(FileAccessLevelEnum.PUBLIC)
+                                          .displayName(String.format("avatar_%s", user.getId())).build();
     }
 
     /**

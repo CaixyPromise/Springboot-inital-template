@@ -1,19 +1,23 @@
 package com.caixy.adminSystem.infrastructure.file.services.impl;
 
-
+import com.caixy.adminSystem.common.api.file.dto.FileInfoDTO;
+import com.caixy.adminSystem.common.api.file.enums.SaveFileMethodEnum;
+import com.caixy.adminSystem.common.api.file.facade.FileActionHelper;
 import com.caixy.adminSystem.common.base.exception.BusinessException;
-import com.caixy.adminSystem.common.base.response.ErrorCode;
+import com.caixy.adminSystem.common.base.exception.ErrorCode;
 import com.caixy.adminSystem.common.base.utils.SpringContextUtils;
-import com.caixy.adminSystem.infrastructure.file.domain.dto.UploadFileDTO;
-import com.caixy.adminSystem.infrastructure.file.domain.dto.UploadFileRequest;
-import com.caixy.adminSystem.infrastructure.file.domain.enums.FileActionBizEnum;
-import com.caixy.adminSystem.infrastructure.file.domain.enums.SaveFileMethodEnum;
-import com.caixy.adminSystem.infrastructure.file.exception.FileUploadActionException;
+import com.caixy.adminSystem.infrastructure.file.chain.UploadChainFactory;
+import com.caixy.adminSystem.infrastructure.file.domain.dto.UploadContext;
+import com.caixy.adminSystem.common.api.file.enums.FileActionBizEnum;
+import com.caixy.adminSystem.infrastructure.file.domain.enums.FileRedisBizKey;
 import com.caixy.adminSystem.infrastructure.file.manager.annotation.FileUploadActionTarget;
 import com.caixy.adminSystem.infrastructure.file.manager.annotation.UploadMethodTarget;
 import com.caixy.adminSystem.infrastructure.file.services.UploadFileService;
 import com.caixy.adminSystem.infrastructure.file.strategy.FileActionStrategy;
 import com.caixy.adminSystem.infrastructure.file.strategy.UploadFileMethodStrategy;
+import com.caixy.adminSystem.infrastucture.cache.redis.RedisManager;
+import com.caixy.adminSystem.infrastucture.cache.redis.replayAttack.ReplayAttackManager;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
@@ -21,11 +25,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -41,34 +46,75 @@ import java.util.concurrent.ConcurrentHashMap;
 public class UploadFileServiceImpl implements UploadFileService
 {
     private final List<UploadFileMethodStrategy> uploadFileMethodStrategies;
+    private final RedisManager redisManager;
+    private final static ObjectMapper objectMapper = new ObjectMapper();
+    private final FileActionHelper fileActionHelper;
+    private final UploadChainFactory uploadChainFactory;
 
     private Map<SaveFileMethodEnum, UploadFileMethodStrategy> uploadFileMethodMap;
 
     private final List<FileActionStrategy> fileActionStrategy;
 
+    private final ReplayAttackManager replayAttackManager;
+
     private ConcurrentHashMap<FileActionBizEnum, FileActionStrategy> serviceCache;
 
     @PostConstruct
-    public void initActionService()
-    {
-        serviceCache =
-                SpringContextUtils.getServiceFromAnnotation(fileActionStrategy, FileUploadActionTarget.class, "value");
-        uploadFileMethodMap =
-                SpringContextUtils.getServiceFromAnnotation(uploadFileMethodStrategies, UploadMethodTarget.class, "value");
+    public void initActionService() {
+        serviceCache = SpringContextUtils.getServiceFromAnnotation(fileActionStrategy, FileUploadActionTarget.class,
+                                                                   "value");
+        uploadFileMethodMap = SpringContextUtils.getServiceFromAnnotation(uploadFileMethodStrategies,
+                                                                          UploadMethodTarget.class, "value");
     }
 
+    @Override
+    public void setCheckFileCache(HashMap<String, Object> cacheMap, String token)
+    {
+        redisManager.setHashMap(FileRedisBizKey.UPLOAD_EXIST_TOKEN, cacheMap, token);
+    }
+
+    /**
+     * 解析token数组信息，并验证防重放攻击
+     *
+     * @author CAIXYPROMISE
+     * @version 2.0 添加防重放验证，改为getHashMap而不是getHashMapThenRemove
+     * @version 2025/1/27 16:24
+     */
+    @Override
+    public Map<String, Object> parasTokenInfoMap(String token, String nonce, Long timestamp, Long userId) {
+        // 1. 验证防重放攻击
+        replayAttackManager.validateReplayAttack(nonce, timestamp, userId);
+
+        // 2. 获取token对应的缓存信息（不删除）
+        Map<String, Object> fileInfoMap = redisManager.getHashMap(FileRedisBizKey.UPLOAD_EXIST_TOKEN, token);
+        if (fileInfoMap == null || fileInfoMap.isEmpty()) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "上传token无效");
+        }
+        return fileInfoMap;
+    }
+
+    /**
+     * 清理token缓存（在请求成功后调用）
+     *
+     * @param token 上传token
+     */
+    public void clearTokenCache(String token) {
+        redisManager.delete(FileRedisBizKey.UPLOAD_EXIST_TOKEN, token);
+    }
 
     @Override
     public Resource getFile(FileActionBizEnum fileActionBizEnum, Path filePath) throws IOException
     {
-        UploadFileMethodStrategy uploadFileMethodStrategy = safetyGetUploadFileMethod(fileActionBizEnum.getSaveFileMethod());
+        UploadFileMethodStrategy uploadFileMethodStrategy =
+                safetyGetUploadFileMethod(fileActionBizEnum.getSaveFileMethod());
         return uploadFileMethodStrategy.getFile(filePath);
     }
 
     @Override
     public void deleteFile(FileActionBizEnum fileActionBizEnum, Path filePath)
     {
-        UploadFileMethodStrategy uploadFileMethodStrategy = safetyGetUploadFileMethod(fileActionBizEnum.getSaveFileMethod());
+        UploadFileMethodStrategy uploadFileMethodStrategy =
+                safetyGetUploadFileMethod(fileActionBizEnum.getSaveFileMethod());
         try
         {
             uploadFileMethodStrategy.deleteFile(filePath);
@@ -85,7 +131,8 @@ public class UploadFileServiceImpl implements UploadFileService
     public void deleteFile(FileActionBizEnum fileActionBizEnum, Long userId, String filename)
     {
         Path filePath = fileActionBizEnum.buildFileAbsolutePathAndName(userId, filename);
-        UploadFileMethodStrategy uploadFileMethodStrategy = safetyGetUploadFileMethod(fileActionBizEnum.getSaveFileMethod());
+        UploadFileMethodStrategy uploadFileMethodStrategy =
+                safetyGetUploadFileMethod(fileActionBizEnum.getSaveFileMethod());
         try
         {
             uploadFileMethodStrategy.deleteFile(filePath);
@@ -96,18 +143,6 @@ public class UploadFileServiceImpl implements UploadFileService
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "删除文件失败: " + e);
         }
     }
-
-    @Override
-    public Path saveFile(UploadFileDTO uploadFileDTO) throws IOException
-    {
-        FileActionBizEnum fileActionBizEnum = uploadFileDTO.getFileActionBizEnum();
-        UploadFileMethodStrategy uploadFileMethodStrategy = safetyGetUploadFileMethod(fileActionBizEnum.getSaveFileMethod());
-        // 把上传服务处理类暴露给 后处理操作 ，例如需要删除前置文件信息等
-        uploadFileDTO.setUploadManager(uploadFileMethodStrategy);
-        uploadFileDTO.getFileMetaInfo().setFileURL(uploadFileMethodStrategy.buildFileURL(uploadFileDTO.getUserId(), uploadFileDTO.getFileMetaInfo().getFileInnerName()));
-        return uploadFileMethodStrategy.saveFile(uploadFileDTO);
-    }
-
 
 
     /**
@@ -127,6 +162,40 @@ public class UploadFileServiceImpl implements UploadFileService
         }
         return actionService;
     }
+
+    @Override
+    public String handleFasterUpload(UploadContext uploadContext)
+    {
+        uploadContext.setFileActionHelper(fileActionHelper);
+        // 上传方法从FileInfo的Type来
+        Map<String, Object> cacheMap = uploadContext.getCacheMap();
+        Object fileInfoStr = Optional.ofNullable(cacheMap.get("fileInfo"))
+                                     .orElseThrow(() -> new BusinessException(ErrorCode.PARAMS_ERROR, "文件信息不存在"));
+        FileInfoDTO fileInfo = objectMapper.convertValue(fileInfoStr, FileInfoDTO.class);
+        if (fileInfo == null)
+        {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "文件信息不存在");
+        }
+        Integer storageType = fileInfo.getStorageType();
+        uploadContext.setFileInfo(fileInfo);
+        SaveFileMethodEnum fileMethodEnum = SaveFileMethodEnum.getEnumByCode(storageType);
+        if (fileMethodEnum == null)
+        {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "不支持的文件操作方式");
+        }
+        FileActionBizEnum fileActionEnum = uploadContext.getUploadFileRequest().getBiz();
+        uploadContext.setUploadFileMethodStrategy(uploadFileMethodMap.get(fileMethodEnum));
+        uploadContext.setFileActionStrategy(getFileActionService(fileActionEnum));
+        return uploadChainFactory.doFasterUpload(uploadContext);
+    }
+
+    @Override
+    public void degradeToNormalUpload(Map<String, Object> cacheMap, String token)
+    {
+        cacheMap.put("degrade", true);
+        redisManager.setHashMap(FileRedisBizKey.UPLOAD_EXIST_TOKEN, cacheMap, token);
+    }
+
     /**
      * 处理上传逻辑
      *
@@ -136,61 +205,15 @@ public class UploadFileServiceImpl implements UploadFileService
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public String handleUpload(UploadFileRequest uploadFileRequest, FileActionBizEnum uploadBizEnum,
-                               SaveFileMethodEnum saveFileMethod, UploadFileDTO uploadFileDTO,
-                               HttpServletRequest request)
+    public String handleUpload(UploadContext uploadContext)
     {
-        Path savePath = null;
-
-        try
-        {
-            // 获取文件处理类，如果找不到就会直接报错
-            FileActionStrategy actionService = getFileActionService(uploadBizEnum);
-            boolean doVerifyFileToken = doBeforeFileUploadAction(actionService, uploadFileDTO, uploadFileRequest);
-            if (!doVerifyFileToken)
-            {
-                log.error("{}-验证token：文件上传失败，文件信息：{}, 上传用户Id: {}", saveFileMethod.getDesc(),
-                        uploadFileDTO.getFileMetaInfo(),
-                        uploadFileDTO.getUserId());
-                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "文件上传失败");
-            }
-            savePath = saveFile(uploadFileDTO);
-            boolean doAfterFileUpload =
-                    doAfterFileUploadAction(actionService, uploadFileDTO, savePath, uploadFileRequest, request);
-            if (!doAfterFileUpload)
-            {
-                log.error("{}：文件上传成功，文件路径：{}，但后续处理失败", saveFileMethod.getDesc(), savePath);
-                deleteFile(uploadFileDTO.getFileActionBizEnum(), savePath);
-
-                log.error("{}：文件上传成功，文件路径：{}，后处理失败后，成功删除文件", saveFileMethod.getDesc(), savePath);
-                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "文件上传成功，但后续处理失败");
-            }
-            log.info("{}：文件上传成功，文件路径：{}", saveFileMethod.getDesc(), savePath);
-            return uploadFileDTO.getFileMetaInfo().getFileURL();
-        }
-        catch (FileUploadActionException | BusinessException | IOException e)
-        {
-            log.error("{}: 文件上传失败，错误信息: {}", saveFileMethod.getDesc(), e.getMessage());
-            // 如果 savePath 不为空，则意味着文件已经上传成功，需要删除它
-            if (savePath != null)
-            {
-                deleteFile(uploadBizEnum, savePath);
-                log.info("{}：文件上传失败，删除文件成功，文件路径：{}", saveFileMethod.getDesc(), savePath);
-            }
-            // 抛出业务异常，以触发事务回滚
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, e.getMessage());
-        }
-    }
-
-    private boolean doAfterFileUploadAction(FileActionStrategy actionService, UploadFileDTO uploadFileDTO, Path savePath, UploadFileRequest uploadFileRequest, HttpServletRequest request) throws IOException
-    {
-        return actionService.doAfterUploadAction(uploadFileDTO, savePath, uploadFileRequest, request);
-    }
-
-    private boolean doBeforeFileUploadAction(FileActionStrategy actionService, UploadFileDTO uploadFileDTO
-            , UploadFileRequest uploadFileRequest)
-    {
-        return actionService.doBeforeUploadAction(uploadFileDTO, uploadFileRequest);
+        uploadContext.setFileActionHelper(fileActionHelper);
+        uploadContext.setUploadFileMethodStrategy(uploadFileMethodMap.get(uploadContext.getUploadFileDTO()
+                                                                                       .getFileActionBizEnum()
+                                                                                       .getSaveFileMethod()));
+        uploadContext.setFileActionStrategy(getFileActionService(uploadContext.getUploadFileDTO()
+                                                                              .getFileActionBizEnum()));
+        return uploadChainFactory.doNormalUpload(uploadContext);
     }
 
     private UploadFileMethodStrategy safetyGetUploadFileMethod(SaveFileMethodEnum saveFileMethodEnum)

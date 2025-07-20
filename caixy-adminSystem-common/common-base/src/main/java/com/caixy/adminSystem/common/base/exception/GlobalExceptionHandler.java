@@ -1,6 +1,5 @@
 package com.caixy.adminSystem.common.base.exception;
 
-import com.caixy.adminSystem.common.base.response.ErrorCode;
 import com.caixy.adminSystem.common.base.response.Result;
 import com.caixy.adminSystem.common.base.response.ResultUtils;
 import lombok.extern.slf4j.Slf4j;

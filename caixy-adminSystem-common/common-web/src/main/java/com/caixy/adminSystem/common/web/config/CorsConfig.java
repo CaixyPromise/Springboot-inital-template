@@ -26,7 +26,14 @@ public class CorsConfig implements WebMvcConfigurer
     @Override
     public void addInterceptors(InterceptorRegistry registry)
     {
-        registry.addInterceptor(loginUserInfoInterceptor).addPathPatterns("/**");
+        registry.addInterceptor(loginUserInfoInterceptor).addPathPatterns("/**")
+                .excludePathPatterns(
+                        "/doc.html",
+                        "/swagger-ui.html",
+                        "/swagger-resources/**",
+                        "/webjars/**",
+                        "/v3/api-docs/**",
+                        "/favicon.ico");
     }
 
     @Override

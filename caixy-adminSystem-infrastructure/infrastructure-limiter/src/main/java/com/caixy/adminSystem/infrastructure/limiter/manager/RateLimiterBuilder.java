@@ -1,7 +1,7 @@
 package com.caixy.adminSystem.infrastructure.limiter.manager;
 
 
-import com.caixy.adminSystem.common.base.response.ErrorCode;
+import com.caixy.adminSystem.common.base.exception.ErrorCode;
 import com.caixy.adminSystem.common.base.exception.BusinessException;
 import org.redisson.api.RRateLimiter;
 

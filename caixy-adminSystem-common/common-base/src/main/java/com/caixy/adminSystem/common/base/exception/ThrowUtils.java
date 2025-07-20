@@ -1,8 +1,6 @@
 package com.caixy.adminSystem.common.base.exception;
 
 
-import com.caixy.adminSystem.common.base.response.ErrorCode;
-
 import java.util.function.Supplier;
 
 /**

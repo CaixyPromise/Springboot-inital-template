@@ -4,7 +4,7 @@ import cn.hutool.core.util.RandomUtil;
 import com.caixy.adminSystem.business.captcha.annotation.CaptchaTypeTarget;
 import com.caixy.adminSystem.business.captcha.strategy.CaptchaGenerationStrategy;
 import com.caixy.adminSystem.common.base.exception.BusinessException;
-import com.caixy.adminSystem.common.base.response.ErrorCode;
+import com.caixy.adminSystem.common.base.exception.ErrorCode;
 import com.caixy.adminSystem.common.base.utils.ServletUtils;
 import com.caixy.adminSystem.common.base.utils.SpringContextUtils;
 import com.caixy.adminSystem.infrastucture.cache.redis.RedisManager;
@@ -17,6 +17,7 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -63,12 +64,14 @@ public class CaptchaFactory
         String sessionId = ServletUtils.getSessionId();
 
         // 获取存储在 Redis 中的验证码
-        Map<String, String> result = redisManager.getHashMap(RedisKeyEnum.CAPTCHA_CODE, String.class, String.class, sessionId);
+        Map<String, Object> result = redisManager.getHashMap(RedisKeyEnum.CAPTCHA_CODE, String.class, String.class, sessionId);
         if (result == null || result.isEmpty()) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "验证码错误或已过期");
         }
 
-        String redisCode = result.get("code").trim();
+        String redisCode = Optional.of(result.get("code"))
+                                   .orElseThrow(() -> new BusinessException(ErrorCode.PARAMS_ERROR, "验证码错误或已过期"))
+                                   .toString().trim();
 
         // 校验验证码（不区分大小写），同时删除 Redis 中的验证码，确保验证码的单次有效性
         boolean isVerified = redisCode.equalsIgnoreCase(captchaCode.trim());

@@ -13,7 +13,7 @@ import com.caixy.adminSystem.common.api.wx.dto.WxOAuth2LoginDTO;
 import com.caixy.adminSystem.common.api.wx.service.WxFacadeService;
 import com.caixy.adminSystem.common.base.constant.CommonConstant;
 import com.caixy.adminSystem.common.base.exception.BusinessException;
-import com.caixy.adminSystem.common.base.response.ErrorCode;
+import com.caixy.adminSystem.common.base.exception.ErrorCode;
 import com.caixy.adminSystem.common.base.response.Result;
 import com.caixy.adminSystem.common.base.response.ResultUtils;
 import com.caixy.adminSystem.common.base.utils.StringUtils;

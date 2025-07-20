@@ -21,15 +21,15 @@
     <dependencies>
         <dependency>
             <groupId>com.caixy</groupId>
-            <artifactId>common-web</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.caixy</groupId>
             <artifactId>infrastructure-file</artifactId>
         </dependency>
         <dependency>
             <groupId>com.caixy</groupId>
             <artifactId>authorization-service</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.caixy</groupId>
+            <artifactId>common-web</artifactId>
         </dependency>
     </dependencies>
 </project>

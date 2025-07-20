@@ -1,6 +1,6 @@
 package com.caixy.adminSystem.infrastructure.limiter.aop;
 
-import com.caixy.adminSystem.common.base.response.ErrorCode;
+import com.caixy.adminSystem.common.base.exception.ErrorCode;
 import com.caixy.adminSystem.common.base.exception.BusinessException;
 import com.caixy.adminSystem.common.base.utils.StringUtils;
 import com.caixy.adminSystem.infrastructure.limiter.annotation.RateLimitFlow;

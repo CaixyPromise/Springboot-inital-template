@@ -4,7 +4,7 @@ import cn.hutool.crypto.digest.DigestUtil;
 import com.caixy.adminSystem.common.base.annotation.StaticValue;
 import com.caixy.adminSystem.common.base.annotation.StaticValueTarget;
 import com.caixy.adminSystem.common.base.exception.BusinessException;
-import com.caixy.adminSystem.common.base.response.ErrorCode;
+import com.caixy.adminSystem.common.base.exception.ErrorCode;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;

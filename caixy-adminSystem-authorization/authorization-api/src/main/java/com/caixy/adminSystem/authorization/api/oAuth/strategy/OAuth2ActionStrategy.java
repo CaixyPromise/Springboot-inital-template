@@ -2,7 +2,7 @@ package com.caixy.adminSystem.authorization.api.oAuth.strategy;
 
 import com.caixy.adminSystem.common.api.oauth.enums.OAuthResultResponse;
 import com.caixy.adminSystem.common.base.exception.BusinessException;
-import com.caixy.adminSystem.common.base.response.ErrorCode;
+import com.caixy.adminSystem.common.base.exception.ErrorCode;
 import com.caixy.adminSystem.infrastucture.cache.redis.RedisManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

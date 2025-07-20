@@ -12,7 +12,7 @@ import java.util.function.Predicate;
  * @name com.caixy.adminSystem.utils.MapUtils
  * @since 2024/10/8 下午11:41
  */
-public class MapUtils
+public final class MapUtils
 {
 
     /**
@@ -25,10 +25,8 @@ public class MapUtils
         return new HashMap<>();
     }
 
-    public static <K, V> Map<K, V> of(K k, V v) {
-        Map<K, V> map = newHashMap();
-        map.put(k, v);
-        return map;
+    public static Boolean isEmpty(Map<?, ?> map) {
+        return map == null || map.isEmpty();
     }
 
     /**

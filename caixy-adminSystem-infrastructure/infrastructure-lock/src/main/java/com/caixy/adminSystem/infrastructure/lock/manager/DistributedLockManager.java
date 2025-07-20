@@ -1,7 +1,7 @@
 package com.caixy.adminSystem.infrastructure.lock.manager;
 
 
-import com.caixy.adminSystem.common.base.response.ErrorCode;
+import com.caixy.adminSystem.common.base.exception.ErrorCode;
 import com.caixy.adminSystem.common.base.exception.BusinessException;
 import com.caixy.adminSystem.common.base.utils.StringUtils;
 import com.caixy.adminSystem.infrastructure.lock.domain.RDLockKeyEnum;

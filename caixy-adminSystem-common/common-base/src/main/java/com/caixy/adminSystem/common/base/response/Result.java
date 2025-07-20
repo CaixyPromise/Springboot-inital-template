@@ -1,5 +1,6 @@
 package com.caixy.adminSystem.common.base.response;
 
+import com.caixy.adminSystem.common.base.exception.ErrorCode;
 import lombok.Data;
 
 import java.io.Serializable;

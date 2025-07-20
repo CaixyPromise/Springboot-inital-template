@@ -14,12 +14,12 @@ import com.caixy.adminSystem.business.post.domain.postfavour.mapper.PostFavourMa
 import com.caixy.adminSystem.business.post.domain.postthumb.entity.PostThumb;
 import com.caixy.adminSystem.business.post.domain.postthumb.mapper.PostThumbMapper;
 import com.caixy.adminSystem.business.post.services.PostService;
-import com.caixy.adminSystem.common.api.user.service.UserFacadeService;
+import com.caixy.adminSystem.common.api.user.facade.UserFacadeService;
 import com.caixy.adminSystem.common.api.user.vo.UserVO;
 import com.caixy.adminSystem.common.base.constant.CommonConstant;
 import com.caixy.adminSystem.common.base.exception.BusinessException;
 import com.caixy.adminSystem.common.base.exception.ThrowUtils;
-import com.caixy.adminSystem.common.base.response.ErrorCode;
+import com.caixy.adminSystem.common.base.exception.ErrorCode;
 import com.caixy.adminSystem.common.base.utils.SqlUtils;
 import com.caixy.adminSystem.common.base.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
